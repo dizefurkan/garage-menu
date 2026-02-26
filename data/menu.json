@@ -1,0 +1,142 @@
+{
+  "restaurant": {
+    "name": "Garage Chocolate & Croissant",
+    "currency": "TRY",
+    "languages": ["tr", "en"]
+  },
+  "categories": [
+    { "id": 1, "slug": "breakfast", "order": 1, "name": { "tr": "Kahvaltılar", "en": "Breakfast" } },
+    { "id": 2, "slug": "cheesecakes", "order": 2, "name": { "tr": "Cheesecake'ler", "en": "Cheesecakes" } },
+    { "id": 3, "slug": "chocolate-desserts", "order": 3, "name": { "tr": "Çikolatalı Tatlılar", "en": "Chocolate Desserts" } },
+    { "id": 4, "slug": "chocolates", "order": 4, "name": { "tr": "Çikolatalar", "en": "Chocolates" } },
+    { "id": 5, "slug": "beverages", "order": 5, "name": { "tr": "İçecekler", "en": "Beverages" } }
+  ],
+  "products": [
+    {
+      "id": 101,
+      "categoryId": 1,
+      "price": 375,
+      "name": { "tr": "Classic Garage", "en": "Classic Garage" },
+      "description": {
+        "tr": "Tereyağlı kruvasan yanında çörekotlu ezine peyniri, salatalık, labne, vişne reçeli ve eritilmiş çikolata ile servis edilir.",
+        "en": "Buttery croissant served with black cumin Ezine cheese, cucumber, cream cheese, sour cherry jam and melted chocolate."
+      }
+    },
+    {
+      "id": 102,
+      "categoryId": 1,
+      "price": 425,
+      "name": { "tr": "Sunny Garage", "en": "Sunny Garage" },
+      "description": {
+        "tr": "Labneli kruvasan, zeytin ezmesi, hindi füme; üzerine 2 adet güneş yumurta, kaşar ve ceviz.",
+        "en": "Croissant with cream cheese, olive paste, smoked turkey; topped with 2 sunny-side-up eggs, kashar cheese and walnuts."
+      }
+    },
+    {
+      "id": 103,
+      "categoryId": 1,
+      "price": 550,
+      "name": { "tr": "Protein Garage", "en": "Protein Garage" },
+      "description": {
+        "tr": "Labneli kruvasan, 3 adet scrambled yumurta, frankfurter sosis ve füme dana eti.",
+        "en": "Croissant with cream cheese, 3 scrambled eggs, frankfurter sausage and smoked beef."
+      }
+    },
+    {
+      "id": 104,
+      "categoryId": 1,
+      "price": 425,
+      "name": { "tr": "Avocado Garage", "en": "Avocado Garage" },
+      "description": {
+        "tr": "Zeytinli peynirli cevizli ezme, 3 scrambled yumurta, avokado, çörekotu ve zeytinyağı.",
+        "en": "Olive-cheese-walnut spread, 3 scrambled eggs, avocado, black cumin and olive oil."
+      }
+    },
+    {
+      "id": 105,
+      "categoryId": 1,
+      "price": 475,
+      "name": { "tr": "Morning Croissant", "en": "Morning Croissant" },
+      "description": {
+        "tr": "Zeytinli peynirli cevizli ezme, domates, fesleğen, mozarella ve pesto sos.",
+        "en": "Olive-cheese-walnut spread, tomato, arugula, mozzarella and pesto sauce."
+      }
+    },
+
+    { "id": 201, "categoryId": 2, "price": 175, "name": { "tr": "San Sebastian Cheesecake", "en": "San Sebastian Cheesecake" }, "description": { "tr": "", "en": "" } },
+    { "id": 202, "categoryId": 2, "price": 175, "name": { "tr": "Limonlu Cheesecake", "en": "Lemon Cheesecake" }, "description": { "tr": "", "en": "" } },
+    { "id": 203, "categoryId": 2, "price": 175, "name": { "tr": "Orman Meyveli Cheesecake", "en": "Forest Fruit Cheesecake" }, "description": { "tr": "", "en": "" } },
+
+    {
+      "id": 301,
+      "categoryId": 3,
+      "price": 275,
+      "name": { "tr": "Garage Mag’nificent", "en": "Garage Mag’nificent" },
+      "description": {
+        "tr": "330 cc kavanozda kakaolu kek, çilek, muz, Belçika çikolatası, krep kırığı ve krem şanti.",
+        "en": "330 cc jar with cocoa cake, strawberry, banana, Belgian chocolate, crepe crumbs and whipped cream."
+      }
+    },
+    {
+      "id": 302,
+      "categoryId": 3,
+      "price": 400,
+      "name": { "tr": "Rolling In Garage", "en": "Rolling In Garage" },
+      "description": {
+        "tr": "Roll kruvasan içinde Belçika çikolatası, fındık, fıstık, çilek, muz ve Hindistan cevizi.",
+        "en": "Rolled croissant with Belgian chocolate, hazelnut, pistachio, strawberry, banana and coconut."
+      }
+    },
+    {
+      "id": 303,
+      "categoryId": 3,
+      "price": 325,
+      "name": { "tr": "Bruksel Waffle", "en": "Brussels Waffle" },
+      "description": {
+        "tr": "Belçika çikolatası, muz, çilek, ananas, Hindistan cevizi, Antep fıstığı, fındık ve krep kırığı.",
+        "en": "Belgian chocolate, banana, strawberry, pineapple, coconut, pistachio, hazelnut and crepe crumbs."
+      }
+    },
+    {
+      "id": 304,
+      "categoryId": 3,
+      "price": 225,
+      "name": { "tr": "Creep Roll", "en": "Creep Roll" },
+      "description": {
+        "tr": "6 adet çikolatalı roll krep, çilek ve pudra şekeri.",
+        "en": "6 chocolate roll crepes with strawberry and powdered sugar."
+      }
+    },
+    {
+      "id": 305,
+      "categoryId": 3,
+      "price": 175,
+      "name": { "tr": "Garage Muffin", "en": "Garage Muffin" },
+      "description": { "tr": "3 adet yaban mersinli muffin.", "en": "3 blueberry muffins." }
+    },
+    {
+      "id": 306,
+      "categoryId": 3,
+      "price": 275,
+      "name": { "tr": "Oat Fuel", "en": "Oat Fuel" },
+      "description": {
+        "tr": "Yulaf sütlü puding, yaban mersini, kakao, Hindistan cevizi ve fındık.",
+        "en": "Oat milk pudding with blueberries, cocoa, coconut and hazelnut."
+      }
+    },
+    { "id": 307, "categoryId": 3, "price": 250, "name": { "tr": "Fondü", "en": "Fondue" }, "description": { "tr": "", "en": "" } },
+    { "id": 308, "categoryId": 3, "price": 325, "name": { "tr": "Garage Cup", "en": "Garage Cup" }, "description": { "tr": "Belçika çikolatası, çilek, muz ve pancake.", "en": "Belgian chocolate with strawberry, banana and pancakes." } },
+    { "id": 309, "categoryId": 3, "price": 300, "name": { "tr": "Banana Bomb", "en": "Banana Bomb" }, "description": { "tr": "Muzlu pancake, Hindistan cevizi balı ve çikolata.", "en": "Banana pancakes with coconut honey and chocolate." } },
+    { "id": 310, "categoryId": 3, "price": 275, "name": { "tr": "Garage Brownie", "en": "Garage Brownie" }, "description": { "tr": "Muzlu bitter çikolatalı kek.", "en": "Banana dark chocolate cake." } },
+
+    { "id": 401, "categoryId": 4, "price": 125, "name": { "tr": "Antep Fıstıklı Çikolata", "en": "Pistachio Chocolate" }, "description": { "tr": "", "en": "" } },
+    { "id": 402, "categoryId": 4, "price": 125, "name": { "tr": "Fındıklı Çikolata", "en": "Hazelnut Chocolate" }, "description": { "tr": "", "en": "" } },
+    { "id": 403, "categoryId": 4, "price": 125, "name": { "tr": "Yaban Mersinli Çikolata", "en": "Blueberry Chocolate" }, "description": { "tr": "", "en": "" } },
+
+    { "id": 501, "categoryId": 5, "price": 175, "name": { "tr": "Filtre Kahve", "en": "Filter Coffee" }, "description": { "tr": "", "en": "" } },
+    { "id": 502, "categoryId": 5, "price": 50, "name": { "tr": "Çay", "en": "Tea" }, "description": { "tr": "", "en": "" } },
+    { "id": 503, "categoryId": 5, "price": 50, "name": { "tr": "Soda", "en": "Soda" }, "description": { "tr": "", "en": "" } },
+    { "id": 504, "categoryId": 5, "price": 200, "name": { "tr": "Taze Sıkım Portakal Suyu", "en": "Fresh Orange Juice" }, "description": { "tr": "", "en": "" } },
+    { "id": 505, "categoryId": 5, "price": 50, "name": { "tr": "Su", "en": "Water" }, "description": { "tr": "", "en": "" } }
+  ]
+}
