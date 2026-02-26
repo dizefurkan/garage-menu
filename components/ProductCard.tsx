@@ -6,16 +6,15 @@ export default function ProductCard({
   lang,
 }: {
   currency: string;
-  product: typeof import("@/data/menu.json")["products"][number];
+  product: (typeof import("@/data/menu.json"))["products"][number];
   lang: "tr" | "en";
 }) {
   return (
     <div className="reveal bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden">
-      
       <div className="relative w-full h-48 bg-gray-200">
         <Image
           fill
-          src="/placeholder.jpg"
+          src={product.imagePath || "/placeholder.jpg"}
           alt={product.name[lang]}
           className="object-cover scale-105"
         />
@@ -37,7 +36,7 @@ export default function ProductCard({
             {Intl.NumberFormat(lang, {
               currencyDisplay: "symbol",
               signDisplay: "auto",
-              
+
               style: "currency",
               currency,
             }).format(product.price)}

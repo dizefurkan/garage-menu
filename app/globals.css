@@ -1,10 +1,8 @@
-
 @import "tailwindcss";
 
-
 @theme {
-  --primary: #71102f;
-  --secondary: #f2f0e9;
+  --primary-500: #71102f;
+  --secondary-500: #f2f0e9;
 }
 
 :root {

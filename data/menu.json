@@ -15,6 +15,7 @@
     {
       "id": 101,
       "categoryId": 1,
+      "imagePath": "/products/classic-garage.webp",
       "price": 375,
       "name": { "tr": "Classic Garage", "en": "Classic Garage" },
       "description": {
@@ -25,6 +26,7 @@
     {
       "id": 102,
       "categoryId": 1,
+      "imagePath": "/products/sunny_garage.webp",
       "price": 425,
       "name": { "tr": "Sunny Garage", "en": "Sunny Garage" },
       "description": {
@@ -35,6 +37,7 @@
     {
       "id": 103,
       "categoryId": 1,
+      "imagePath": "/products/protein_garage.webp",
       "price": 550,
       "name": { "tr": "Protein Garage", "en": "Protein Garage" },
       "description": {
@@ -45,6 +48,7 @@
     {
       "id": 104,
       "categoryId": 1,
+      "imagePath": "/products/avocado_garage.webp",
       "price": 425,
       "name": { "tr": "Avocado Garage", "en": "Avocado Garage" },
       "description": {
@@ -55,6 +59,7 @@
     {
       "id": 105,
       "categoryId": 1,
+      "imagePath": "/products/morning_croissant.webp",
       "price": 475,
       "name": { "tr": "Morning Croissant", "en": "Morning Croissant" },
       "description": {
