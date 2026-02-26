@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import "./globals.css";
 import { Playfair_Display, Inter } from "next/font/google";
 
@@ -12,17 +13,18 @@ const inter = Inter({
   variable: "--font-body",
 });
 
-
 // localized metadata helper
 const translations = {
   en: {
     title: "Garage Chocolate & Croissant",
-    description: "Delight in handcrafted chocolate croissants and artisanal treats at Garage Chocolate & Croissant.",
+    description:
+      "Delight in handcrafted chocolate croissants and artisanal treats at Garage Chocolate & Croissant.",
     ogLocale: "en_US",
   },
   tr: {
     title: "Garage Çikolata & Kruvasan",
-    description: "Garage Çikolata & Kruvasan'da el yapımı çikolata kruvasanlar ve özel lezzetlerin tadını çıkarın.",
+    description:
+      "Garage Çikolata & Kruvasan'da el yapımı çikolata kruvasanlar ve özel lezzetlerin tadını çıkarın.",
     ogLocale: "tr_TR",
   },
 };
@@ -80,7 +82,7 @@ export default function RootLayout({
   return (
     <html lang="tr">
       <body className={`${playfair.variable} ${inter.variable} font-body`}>
-        {children}
+        <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
       </body>
     </html>
   );
