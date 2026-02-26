@@ -164,7 +164,7 @@ const Header = (props: HeaderProps) => {
   };
 
   return (
-    <header className="sticky top-0 z-30 backdrop-blur-md border-b shadow-sm">
+    <header className="sticky top-0 z-30 backdrop-blur-md">
       <div
         className="flex justify-between items-center p-4 max-w-6xl mx-auto "
         style={{
@@ -213,7 +213,7 @@ const Header = (props: HeaderProps) => {
       </div>
 
       {/* CATEGORY NAV */}
-      <div className="overflow-x-auto no-scrollbar border-t" ref={navRef}>
+      <div className="overflow-x-auto no-scrollbar" ref={navRef}>
         <div className="flex gap-6 px-4 py-3 max-w-6xl mx-auto">
           {menu.categories.map((cat) => (
             <button
@@ -281,33 +281,43 @@ const Sidebar = ({ open, setOpen }: SidebarProps) => {
           &times;
         </button>
       </div>
-      <div className="p-4 space-y-6">
-        <div>
-          <strong>Adresimiz</strong>
-          <a href="https://maps.app.goo.gl/HUn5sEAAxAvsaavV7" target="_blank">
-            <p>
-              AHMEDİYE MAHALLESİ NECMEDDİN OKYAY SOKAK NO: 44/B İSTANBUL /
-              ÜSKÜDAR 🔗
-            </p>
-          </a>
+      <div className="flex flex-col content-between">
+        <div className="p-4 space-y-6">
+          <div>
+            <strong>Adresimiz</strong>
+            <a href="https://maps.app.goo.gl/HUn5sEAAxAvsaavV7" target="_blank">
+              <p>
+                AHMEDİYE MAHALLESİ NECMEDDİN OKYAY SOKAK NO: 44/B İSTANBUL /
+                ÜSKÜDAR 🔗
+              </p>
+            </a>
+          </div>
+          <div>
+            <a href="+tel:905551234567">
+              <strong>Telefon</strong>
+              <p>+90 555 123 4567</p>
+            </a>
+          </div>
+          <div>
+            <a
+              href="https://wa.me/905551234567"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <div className="flex items-center gap-2 text-green-600">
+                <WhatsappSVG />
+                <strong>WhatsApp'tan bize ulaşın</strong>
+              </div>
+            </a>
+          </div>
         </div>
-        <div>
-          <a href="+tel:905551234567">
-            <strong>Telefon</strong>
-            <p>+90 555 123 4567</p>
-          </a>
-        </div>
-        <div>
-          <a
-            href="https://wa.me/905551234567"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <div className="flex items-center gap-2 text-green-600">
-              <WhatsappSVG />
-              <strong>WhatsApp'tan bize ulaşın</strong>
-            </div>
-          </a>
+        <div className="relative w-full h-40">
+          <Image
+            fill
+            src="/garagechoco.jpg"
+            className="object-cover"
+            alt="Garage Logo"
+          />
         </div>
       </div>
     </div>

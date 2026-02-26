@@ -68,13 +68,14 @@
       }
     },
 
-    { "id": 201, "categoryId": 2, "price": 175, "name": { "tr": "San Sebastian Cheesecake", "en": "San Sebastian Cheesecake" }, "description": { "tr": "", "en": "" } },
-    { "id": 202, "categoryId": 2, "price": 175, "name": { "tr": "Limonlu Cheesecake", "en": "Lemon Cheesecake" }, "description": { "tr": "", "en": "" } },
-    { "id": 203, "categoryId": 2, "price": 175, "name": { "tr": "Orman Meyveli Cheesecake", "en": "Forest Fruit Cheesecake" }, "description": { "tr": "", "en": "" } },
+    { "id": 201, "categoryId": 2, "imagePath": "/products/san_sebastian_cheesecake.webp", "price": 175, "name": { "tr": "San Sebastian Cheesecake", "en": "San Sebastian Cheesecake" }, "description": { "tr": "", "en": "" } },
+    { "id": 202, "categoryId": 2, "imagePath": "/products/lemon_cheesecake.webp", "price": 175, "name": { "tr": "Limonlu Cheesecake", "en": "Lemon Cheesecake" }, "description": { "tr": "", "en": "" } },
+    { "id": 203, "categoryId": 2, "imagePath": "/products/forest_fruit_cheesecake.webp", "price": 175, "name": { "tr": "Orman Meyveli Cheesecake", "en": "Forest Fruit Cheesecake" }, "description": { "tr": "", "en": "" } },
 
     {
       "id": 301,
       "categoryId": 3,
+      "imagePath": "/products/magnificent.webp",
       "price": 275,
       "name": { "tr": "Garage Mag’nificent", "en": "Garage Mag’nificent" },
       "description": {
@@ -85,6 +86,7 @@
     {
       "id": 302,
       "categoryId": 3,
+      "imagePath": "/products/rolling_in_garage.webp",
       "price": 400,
       "name": { "tr": "Rolling In Garage", "en": "Rolling In Garage" },
       "description": {
@@ -95,6 +97,7 @@
     {
       "id": 303,
       "categoryId": 3,
+      "imagePath": "/products/brussels_waffle.webp",
       "price": 325,
       "name": { "tr": "Bruksel Waffle", "en": "Brussels Waffle" },
       "description": {
@@ -105,6 +108,7 @@
     {
       "id": 304,
       "categoryId": 3,
+      "imagePath": "/products/creep_roll.webp",
       "price": 225,
       "name": { "tr": "Creep Roll", "en": "Creep Roll" },
       "description": {
@@ -115,6 +119,7 @@
     {
       "id": 305,
       "categoryId": 3,
+      "imagePath": "/products/blueberry_muffins.webp",
       "price": 175,
       "name": { "tr": "Garage Muffin", "en": "Garage Muffin" },
       "description": { "tr": "3 adet yaban mersinli muffin.", "en": "3 blueberry muffins." }
@@ -122,6 +127,7 @@
     {
       "id": 306,
       "categoryId": 3,
+        "imagePath": "/products/oat_fuel.webp",
       "price": 275,
       "name": { "tr": "Oat Fuel", "en": "Oat Fuel" },
       "description": {
@@ -129,10 +135,10 @@
         "en": "Oat milk pudding with blueberries, cocoa, coconut and hazelnut."
       }
     },
-    { "id": 307, "categoryId": 3, "price": 250, "name": { "tr": "Fondü", "en": "Fondue" }, "description": { "tr": "", "en": "" } },
+    { "id": 307, "categoryId": 3, "imagePath": "/products/fondu.webp", "price": 250, "name": { "tr": "Fondü", "en": "Fondue" }, "description": { "tr": "", "en": "" } },
     { "id": 308, "categoryId": 3, "price": 325, "name": { "tr": "Garage Cup", "en": "Garage Cup" }, "description": { "tr": "Belçika çikolatası, çilek, muz ve pancake.", "en": "Belgian chocolate with strawberry, banana and pancakes." } },
     { "id": 309, "categoryId": 3, "price": 300, "name": { "tr": "Banana Bomb", "en": "Banana Bomb" }, "description": { "tr": "Muzlu pancake, Hindistan cevizi balı ve çikolata.", "en": "Banana pancakes with coconut honey and chocolate." } },
-    { "id": 310, "categoryId": 3, "price": 275, "name": { "tr": "Garage Brownie", "en": "Garage Brownie" }, "description": { "tr": "Muzlu bitter çikolatalı kek.", "en": "Banana dark chocolate cake." } },
+    { "id": 310, "categoryId": 3, "price":275,"name":{"tr":"Garage Brownie","en":"Garage Brownie"},"description":{"tr":"Muzlu bitter çikolatalı kek.","en":"Banana dark chocolate cake."}},
 
     { "id": 401, "categoryId": 4, "price": 125, "name": { "tr": "Antep Fıstıklı Çikolata", "en": "Pistachio Chocolate" }, "description": { "tr": "", "en": "" } },
     { "id": 402, "categoryId": 4, "price": 125, "name": { "tr": "Fındıklı Çikolata", "en": "Hazelnut Chocolate" }, "description": { "tr": "", "en": "" } },
