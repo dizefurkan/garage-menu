@@ -41,35 +41,77 @@ export function generateMetadata({
   const lang = locale && translations[locale] ? locale : "en";
   const t = translations[lang];
 
+  const baseUrl = "https://garage-menu.vercel.app";
+
   return {
-    title: t.title,
+    metadataBase: new URL(baseUrl),
+
+    title: {
+      default: t.title,
+      template: `%s | ${t.title}`,
+    },
+
     description: t.description,
+
+    keywords: [
+      "chocolate",
+      "croissant",
+      "artisan bakery",
+      "garage chocolate",
+      "kruvasan",
+      "çikolata",
+      "el yapımı kruvasan",
+    ],
+
+    authors: [{ name: "Garage Chocolate & Croissant" }],
+
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-video-preview": -1,
+        "max-image-preview": "large",
+        "max-snippet": -1,
+      },
+    },
+
+    alternates: {
+      canonical: baseUrl,
+      languages: {
+        en: `${baseUrl}?lang=en`,
+        tr: `${baseUrl}?lang=tr`,
+      },
+    },
+
     icons: {
       icon: "/favicon.ico",
       apple: "/apple-touch-icon.png",
     },
+
     openGraph: {
       title: t.title,
       description: t.description,
-      url: "https://garage-menu.example.com", // update with real URL
-      siteName: "Garage Chocolate & Croissant",
+      url: baseUrl,
+      siteName: t.title,
       images: [
         {
-          url: "https://garage-menu.example.com/og-image.jpg",
+          url: `${baseUrl}/garagechoco.jpg`,
           width: 1200,
           height: 630,
-          alt: "Garage Chocolate & Croissant Logo",
+          alt: t.title,
         },
       ],
       locale: t.ogLocale,
       type: "website",
     },
+
     twitter: {
       card: "summary_large_image",
       title: t.title,
       description: t.description,
-      images: ["https://garage-menu.example.com/og-image.jpg"],
-      creator: "@YourTwitterHandle",
+      images: [`${baseUrl}/garagechoco.jpg`],
     },
   };
 }
@@ -84,6 +126,51 @@ export default function RootLayout({
       <body className={`${playfair.variable} ${inter.variable} font-body`}>
         <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
       </body>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Bakery",
+            name: "Garage Chocolate & Croissant",
+            image: "https://garage-menu.vercel.app/garagechoco.jpg",
+            url: "https://garage-menu.vercel.app",
+            telephone: "+905385730401",
+            address: {
+              "@type": "PostalAddress",
+              streetAddress: "Ahmediyeh Mah. Necmeddin Okyay Sok. No:44/B",
+              addressLocality: "İstanbul",
+              addressCountry: "TR",
+            },
+            servesCuisine: ["Chocolate", "Croissant", "Bakery"],
+            priceRange: "$$",
+            sameAs: [
+              "https://www.instagram.com/garagexcroissant/",
+              "https://www.instagram.com/garagexchocolate/",
+            ],
+            geo: {
+              "@type": "GeoCoordinates",
+              latitude: 41.01875142451296,
+              longitude: 29.01835386498314,
+            },
+            openingHoursSpecification: [
+              {
+                "@type": "OpeningHoursSpecification",
+                dayOfWeek: [
+                  "Monday",
+                  "Tuesday",
+                  "Wednesday",
+                  "Thursday",
+                  "Friday",
+                  "Saturday",
+                ],
+                opens: "08:00",
+                closes: "22:00",
+              },
+            ],
+          }),
+        }}
+      />
     </html>
   );
 }
