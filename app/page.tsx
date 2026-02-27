@@ -189,7 +189,7 @@ const Header = (props: HeaderProps) => {
         <div className="relative">
           <Image
             // fill
-            width={200}
+            width={170}
             height={100}
             src="/garagelogo.png"
             alt={menu.restaurant.name + " logo"}
@@ -197,16 +197,16 @@ const Header = (props: HeaderProps) => {
           />
         </div>
 
-        <div className="flex absolute right-4 top-1/2 -translate-y-1/2 items-center">
+        <div className="flex gap-2 absolute right-4 top-1/2 -translate-y-1/2 items-center">
           <button
             onClick={() => setLang(lang === "tr" ? "en" : "tr")}
-            className="px-4 py-1 rounded-full  text-white text-sm transition-all duration-300 hover:scale-105"
+            className="w-8 h-8 rounded-full  text-white text-sm transition-all duration-300 hover:scale-105"
           >
             {lang.toUpperCase()}
           </button>
           <button
             onClick={() => setColumns(columns === 1 ? 2 : 1)}
-            className="w-8 h-8 mr-2 rounded-full text-white text-sm transition-all duration-300 hover:scale-105"
+            className="w-8 h-8 rounded-full text-white text-sm transition-all duration-300 hover:scale-105"
           >
             {columns === 2 ? <RowSVG /> : <ColumnSVG />}
           </button>
