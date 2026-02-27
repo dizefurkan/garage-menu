@@ -166,25 +166,15 @@ const Header = (props: HeaderProps) => {
   return (
     <header className="sticky top-0 z-30 backdrop-blur-md">
       <div
-        className="flex justify-between items-center p-4 max-w-6xl mx-auto "
+        className="relative flex justify-center items-center p-4 max-w-6xl mx-auto "
         style={{
           backgroundColor: "var(--primary)",
         }}
       >
         <button
-          className="flex items-center"
+          className="flex items-center absolute top-1/2 left-4 -translate-y-1/2 focus:outline-none"
           onClick={() => setSidebarOpen(!sidebarOpen)}
         >
-          <div className="relative w-full ">
-            <Image
-              // fill
-              width={200}
-              height={100}
-              src="/garagelogo.png"
-              alt={menu.restaurant.name + " logo"}
-              className="object-cover"
-            />
-          </div>
           <div
             className="flex items-center flex-col text-center"
             style={{ color: "var(--secondary)" }}
@@ -192,11 +182,22 @@ const Header = (props: HeaderProps) => {
             <div className="w-8 h-8 rounded-full text-sm transition-all duration-300 hover:scale-105 flex items-center justify-center">
               <HamburgerSVG />
             </div>
-            <span className="text-xs opacity-70">İLETİŞİM</span>
+            <span className="text-xs opacity-70">MENU</span>
           </div>
         </button>
 
-        <div className="flex">
+        <div className="relative">
+          <Image
+            // fill
+            width={200}
+            height={100}
+            src="/garagelogo.png"
+            alt={menu.restaurant.name + " logo"}
+            className="object-cover"
+          />
+        </div>
+
+        <div className="flex absolute right-4 top-1/2 -translate-y-1/2 items-center">
           <button
             onClick={() => setLang(lang === "tr" ? "en" : "tr")}
             className="px-4 py-1 rounded-full  text-white text-sm transition-all duration-300 hover:scale-105"
