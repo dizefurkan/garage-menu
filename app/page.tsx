@@ -294,14 +294,14 @@ const Sidebar = ({ open, setOpen }: SidebarProps) => {
             </a>
           </div>
           <div>
-            <a href="+tel:905551234567">
+            <a href="+tel:905385730401">
               <strong>Telefon</strong>
-              <p>+90 555 123 4567</p>
+              <p>+90 538 573 0401</p>
             </a>
           </div>
           <div>
             <a
-              href="https://wa.me/905551234567"
+              href="https://wa.me/905385730401"
               target="_blank"
               rel="noopener noreferrer"
             >
