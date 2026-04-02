@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import "./globals.css";
-import { Playfair_Display, Inter } from "next/font/google";
+import { Playfair_Display, Inter, Geist } from "next/font/google";
+import { cn } from "@/lib/utils";
+
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
@@ -30,14 +33,10 @@ const translations = {
 };
 
 export function generateMetadata({
-  params,
-  searchParams,
   locale,
 }: {
-  params: Record<string, any>;
-  searchParams: URLSearchParams;
   locale?: "tr" | "en";
-}): Metadata {
+} = {}): Metadata {
   const lang = locale && translations[locale] ? locale : "en";
   const t = translations[lang];
 
@@ -122,55 +121,57 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="tr">
+    <html lang="tr" className={cn("font-sans", geist.variable)}>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Bakery",
+              name: "Garage Chocolate & Croissant",
+              image: "https://garage-menu.vercel.app/garagechoco.jpg",
+              url: "https://garage-menu.vercel.app",
+              telephone: "+905385730401",
+              address: {
+                "@type": "PostalAddress",
+                streetAddress: "Ahmediyeh Mah. Necmeddin Okyay Sok. No:44/B",
+                addressLocality: "İstanbul",
+                addressCountry: "TR",
+              },
+              servesCuisine: ["Chocolate", "Croissant", "Bakery"],
+              priceRange: "$$",
+              sameAs: [
+                "https://www.instagram.com/garagexcroissant/",
+                "https://www.instagram.com/garagexchocolate/",
+              ],
+              geo: {
+                "@type": "GeoCoordinates",
+                latitude: 41.01875142451296,
+                longitude: 29.01835386498314,
+              },
+              openingHoursSpecification: [
+                {
+                  "@type": "OpeningHoursSpecification",
+                  dayOfWeek: [
+                    "Monday",
+                    "Tuesday",
+                    "Wednesday",
+                    "Thursday",
+                    "Friday",
+                    "Saturday",
+                  ],
+                  opens: "08:00",
+                  closes: "22:00",
+                },
+              ],
+            }),
+          }}
+        />
+      </head>
       <body className={`${playfair.variable} ${inter.variable} font-body`}>
         <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
       </body>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "Bakery",
-            name: "Garage Chocolate & Croissant",
-            image: "https://garage-menu.vercel.app/garagechoco.jpg",
-            url: "https://garage-menu.vercel.app",
-            telephone: "+905385730401",
-            address: {
-              "@type": "PostalAddress",
-              streetAddress: "Ahmediyeh Mah. Necmeddin Okyay Sok. No:44/B",
-              addressLocality: "İstanbul",
-              addressCountry: "TR",
-            },
-            servesCuisine: ["Chocolate", "Croissant", "Bakery"],
-            priceRange: "$$",
-            sameAs: [
-              "https://www.instagram.com/garagexcroissant/",
-              "https://www.instagram.com/garagexchocolate/",
-            ],
-            geo: {
-              "@type": "GeoCoordinates",
-              latitude: 41.01875142451296,
-              longitude: 29.01835386498314,
-            },
-            openingHoursSpecification: [
-              {
-                "@type": "OpeningHoursSpecification",
-                dayOfWeek: [
-                  "Monday",
-                  "Tuesday",
-                  "Wednesday",
-                  "Thursday",
-                  "Friday",
-                  "Saturday",
-                ],
-                opens: "08:00",
-                closes: "22:00",
-              },
-            ],
-          }),
-        }}
-      />
     </html>
   );
 }

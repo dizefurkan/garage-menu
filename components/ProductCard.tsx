@@ -1,4 +1,22 @@
 import Image from "next/image";
+import { extractGoogleDriveFileId } from "@/lib/google-drive";
+import { type MenuProduct, type SupportedLocale } from "@/lib/menu";
+
+function getProductImageSrc(product: MenuProduct): string {
+  if (product.imageId) {
+    return `/api/image?id=${encodeURIComponent(product.imageId)}`;
+  }
+
+  const driveFileId = extractGoogleDriveFileId(
+    product.imageUrl ?? product.imagePath ?? ""
+  );
+
+  if (driveFileId) {
+    return `/api/image?id=${encodeURIComponent(driveFileId)}`;
+  }
+
+  return product.imagePath || "/placeholder.jpg";
+}
 
 export default function ProductCard({
   currency,
@@ -6,17 +24,21 @@ export default function ProductCard({
   lang,
 }: {
   currency: string;
-  product: (typeof import("@/data/menu.json"))["products"][number];
-  lang: "tr" | "en";
+  product: MenuProduct;
+  lang: SupportedLocale;
 }) {
+  const imageSrc = getProductImageSrc(product);
+
   return (
     <div className="reveal bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden">
       <div className="relative w-full h-48 bg-gray-200">
         <Image
           fill
-          src={product.imagePath || "/placeholder.jpg"}
+          src={imageSrc}
           alt={product.name[lang]}
           className="object-cover scale-105"
+          sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
+          unoptimized={imageSrc.startsWith("/api/image?")}
         />
       </div>
 

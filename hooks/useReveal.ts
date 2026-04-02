@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 
-export default function useReveal() {
+export default function useReveal(trigger?: number) {
   useEffect(() => {
     const elements = document.querySelectorAll(".reveal");
 
@@ -20,5 +20,5 @@ export default function useReveal() {
     elements.forEach((el) => observer.observe(el));
 
     return () => observer.disconnect();
-  }, []);
+  }, [trigger]);
 }

@@ -15,7 +15,7 @@
     {
       "id": 101,
       "categoryId": 1,
-      "imagePath": "/products/classic-garage.webp",
+      "imageId": "YOUR_DRIVE_FILE_ID_FOR_CLASSIC_GARAGE",
       "price": 375,
       "name": { "tr": "Classic Garage", "en": "Classic Garage" },
       "description": {
@@ -26,7 +26,7 @@
     {
       "id": 102,
       "categoryId": 1,
-      "imagePath": "/products/sunny_garage.webp",
+      "imageId": "YOUR_DRIVE_FILE_ID_FOR_SUNNY_GARAGE",
       "price": 425,
       "name": { "tr": "Sunny Garage", "en": "Sunny Garage" },
       "description": {
@@ -37,7 +37,7 @@
     {
       "id": 103,
       "categoryId": 1,
-      "imagePath": "/products/protein_garage.webp",
+      "imageId": "YOUR_DRIVE_FILE_ID_FOR_PROTEIN_GARAGE",
       "price": 550,
       "name": { "tr": "Protein Garage", "en": "Protein Garage" },
       "description": {
@@ -48,7 +48,7 @@
     {
       "id": 104,
       "categoryId": 1,
-      "imagePath": "/products/avocado_garage.webp",
+      "imageId": "YOUR_DRIVE_FILE_ID_FOR_AVOCADO_GARAGE",
       "price": 425,
       "name": { "tr": "Avocado Garage", "en": "Avocado Garage" },
       "description": {
@@ -59,7 +59,7 @@
     {
       "id": 105,
       "categoryId": 1,
-      "imagePath": "/products/morning_croissant.webp",
+      "imageId": "YOUR_DRIVE_FILE_ID_FOR_MORNING_CROISSANT",
       "price": 475,
       "name": { "tr": "Morning Croissant", "en": "Morning Croissant" },
       "description": {
@@ -68,14 +68,14 @@
       }
     },
 
-    { "id": 201, "categoryId": 2, "imagePath": "/products/san_sebastian_cheesecake.webp", "price": 175, "name": { "tr": "San Sebastian Cheesecake", "en": "San Sebastian Cheesecake" }, "description": { "tr": "", "en": "" } },
-    { "id": 202, "categoryId": 2, "imagePath": "/products/lemon_cheesecake.webp", "price": 175, "name": { "tr": "Limonlu Cheesecake", "en": "Lemon Cheesecake" }, "description": { "tr": "", "en": "" } },
-    { "id": 203, "categoryId": 2, "imagePath": "/products/forest_fruit_cheesecake.webp", "price": 175, "name": { "tr": "Orman Meyveli Cheesecake", "en": "Forest Fruit Cheesecake" }, "description": { "tr": "", "en": "" } },
+    { "id": 201, "categoryId": 2, "imageId": "YOUR_DRIVE_FILE_ID_FOR_SAN_SEBASTIAN", "price": 175, "name": { "tr": "San Sebastian Cheesecake", "en": "San Sebastian Cheesecake" }, "description": { "tr": "", "en": "" } },
+    { "id": 202, "categoryId": 2, "imageId": "YOUR_DRIVE_FILE_ID_FOR_LEMON_CHEESECAKE", "price": 175, "name": { "tr": "Limonlu Cheesecake", "en": "Lemon Cheesecake" }, "description": { "tr": "", "en": "" } },
+    { "id": 203, "categoryId": 2, "imageId": "YOUR_DRIVE_FILE_ID_FOR_FOREST_FRUIT_CHEESECAKE", "price": 175, "name": { "tr": "Orman Meyveli Cheesecake", "en": "Forest Fruit Cheesecake" }, "description": { "tr": "", "en": "" } },
 
     {
       "id": 301,
       "categoryId": 3,
-      "imagePath": "/products/magnificent.webp",
+      "imageId": "YOUR_DRIVE_FILE_ID_FOR_MAGNIFICENT",
       "price": 275,
       "name": { "tr": "Garage Mag’nificent", "en": "Garage Mag’nificent" },
       "description": {
@@ -86,7 +86,7 @@
     {
       "id": 302,
       "categoryId": 3,
-      "imagePath": "/products/rolling_in_garage.webp",
+      "imageId": "YOUR_DRIVE_FILE_ID_FOR_ROLLING_IN_GARAGE",
       "price": 400,
       "name": { "tr": "Rolling In Garage", "en": "Rolling In Garage" },
       "description": {
@@ -97,7 +97,7 @@
     {
       "id": 303,
       "categoryId": 3,
-      "imagePath": "/products/brussels_waffle.webp",
+      "imageId": "YOUR_DRIVE_FILE_ID_FOR_BRUSSELS_WAFFLE",
       "price": 325,
       "name": { "tr": "Bruksel Waffle", "en": "Brussels Waffle" },
       "description": {
@@ -108,7 +108,7 @@
     {
       "id": 304,
       "categoryId": 3,
-      "imagePath": "/products/creep_roll.webp",
+      "imageId": "YOUR_DRIVE_FILE_ID_FOR_CREEP_ROLL",
       "price": 225,
       "name": { "tr": "Creep Roll", "en": "Creep Roll" },
       "description": {
@@ -119,7 +119,7 @@
     {
       "id": 305,
       "categoryId": 3,
-      "imagePath": "/products/blueberry_muffins.webp",
+      "imageId": "YOUR_DRIVE_FILE_ID_FOR_BLUEBERRY_MUFFINS",
       "price": 175,
       "name": { "tr": "Garage Muffin", "en": "Garage Muffin" },
       "description": { "tr": "3 adet yaban mersinli muffin.", "en": "3 blueberry muffins." }
@@ -127,7 +127,7 @@
     {
       "id": 306,
       "categoryId": 3,
-        "imagePath": "/products/oat_fuel.webp",
+      "imageId": "YOUR_DRIVE_FILE_ID_FOR_OAT_FUEL",
       "price": 275,
       "name": { "tr": "Oat Fuel", "en": "Oat Fuel" },
       "description": {
@@ -135,19 +135,19 @@
         "en": "Oat milk pudding with blueberries, cocoa, coconut and hazelnut."
       }
     },
-    { "id": 307, "categoryId": 3, "imagePath": "/products/fondu.webp", "price": 250, "name": { "tr": "Fondü", "en": "Fondue" }, "description": { "tr": "", "en": "" } },
-    { "id": 308, "categoryId": 3, "imagePath": "/products/garagecup.webp", "price": 325, "name": { "tr": "Garage Cup", "en": "Garage Cup" }, "description": { "tr": "Belçika çikolatası, çilek, muz ve pancake.", "en": "Belgian chocolate with strawberry, banana and pancakes." } },
-    { "id": 309, "categoryId": 3, "imagePath": "/products/bananabomb.webp", "price": 300, "name": { "tr": "Banana Bomb", "en": "Banana Bomb" }, "description": { "tr": "Muzlu pancake, Hindistan cevizi balı ve çikolata.", "en": "Banana pancakes with coconut honey and chocolate." } },
-    { "id": 310, "categoryId": 3, "imagePath": "/products/garagebrownie", "price":275,"name":{"tr":"Garage Brownie","en":"Garage Brownie"},"description":{"tr":"Muzlu bitter çikolatalı kek.","en":"Banana dark chocolate cake."}},
+    { "id": 307, "categoryId": 3, "imageId": "YOUR_DRIVE_FILE_ID_FOR_FONDU", "price": 250, "name": { "tr": "Fondü", "en": "Fondue" }, "description": { "tr": "", "en": "" } },
+    { "id": 308, "categoryId": 3, "imageId": "YOUR_DRIVE_FILE_ID_FOR_GARAGECUP", "price": 325, "name": { "tr": "Garage Cup", "en": "Garage Cup" }, "description": { "tr": "Belçika çikolatası, çilek, muz ve pancake.", "en": "Belgian chocolate with strawberry, banana and pancakes." } },
+    { "id": 309, "categoryId": 3, "imageId": "YOUR_DRIVE_FILE_ID_FOR_BANANA_BOMB", "price": 300, "name": { "tr": "Banana Bomb", "en": "Banana Bomb" }, "description": { "tr": "Muzlu pancake, Hindistan cevizi balı ve çikolata.", "en": "Banana pancakes with coconut honey and chocolate." } },
+    { "id": 310, "categoryId": 3, "imageId": "YOUR_DRIVE_FILE_ID_FOR_GARAGE_BROWNIE", "price":275,"name":{"tr":"Garage Brownie","en":"Garage Brownie"},"description":{"tr":"Muzlu bitter çikolatalı kek.","en":"Banana dark chocolate cake."}},
 
-    { "id": 401, "categoryId": 4, "imagePath": "/products/pistachiochocolate.webp", "price": 125, "name": { "tr": "Antep Fıstıklı Çikolata", "en": "Pistachio Chocolate" }, "description": { "tr": "", "en": "" } },
-    { "id": 402, "categoryId": 4, "imagePath": "/products/hazelnutchocolate.webp", "price": 125, "name": { "tr": "Fındıklı Çikolata", "en": "Hazelnut Chocolate" }, "description": { "tr": "", "en": "" } },
-    { "id": 403, "categoryId": 4, "imagePath": "/products/blueberrychocolate.webp", "price": 125, "name": { "tr": "Yaban Mersinli Çikolata", "en": "Blueberry Chocolate" }, "description": { "tr": "", "en": "" } },
+    { "id": 401, "categoryId": 4, "imageId": "YOUR_DRIVE_FILE_ID_FOR_PISTACHIO_CHOCOLATE", "price": 125, "name": { "tr": "Antep Fıstıklı Çikolata", "en": "Pistachio Chocolate" }, "description": { "tr": "", "en": "" } },
+    { "id": 402, "categoryId": 4, "imageId": "YOUR_DRIVE_FILE_ID_FOR_HAZELNUT_CHOCOLATE", "price": 125, "name": { "tr": "Fındıklı Çikolata", "en": "Hazelnut Chocolate" }, "description": { "tr": "", "en": "" } },
+    { "id": 403, "categoryId": 4, "imageId": "YOUR_DRIVE_FILE_ID_FOR_BLUEBERRY_CHOCOLATE", "price": 125, "name": { "tr": "Yaban Mersinli Çikolata", "en": "Blueberry Chocolate" }, "description": { "tr": "", "en": "" } },
 
-    { "id": 501, "categoryId": 5, "imagePath": "/products/filtercoffee.webp", "price": 175, "name": { "tr": "Filtre Kahve", "en": "Filter Coffee" }, "description": { "tr": "", "en": "" } },
-    { "id": 502, "categoryId": 5, "imagePath": "/products/tea.webp", "price": 50, "name": { "tr": "Çay", "en": "Tea" }, "description": { "tr": "", "en": "" } },
-    { "id": 503, "categoryId": 5, "imagePath": "/products/soda.webp", "price": 50, "name": { "tr": "Soda", "en": "Soda" }, "description": { "tr": "", "en": "" } },
-    { "id": 504, "categoryId": 5, "imagePath": "/products/freshorange.webp", "price": 200, "name": { "tr": "Taze Sıkım Portakal Suyu", "en": "Fresh Orange Juice" }, "description": { "tr": "", "en": "" } },
-    { "id": 505, "categoryId": 5, "imagePath": "/products/water.webp", "price": 50, "name": { "tr": "Su", "en": "Water" }, "description": { "tr": "", "en": "" } }
+    { "id": 501, "categoryId": 5, "imageId": "YOUR_DRIVE_FILE_ID_FOR_FILTER_COFFEE", "price": 175, "name": { "tr": "Filtre Kahve", "en": "Filter Coffee" }, "description": { "tr": "", "en": "" } },
+    { "id": 502, "categoryId": 5, "imageId": "YOUR_DRIVE_FILE_ID_FOR_TEA", "price": 50, "name": { "tr": "Çay", "en": "Tea" }, "description": { "tr": "", "en": "" } },
+    { "id": 503, "categoryId": 5, "imageId": "YOUR_DRIVE_FILE_ID_FOR_SODA", "price": 50, "name": { "tr": "Soda", "en": "Soda" }, "description": { "tr": "", "en": "" } },
+    { "id": 504, "categoryId": 5, "imageId": "YOUR_DRIVE_FILE_ID_FOR_FRESH_ORANGE", "price": 200, "name": { "tr": "Taze Sıkım Portakal Suyu", "en": "Fresh Orange Juice" }, "description": { "tr": "", "en": "" } },
+    { "id": 505, "categoryId": 5, "imageId": "YOUR_DRIVE_FILE_ID_FOR_WATER", "price": 50, "name": { "tr": "Su", "en": "Water" }, "description": { "tr": "", "en": "" } }
   ]
 }
