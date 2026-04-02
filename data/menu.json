@@ -136,18 +136,18 @@
       }
     },
     { "id": 307, "categoryId": 3, "imagePath": "/products/fondu.webp", "price": 250, "name": { "tr": "Fondü", "en": "Fondue" }, "description": { "tr": "", "en": "" } },
-    { "id": 308, "categoryId": 3, "price": 325, "name": { "tr": "Garage Cup", "en": "Garage Cup" }, "description": { "tr": "Belçika çikolatası, çilek, muz ve pancake.", "en": "Belgian chocolate with strawberry, banana and pancakes." } },
-    { "id": 309, "categoryId": 3, "price": 300, "name": { "tr": "Banana Bomb", "en": "Banana Bomb" }, "description": { "tr": "Muzlu pancake, Hindistan cevizi balı ve çikolata.", "en": "Banana pancakes with coconut honey and chocolate." } },
-    { "id": 310, "categoryId": 3, "price":275,"name":{"tr":"Garage Brownie","en":"Garage Brownie"},"description":{"tr":"Muzlu bitter çikolatalı kek.","en":"Banana dark chocolate cake."}},
+    { "id": 308, "categoryId": 3, "imagePath": "/products/garagecup.webp", "price": 325, "name": { "tr": "Garage Cup", "en": "Garage Cup" }, "description": { "tr": "Belçika çikolatası, çilek, muz ve pancake.", "en": "Belgian chocolate with strawberry, banana and pancakes." } },
+    { "id": 309, "categoryId": 3, "imagePath": "/products/bananabomb.webp", "price": 300, "name": { "tr": "Banana Bomb", "en": "Banana Bomb" }, "description": { "tr": "Muzlu pancake, Hindistan cevizi balı ve çikolata.", "en": "Banana pancakes with coconut honey and chocolate." } },
+    { "id": 310, "categoryId": 3, "imagePath": "/products/garagebrownie", "price":275,"name":{"tr":"Garage Brownie","en":"Garage Brownie"},"description":{"tr":"Muzlu bitter çikolatalı kek.","en":"Banana dark chocolate cake."}},
 
-    { "id": 401, "categoryId": 4, "price": 125, "name": { "tr": "Antep Fıstıklı Çikolata", "en": "Pistachio Chocolate" }, "description": { "tr": "", "en": "" } },
-    { "id": 402, "categoryId": 4, "price": 125, "name": { "tr": "Fındıklı Çikolata", "en": "Hazelnut Chocolate" }, "description": { "tr": "", "en": "" } },
-    { "id": 403, "categoryId": 4, "price": 125, "name": { "tr": "Yaban Mersinli Çikolata", "en": "Blueberry Chocolate" }, "description": { "tr": "", "en": "" } },
+    { "id": 401, "categoryId": 4, "imagePath": "/products/pistachiochocolate.webp", "price": 125, "name": { "tr": "Antep Fıstıklı Çikolata", "en": "Pistachio Chocolate" }, "description": { "tr": "", "en": "" } },
+    { "id": 402, "categoryId": 4, "imagePath": "/products/hazelnutchocolate.webp", "price": 125, "name": { "tr": "Fındıklı Çikolata", "en": "Hazelnut Chocolate" }, "description": { "tr": "", "en": "" } },
+    { "id": 403, "categoryId": 4, "imagePath": "/products/blueberrychocolate.webp", "price": 125, "name": { "tr": "Yaban Mersinli Çikolata", "en": "Blueberry Chocolate" }, "description": { "tr": "", "en": "" } },
 
-    { "id": 501, "categoryId": 5, "price": 175, "name": { "tr": "Filtre Kahve", "en": "Filter Coffee" }, "description": { "tr": "", "en": "" } },
-    { "id": 502, "categoryId": 5, "price": 50, "name": { "tr": "Çay", "en": "Tea" }, "description": { "tr": "", "en": "" } },
-    { "id": 503, "categoryId": 5, "price": 50, "name": { "tr": "Soda", "en": "Soda" }, "description": { "tr": "", "en": "" } },
-    { "id": 504, "categoryId": 5, "price": 200, "name": { "tr": "Taze Sıkım Portakal Suyu", "en": "Fresh Orange Juice" }, "description": { "tr": "", "en": "" } },
-    { "id": 505, "categoryId": 5, "price": 50, "name": { "tr": "Su", "en": "Water" }, "description": { "tr": "", "en": "" } }
+    { "id": 501, "categoryId": 5, "imagePath": "/products/filtercoffee.webp", "price": 175, "name": { "tr": "Filtre Kahve", "en": "Filter Coffee" }, "description": { "tr": "", "en": "" } },
+    { "id": 502, "categoryId": 5, "imagePath": "/products/tea.webp", "price": 50, "name": { "tr": "Çay", "en": "Tea" }, "description": { "tr": "", "en": "" } },
+    { "id": 503, "categoryId": 5, "imagePath": "/products/soda.webp", "price": 50, "name": { "tr": "Soda", "en": "Soda" }, "description": { "tr": "", "en": "" } },
+    { "id": 504, "categoryId": 5, "imagePath": "/products/freshorange.webp", "price": 200, "name": { "tr": "Taze Sıkım Portakal Suyu", "en": "Fresh Orange Juice" }, "description": { "tr": "", "en": "" } },
+    { "id": 505, "categoryId": 5, "imagePath": "/products/water.webp", "price": 50, "name": { "tr": "Su", "en": "Water" }, "description": { "tr": "", "en": "" } }
   ]
 }
