@@ -5,6 +5,13 @@ import { CategoriesNav } from "./categories-nav";
 import { Footer } from "@/components/Footer";
 import { formatPrice } from "@/lib/utils/currency";
 
+function getBaseUrl(): string {
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+  return process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+}
+
 interface Props {
   params: Promise<{
     slug: string;
@@ -14,7 +21,7 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug, lang } = await params;
-  const baseUrl = "https://garage-menu.vercel.app";
+  const baseUrl = getBaseUrl();
 
   return {
     title: `Menu | ${slug}`,
@@ -31,7 +38,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 async function getMenuData(slug: string, lang: string) {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+    const baseUrl = getBaseUrl();
     const response = await fetch(
       `${baseUrl}/api/public/menu?slug=${slug}&lang=${lang}`,
       { next: { revalidate: 3600 } }
