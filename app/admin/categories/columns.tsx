@@ -49,7 +49,7 @@ export const columns: ColumnDef<Category>[] = [
     accessorKey: "productCount",
     header: "Ürün Sayısı",
     cell: ({ row }) => {
-      const count = row.getValue("productCount");
+      const count = row.getValue("productCount") as number;
       return (
         <span className="inline-block rounded-full bg-blue-100 text-blue-800 px-3 py-1 text-xs font-medium">
           {count} ürün
