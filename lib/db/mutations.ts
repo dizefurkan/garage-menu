@@ -2,7 +2,7 @@
 
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import { getSessionWithTenant } from './session';
+import { getSessionWithTenant } from '@/lib/auth/session';
 import { nanoid } from 'nanoid';
 
 export async function createProduct(input: {

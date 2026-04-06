@@ -27,6 +27,12 @@ npx shadcn-ui@latest add select
 npx shadcn-ui@latest add dropdown-menu
 npx shadcn-ui@latest add badge
 npx shadcn-ui@latest add loader
+npx shadcn-ui@latest add switch
+npx shadcn-ui@latest add calendar
+npx shadcn-ui@latest add popover
+npx shadcn-ui@latest add dialog
+npx shadcn-ui@latest add alert-dialog
+npx shadcn-ui@latest add alert
 ```
 
 ## Verify Installation

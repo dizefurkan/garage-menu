@@ -102,6 +102,9 @@ export async function POST(request: Request) {
           category_id: body.category_id,
           price: body.price || 0,
           image_url: body.image_url || null,
+          is_published: true,
+          availability_status: "available",
+          unavailable_until: null,
         } as never,
       ] as never)
       .select()) as { data: any; error: any };

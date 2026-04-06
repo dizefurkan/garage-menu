@@ -1,10 +1,10 @@
-import { getSessionWithTenant } from '@/lib/auth/session';
-import { redirect } from 'next/navigation';
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { getSessionWithTenant } from "@/lib/auth/session";
+import { redirect } from "next/navigation";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 async function getTeamMembers(tenantId: number) {
   const cookieStore = await cookies();
@@ -28,9 +28,9 @@ async function getTeamMembers(tenantId: number) {
   );
 
   const { data } = await supabase
-    .from('tenant_users')
-    .select('id, role, invited_at, accepted_at, auth_users:user_id(email)')
-    .eq('tenant_id', tenantId);
+    .from("tenant_users")
+    .select("id, role, invited_at, accepted_at, auth_users:user_id(email)")
+    .eq("tenant_id", tenantId);
 
   return data || [];
 }
@@ -57,10 +57,10 @@ async function getPendingInvites(tenantId: number) {
   );
 
   const { data } = await supabase
-    .from('invitations')
-    .select('id, email, created_at, expires_at, accepted_at')
-    .eq('tenant_id', tenantId)
-    .is('accepted_at', null);
+    .from("invitations")
+    .select("id, email, created_at, expires_at, accepted_at")
+    .eq("tenant_id", tenantId)
+    .is("accepted_at", null);
 
   return data || [];
 }
@@ -68,8 +68,8 @@ async function getPendingInvites(tenantId: number) {
 export default async function TeamPage() {
   const { user, tenant, role } = await getSessionWithTenant();
 
-  if (!user || !tenant || role !== 'owner') {
-    redirect('/admin/dashboard');
+  if (!user || !tenant || role !== "owner") {
+    redirect("/admin/dashboard");
   }
 
   const members = await getTeamMembers(tenant.id);
@@ -84,8 +84,12 @@ export default async function TeamPage() {
 
       <Tabs defaultValue="members">
         <TabsList>
-          <TabsTrigger value="members">Team Members ({members.length})</TabsTrigger>
-          <TabsTrigger value="invites">Pending Invites ({pendingInvites.length})</TabsTrigger>
+          <TabsTrigger value="members">
+            Team Members ({members.length})
+          </TabsTrigger>
+          <TabsTrigger value="invites">
+            Pending Invites ({pendingInvites.length})
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="members" className="space-y-4">
@@ -101,8 +105,12 @@ export default async function TeamPage() {
                       className="flex items-center justify-between rounded border p-3"
                     >
                       <div>
-                        <p className="font-medium">{(member as any).auth_users?.email}</p>
-                        <p className="text-sm capitalize text-gray-500">{member.role}</p>
+                        <p className="font-medium">
+                          {(member as any).auth_users?.email}
+                        </p>
+                        <p className="text-sm capitalize text-gray-500">
+                          {member.role}
+                        </p>
                       </div>
                       <Button variant="outline" size="sm">
                         Remove
@@ -137,7 +145,8 @@ export default async function TeamPage() {
                       <div>
                         <p className="font-medium">{invite.email}</p>
                         <p className="text-sm text-gray-500">
-                          Expires {new Date(invite.expires_at).toLocaleDateString()}
+                          Expires{" "}
+                          {new Date(invite.expires_at).toLocaleDateString()}
                         </p>
                       </div>
                       <Button variant="outline" size="sm">

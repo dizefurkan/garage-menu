@@ -48,6 +48,10 @@ CREATE TABLE public.tenants (
   languages TEXT[] DEFAULT '{"en","tr"}',  -- Supported languages
   default_language VARCHAR(5) DEFAULT 'en',
   
+  -- Contact Information
+  contact_info JSONB DEFAULT '{"address": "", "facebook": "", "instagram": "", "tiktok": "", "email": "", "whatsapp": ""}',
+  -- Example: { "address": "123 Main St", "facebook": "facebook.com/page", "instagram": "@username", "tiktok": "@username", "email": "contact@example.com", "whatsapp": "+1234567890" }
+  
   -- Metadata
   logo_url TEXT,
   description TEXT,

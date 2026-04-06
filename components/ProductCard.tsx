@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { extractGoogleDriveFileId } from "@/lib/google-drive";
+import { formatPrice } from "@/lib/utils/currency";
 import { type MenuProduct, type SupportedLocale } from "@/lib/menu";
 
 function getProductImageSrc(product: MenuProduct): string {
@@ -55,13 +56,11 @@ export default function ProductCard({
 
         <div className="mt-4 text-right">
           <span className="bg-[#890333] text-white px-4 py-1 rounded-full text-sm">
-            {Intl.NumberFormat(lang, {
-              currencyDisplay: "symbol",
-              signDisplay: "auto",
-
-              style: "currency",
+            {formatPrice(
+              product.price,
               currency,
-            }).format(product.price)}
+              lang === "tr" ? "tr-TR" : "en-US"
+            )}
           </span>
         </div>
       </div>

@@ -4,10 +4,12 @@ import "./globals.css";
 import { Playfair_Display, Inter, Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
 
-const geist = Geist({subsets:['latin'],variable:'--font-sans'});
+const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 
-const playfair = Playfair_Display({
+// Use Geist for heading (modern, clean sans-serif instead of serif Playfair)
+const geistHeading = Geist({
   subsets: ["latin"],
+  weight: ["600", "700"],
   variable: "--font-heading",
 });
 
@@ -121,7 +123,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="tr" className={cn("font-sans", geist.variable)}>
+    <html
+      lang="tr"
+      className={cn("font-sans", geist.variable, geistHeading.variable)}
+    >
       <head>
         <script
           type="application/ld+json"
@@ -169,7 +174,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${playfair.variable} ${inter.variable} font-body`}>
+      <body className={`${geistHeading.variable} ${inter.variable} font-body`}>
         <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
       </body>
     </html>

@@ -5,7 +5,7 @@
  */
 
 import { createClient } from "@supabase/supabase-js";
-import type { Database } from "@/types/database";
+import type { Database } from "@/lib/database.types";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -20,6 +20,11 @@ if (!supabaseUrl || !supabaseAnonKey) {
 // Use this in browser/client components with RLS policies automatically applied
 // ============================================================================
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
+
+// Client-side factory function for getting anon client
+export function createClientSupabase() {
+  return createClient<Database>(supabaseUrl!, supabaseAnonKey!);
+}
 
 // ============================================================================
 // SERVER-SIDE SUPABASE (uses service role key)
@@ -42,7 +47,7 @@ export async function createServerSupabase(accessToken?: string) {
   }
 
   // Create a new client with the user's access token
-  const client = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+  const client = createClient<Database>(supabaseUrl!, supabaseAnonKey!, {
     global: {
       headers: {
         Authorization: `Bearer ${accessToken}`,

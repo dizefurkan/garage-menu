@@ -1,15 +1,18 @@
-import { getSessionWithTenant } from '@/lib/auth/session';
-import { redirect } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { getSessionWithTenant } from "@/lib/auth/session";
+import { redirect } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { LanguageSettings } from "./language-settings";
+import { ThemeSettings } from "./theme-settings";
+import { ContactSettings } from "./contact-settings";
 
 export default async function SettingsPage() {
   const { user, tenant, role } = await getSessionWithTenant();
 
-  if (!user || !tenant || role !== 'owner') {
-    redirect('/admin/dashboard');
+  if (!user || !tenant || role !== "owner") {
+    redirect("/admin/dashboard");
   }
 
   return (
@@ -26,7 +29,9 @@ export default async function SettingsPage() {
         <CardContent>
           <form className="space-y-4">
             <div>
-              <label className="mb-2 block text-sm font-medium">Restaurant Name</label>
+              <label className="mb-2 block text-sm font-medium">
+                Restaurant Name
+              </label>
               <Input
                 defaultValue={tenant.name}
                 placeholder="e.g. Garage Chocolate"
@@ -37,7 +42,7 @@ export default async function SettingsPage() {
               <label className="mb-2 block text-sm font-medium">Email</label>
               <Input
                 type="email"
-                defaultValue={tenant.email || ''}
+                defaultValue={tenant.email || ""}
                 placeholder="info@restaurant.com"
               />
             </div>
@@ -45,27 +50,16 @@ export default async function SettingsPage() {
             <div>
               <label className="mb-2 block text-sm font-medium">Phone</label>
               <Input
-                defaultValue={tenant.phone || ''}
+                defaultValue={tenant.phone || ""}
                 placeholder="+90 555 123 4567"
               />
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium">Description</label>
-              <Textarea
-                defaultValue={tenant.description || ''}
-                placeholder="Brief description of your restaurant..."
-                rows={3}
-              />
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-medium">Menu Slug</label>
-              <Input
-                value={tenant.slug}
-                disabled
-                className="bg-gray-100"
-              />
+              <label className="mb-2 block text-sm font-medium">
+                Menu Slug
+              </label>
+              <Input value={tenant.slug} disabled className="bg-gray-100" />
               <p className="mt-1 text-xs text-gray-500">
                 Your public menu URL: /{tenant.slug}/en
               </p>
@@ -81,16 +75,25 @@ export default async function SettingsPage() {
           <CardTitle>Languages</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-2">
-            {tenant.languages?.map((lang: string) => (
-              <div key={lang} className="flex items-center gap-2">
-                <input type="checkbox" defaultChecked id={lang} />
-                <label htmlFor={lang} className="text-sm">
-                  {lang === 'en' ? 'English' : 'Türkçe'}
-                </label>
-              </div>
-            ))}
-          </div>
+          <LanguageSettings tenant={tenant} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Appearance</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ThemeSettings tenant={tenant} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Contact Information</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ContactSettings tenant={tenant} />
         </CardContent>
       </Card>
 
@@ -99,7 +102,12 @@ export default async function SettingsPage() {
           <CardTitle>Danger Zone</CardTitle>
         </CardHeader>
         <CardContent>
-          <Button variant="destructive">Delete Restaurant</Button>
+          <Button
+            variant="destructive"
+            className="bg-red-600 text-white hover:bg-red-700"
+          >
+            Delete Restaurant
+          </Button>
         </CardContent>
       </Card>
     </div>

@@ -32,7 +32,7 @@ export async function getCurrentTenant(): Promise<Tenant | null> {
   if (!user) return null;
 
   // Query tenant_users to get user's tenant_id
-  const { data: tenantUser, error } = await supabase
+  const { data: tenantUser, error } = await (supabase as any)
     .from("tenant_users")
     .select("tenant_id")
     .eq("user_id", user.id)
@@ -45,10 +45,10 @@ export async function getCurrentTenant(): Promise<Tenant | null> {
   }
 
   // Fetch the tenant
-  const { data: tenant, error: tenantError } = await supabase
+  const { data: tenant, error: tenantError } = await (supabase as any)
     .from("tenants")
     .select("*")
-    .eq("id", tenantUser.tenant_id)
+    .eq("id", (tenantUser as any).tenant_id)
     .single();
 
   if (tenantError) {
@@ -66,14 +66,14 @@ export async function getCurrentTenantId(): Promise<bigint | null> {
   const user = await getCurrentUser();
   if (!user) return null;
 
-  const { data } = await supabase
+  const { data } = await (supabase as any)
     .from("tenant_users")
     .select("tenant_id")
     .eq("user_id", user.id)
     .limit(1)
     .single();
 
-  return data?.tenant_id ?? null;
+  return (data as any)?.tenant_id ?? null;
 }
 
 // ============================================================================
@@ -86,14 +86,14 @@ export async function getUserRole(
   const tenantId = await getCurrentTenantId();
   if (!tenantId) return null;
 
-  const { data } = await supabase
+  const { data } = await (supabase as any)
     .from("tenant_users")
     .select("role")
     .eq("tenant_id", tenantId)
     .eq("user_id", userId)
     .single();
 
-  return data?.role ?? null;
+  return (data as any)?.role ?? null;
 }
 
 // ============================================================================
@@ -104,14 +104,14 @@ export async function verifyTenantAccess(tenantId: bigint): Promise<boolean> {
   const user = await getCurrentUser();
   if (!user) return false;
 
-  const { data } = await supabase
+  const { data } = await (supabase as any)
     .from("tenant_users")
     .select("id")
     .eq("tenant_id", tenantId)
     .eq("user_id", user.id)
     .limit(1);
 
-  return !!data?.length;
+  return !!(data as any)?.length;
 }
 
 // ============================================================================

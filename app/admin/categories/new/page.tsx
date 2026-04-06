@@ -1,50 +1,118 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useState, useEffect } from "react";
+import { useRouter, useParams } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { CheckCircle2 } from "lucide-react";
+import { useTenant } from "@/lib/context/tenant-context";
 
 export default function CategoryFormPage() {
   const router = useRouter();
+  const params = useParams();
+  const tenant = useTenant();
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    en: { name: '', description: '' },
-    tr: { name: '', description: '' },
-  });
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [formData, setFormData] = useState<
+    Record<string, { name: string; description: string }>
+  >({});
+
+  const categoryId = params?.id as string | undefined;
+  const isEdit = !!categoryId;
+
+  useEffect(() => {
+    setIsEditMode(isEdit);
+    // Initialize form data with selected languages
+    const languages = tenant.languages || ["en"];
+    const initialData = languages.reduce(
+      (acc, lang) => {
+        acc[lang] = { name: "", description: "" };
+        return acc;
+      },
+      {} as Record<string, { name: string; description: string }>
+    );
+    setFormData(initialData);
+  }, [tenant, isEdit]);
+
+  useEffect(() => {
+    if (success) {
+      const timer = setTimeout(() => {
+        router.push("/admin/categories");
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [success, router]);
+
+  const languages = tenant.languages || ["en"];
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setError(null);
     setLoading(true);
 
+    // Validate that at least one language has a name
+    const hasAnyName = Object.values(formData).some((lang) => lang.name.trim());
+    if (!hasAnyName) {
+      setError("At least one category name is required");
+      setLoading(false);
+      return;
+    }
+
     try {
-      // TODO: Call createCategory from mutations
-      // const result = await createCategory({ translations: formData });
-      // router.push('/admin/categories');
-    } catch (error) {
-      console.error('Error:', error);
+      const response = await fetch("/api/admin/categories", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ translations: formData }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to save category");
+      }
+
+      setSuccess(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save category");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="max-w-2xl">
-      <h1 className="mb-6 text-3xl font-bold">New Category</h1>
+    <div className="max-w-2xl space-y-6">
+      <h1 className="text-3xl font-bold">
+        {isEditMode ? "Edit Category" : "New Category"}
+      </h1>
+
+      {success && (
+        <Alert className="border-green-200 bg-green-50">
+          <CheckCircle2 className="h-4 w-4 text-green-600" />
+          <AlertTitle className="text-green-800">Success!</AlertTitle>
+          <AlertDescription className="text-green-700">
+            Category created successfully! Redirecting...
+          </AlertDescription>
+        </Alert>
+      )}
 
       <Card>
         <CardContent className="pt-6">
           <form onSubmit={handleSubmit} className="space-y-6">
-            <Tabs defaultValue="en">
+            <Tabs defaultValue={languages[0] || "en"}>
               <TabsList>
-                <TabsTrigger value="en">English</TabsTrigger>
-                <TabsTrigger value="tr">Türkçe</TabsTrigger>
+                {languages.map((lang) => (
+                  <TabsTrigger key={lang} value={lang}>
+                    {lang === "en" ? "English" : "Türkçe"}
+                  </TabsTrigger>
+                ))}
               </TabsList>
 
-              {(['en', 'tr'] as const).map((lang) => (
+              {(languages as readonly string[]).map((lang) => (
                 <TabsContent key={lang} value={lang} className="space-y-4">
                   <div>
                     <label className="mb-2 block text-sm font-medium">
@@ -52,7 +120,7 @@ export default function CategoryFormPage() {
                     </label>
                     <Input
                       placeholder="e.g. Desserts"
-                      value={formData[lang].name}
+                      value={formData[lang]?.name || ""}
                       onChange={(e) =>
                         setFormData({
                           ...formData,
@@ -69,7 +137,7 @@ export default function CategoryFormPage() {
                     </label>
                     <Textarea
                       placeholder="Optional description..."
-                      value={formData[lang].description}
+                      value={formData[lang]?.description || ""}
                       onChange={(e) =>
                         setFormData({
                           ...formData,
@@ -86,9 +154,21 @@ export default function CategoryFormPage() {
               ))}
             </Tabs>
 
+            {error && (
+              <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">
+                {error}
+              </div>
+            )}
+
             <div className="flex gap-3">
               <Button type="submit" disabled={loading}>
-                {loading ? 'Saving...' : 'Save Category'}
+                {loading
+                  ? isEditMode
+                    ? "Saving..."
+                    : "Creating..."
+                  : isEditMode
+                    ? "Save"
+                    : "Create"}
               </Button>
               <Button
                 type="button"

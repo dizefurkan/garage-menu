@@ -1,10 +1,16 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import Link from 'next/link';
-import { getSessionWithTenant } from '@/lib/auth/session';
-import { redirect } from 'next/navigation';
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { getSessionWithTenant } from "@/lib/auth/session";
+import { redirect } from "next/navigation";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 
 async function getDashboardStats(tenantId: number) {
   const cookieStore = await cookies();
@@ -30,9 +36,9 @@ async function getDashboardStats(tenantId: number) {
   );
 
   const [productsRes, categoriesRes, teamRes] = await Promise.all([
-    supabase.from('products').select('id').eq('tenant_id', tenantId),
-    supabase.from('categories').select('id').eq('tenant_id', tenantId),
-    supabase.from('tenant_users').select('id').eq('tenant_id', tenantId),
+    supabase.from("products").select("id").eq("tenant_id", tenantId),
+    supabase.from("categories").select("id").eq("tenant_id", tenantId),
+    supabase.from("tenant_users").select("id").eq("tenant_id", tenantId),
   ]);
 
   return {
@@ -46,285 +52,111 @@ export default async function DashboardPage() {
   const { user, tenant, role } = await getSessionWithTenant();
 
   if (!user || !tenant) {
-    redirect('/auth/login');
+    redirect("/auth/login");
   }
 
   const stats = await getDashboardStats(tenant.id);
+  const userName = user.email?.split("@")[0] || "User";
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900">
-          Welcome back, {user.email?.split('@')[0]}!
+      <div className="flex flex-col gap-1">
+        <h1 className="text-2xl font-semibold tracking-tight">
+          Welcome back, {userName}
         </h1>
-        <p className="mt-2 text-gray-600">
-          Manage your restaurant menu and team
+        <p className="text-sm text-foreground/60">
+          Manage your menu and team from here
         </p>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
+      <div className="grid gap-3 md:grid-cols-3">
+        <Card className="border-foreground/5">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">
+            <CardTitle className="text-xs font-medium tracking-tight text-foreground/70">
               Products
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{stats.productsCount}</div>
-            <p className="mt-1 text-xs text-gray-500">
-              Total products in menu
+            <div className="text-3xl font-semibold">{stats.productsCount}</div>
+            <p className="text-xs text-foreground/50 mt-1">
+              {stats.productsCount === 1 ? "product" : "products"}
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-foreground/5">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">
+            <CardTitle className="text-xs font-medium tracking-tight text-foreground/70">
               Categories
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{stats.categoriesCount}</div>
-            <p className="mt-1 text-xs text-gray-500">
-              Menu categories
-            </p>
+            <div className="text-3xl font-semibold">
+              {stats.categoriesCount}
+            </div>
+            <p className="text-xs text-foreground/50 mt-1">categories</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-foreground/5">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">
-              Team Members
+            <CardTitle className="text-xs font-medium tracking-tight text-foreground/70">
+              Team
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{stats.teamCount}</div>
-            <p className="mt-1 text-xs text-gray-500">
-              Collaborators
+            <div className="text-3xl font-semibold">{stats.teamCount}</div>
+            <p className="text-xs text-foreground/50 mt-1">
+              {stats.teamCount === 1 ? "member" : "members"}
             </p>
           </CardContent>
         </Card>
       </div>
 
       {/* Quick Actions */}
-      <Card>
+      <Card className="border-foreground/5">
         <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-          <CardDescription>
-            Common management tasks
+          <CardTitle className="text-base">Getting Started</CardTitle>
+          <CardDescription className="text-xs">
+            Common tasks to get you started
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {(role === 'owner' || role === 'editor') && (
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+            {(role === "owner" || role === "editor") && (
               <>
                 <Link href="/admin/products/new">
-                  <Button className="w-full">
-                    Add Product
+                  <Button size="sm" className="w-full">
+                    + Add Product
                   </Button>
                 </Link>
 
                 <Link href="/admin/categories">
-                  <Button variant="outline" className="w-full">
-                    Manage Categories
+                  <Button size="sm" variant="outline" className="w-full">
+                    Categories
                   </Button>
                 </Link>
               </>
             )}
 
-            <Link href={`/${tenant.slug}/en`} target="_blank">
-              <Button variant="outline" className="w-full">
-                View Public Menu
-              </Button>
-            </Link>
-
-            {role === 'owner' && (
+            {role === "owner" && (
               <Link href="/admin/team">
-                <Button variant="outline" className="w-full">
-                  Manage Team
+                <Button size="sm" variant="outline" className="w-full">
+                  Team
                 </Button>
               </Link>
             )}
+
+            <Link href={`/${tenant.slug}/en`} target="_blank">
+              <Button size="sm" variant="outline" className="w-full">
+                Preview Menu
+              </Button>
+            </Link>
           </div>
         </CardContent>
       </Card>
-
-      {/* Info Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Getting Started</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2 text-sm text-gray-600">
-          <p>
-            ✓ Your menu is live at: <code className="bg-gray-100 px-2 py-1 rounded">/{tenant.slug}/en</code>
-          </p>
-          <p>
-            ✓ Add products to make your menu visible
-          </p>
-          <p>
-            ✓ Support for multi-language (EN, TR)
-          </p>
-          {role === 'owner' && (
-            <p>
-              ✓ <Link href="/admin/team" className="text-blue-600 hover:text-blue-700">Invite team members</Link> to help manage your menu
-            </p>
-          )}
-        </CardContent>
-      </Card>
     </div>
-  );
-}
-          href="/admin/products"
-        />
-        <StatCard
-          title="Categories"
-          value="TBD"
-          description="Menu sections"
-          href="/admin/categories"
-        />
-        <StatCard
-          title="Team Members"
-          value="TBD"
-          description="Collaborators"
-          href="/admin/team"
-        />
-      </div>
-
-      {/* Quick Actions Tabs */}
-      <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="recent">Recent Activity</TabsTrigger>
-          <TabsTrigger value="quick-actions">Quick Actions</TabsTrigger>
-        </TabsList>
-
-        {/* Overview Tab */}
-        <TabsContent value="overview" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Drafts</CardTitle>
-              <CardDescription>
-                Unpublished changes waiting to go live
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="text-center py-8 text-gray-500">
-              <p>No drafts yet</p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Recent Activity Tab */}
-        <TabsContent value="recent" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Activity</CardTitle>
-              <CardDescription>Latest changes in your menu</CardDescription>
-            </CardHeader>
-            <CardContent className="text-center py-8 text-gray-500">
-              <p>No recent activity</p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Quick Actions Tab */}
-        <TabsContent value="quick-actions" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <Card className="hover:shadow-lg transition cursor-pointer">
-              <CardHeader>
-                <CardTitle className="text-base">Add New Product</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Button
-                  className="w-full"
-                  onClick={() => router.push("/admin/products/new")}
-                >
-                  Create Product
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-lg transition cursor-pointer">
-              <CardHeader>
-                <CardTitle className="text-base">Add Category</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Button
-                  className="w-full"
-                  onClick={() => router.push("/admin/categories/new")}
-                >
-                  Create Category
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-lg transition cursor-pointer">
-              <CardHeader>
-                <CardTitle className="text-base">Invite Team Member</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Button
-                  className="w-full"
-                  variant="outline"
-                  onClick={() => router.push("/admin/invites")}
-                >
-                  Send Invite
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-lg transition cursor-pointer">
-              <CardHeader>
-                <CardTitle className="text-base">Customize Theme</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Button
-                  className="w-full"
-                  variant="outline"
-                  onClick={() => router.push("/admin/settings")}
-                >
-                  Edit Theme
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-      </Tabs>
-    </div>
-  );
-}
-
-// ============================================================================
-// STAT CARD COMPONENT
-// ============================================================================
-function StatCard({
-  title,
-  value,
-  description,
-  href,
-}: {
-  title: string;
-  value: string;
-  description: string;
-  href: string;
-}) {
-  const router = useRouter();
-
-  return (
-    <Card
-      className="cursor-pointer hover:shadow-lg transition"
-      onClick={() => router.push(href)}
-    >
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium text-gray-600">
-          {title}
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
-        <p className="text-xs text-gray-500 mt-1">{description}</p>
-      </CardContent>
-    </Card>
   );
 }

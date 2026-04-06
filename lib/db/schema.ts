@@ -28,7 +28,7 @@ export type Tenant = {
     primary: string;
     secondary: string;
     font?: string;
-    [key: string]: string;
+    [key: string]: string | undefined;
   };
   languages: string[];
   default_language: string;

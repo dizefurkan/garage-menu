@@ -1,8 +1,8 @@
-'use server';
+"use server";
 
-import { cookies } from 'next/headers';
-import { createServerClient } from '@supabase/ssr';
-import { redirect } from 'next/navigation';
+import { cookies } from "next/headers";
+import { createServerClient } from "@supabase/ssr";
+import { redirect } from "next/navigation";
 
 export async function logout() {
   const cookieStore = await cookies();
@@ -30,5 +30,5 @@ export async function logout() {
 
   await supabase.auth.signOut();
 
-  redirect('/auth/login');
+  redirect("/auth/login");
 }

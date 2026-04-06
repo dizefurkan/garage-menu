@@ -23,6 +23,19 @@ type TranslatedProduct = {
   }>;
 };
 
+export interface Product {
+  id: number;
+  name: string;
+  price: number;
+  currency: string;
+  image_url: string | null;
+  is_available: boolean;
+  is_draft: boolean;
+  created_at: string;
+  category_id: number;
+  categories: { id: number; name: string | null } | null;
+}
+
 /**
  * Fetch menu data from Supabase with translations
  */

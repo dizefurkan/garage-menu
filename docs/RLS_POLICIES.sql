@@ -51,12 +51,21 @@ ALTER TABLE public.product_translations ENABLE ROW LEVEL SECURITY;
 
 -- Helper function to get current user's tenant_id
 -- NOTE: Must be in public schema, not auth schema (auth is Supabase-managed)
+-- Uses auth role check to avoid recursive RLS policy evaluation
 CREATE OR REPLACE FUNCTION public.user_tenant_id()
 RETURNS BIGINT AS $$
-  SELECT tenant_id FROM public.tenant_users
-  WHERE user_id = auth.uid()
-  LIMIT 1
-$$ LANGUAGE SQL STABLE;
+BEGIN
+  IF auth.role() = 'service_role' THEN
+    RETURN NULL;  -- Service role has full access, no tenant restriction
+  END IF;
+  
+  RETURN (
+    SELECT tenant_id FROM public.tenant_users
+    WHERE user_id = auth.uid()
+    LIMIT 1
+  );
+END
+$$ LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = public;
 
 -- ============================================================================
 -- TENANTS TABLE - RLS POLICIES
@@ -81,31 +90,59 @@ CREATE POLICY "Ops: Allow service role full access"
 CREATE POLICY "Users can select own tenant members"
   ON public.tenant_users FOR SELECT
   USING (
-    tenant_id = public.user_tenant_id()
+    auth.role() = 'service_role'
+    OR (
+      auth.uid() IS NOT NULL
+      AND EXISTS (
+        SELECT 1 FROM public.tenant_users tu2
+        WHERE tu2.user_id = auth.uid()
+          AND tu2.tenant_id = public.tenant_users.tenant_id
+        LIMIT 1
+      )
+    )
   );
 
 CREATE POLICY "Tenant owners can insert new members"
   ON public.tenant_users FOR INSERT
   WITH CHECK (
-    tenant_id = public.user_tenant_id()
-    AND EXISTS (
-      SELECT 1 FROM public.tenant_users
-      WHERE tenant_id = public.user_tenant_id()
-        AND user_id = auth.uid()
-        AND role = 'owner'
+    auth.role() = 'service_role'
+    OR (
+      auth.uid() IS NOT NULL
+      AND EXISTS (
+        SELECT 1 FROM public.tenant_users tu2
+        WHERE tu2.user_id = auth.uid()
+          AND tu2.tenant_id = public.tenant_users.tenant_id
+          AND tu2.role = 'owner'
+        LIMIT 1
+      )
     )
   );
 
 CREATE POLICY "Tenant owners can update members"
   ON public.tenant_users FOR UPDATE
-  USING (tenant_id = public.user_tenant_id())
+  USING (
+    auth.role() = 'service_role'
+    OR (
+      auth.uid() IS NOT NULL
+      AND EXISTS (
+        SELECT 1 FROM public.tenant_users tu2
+        WHERE tu2.user_id = auth.uid()
+          AND tu2.tenant_id = public.tenant_users.tenant_id
+        LIMIT 1
+      )
+    )
+  )
   WITH CHECK (
-    tenant_id = public.user_tenant_id()
-    AND EXISTS (
-      SELECT 1 FROM public.tenant_users
-      WHERE tenant_id = public.user_tenant_id()
-        AND user_id = auth.uid()
-        AND role = 'owner'
+    auth.role() = 'service_role'
+    OR (
+      auth.uid() IS NOT NULL
+      AND EXISTS (
+        SELECT 1 FROM public.tenant_users tu2
+        WHERE tu2.user_id = auth.uid()
+          AND tu2.tenant_id = public.tenant_users.tenant_id
+          AND tu2.role = 'owner'
+        LIMIT 1
+      )
     )
   );
 

@@ -1,40 +1,101 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { useState, useEffect } from "react";
+import { useRouter, useParams } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { CheckCircle2 } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useTenant } from "@/lib/context/tenant-context";
 
 const productSchema = z.object({
   price: z.coerce.number().min(0).max(999999),
-  currency: z.string().default('TRY'),
+  currency: z.string().default("TRY"),
   is_available: z.boolean().default(true),
   category_id: z.coerce.number(),
-  translations: z.record(z.object({
-    name: z.string().min(1),
-    description: z.string().optional(),
-  })),
+  translations: z.record(
+    z.string(),
+    z.object({
+      name: z.string().min(1),
+      description: z.string().optional(),
+    })
+  ),
 });
 
 type ProductFormData = z.infer<typeof productSchema>;
 
-export default function ProductFormPage({ 
-  params 
-}: { 
-  params: Promise<{ id?: string }> 
-}) {
+export default function ProductFormPage() {
   const router = useRouter();
+  const params = useParams();
+  const tenant = useTenant();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [categories, setCategories] = useState<
+    Array<{ id: number; name: string }>
+  >([]);
 
-  const { register, handleSubmit, formState: { errors } } = useForm<ProductFormData>({
-    resolver: zodResolver(productSchema),
+  const productId = params?.id as string | undefined;
+  const isEdit = !!productId;
+
+  useEffect(() => {
+    setIsEditMode(isEdit);
+  }, [isEdit]);
+
+  // Fetch categories
+  useEffect(() => {
+    async function loadCategories() {
+      try {
+        const response = await fetch("/api/admin/categories");
+        if (response.ok) {
+          const data = await response.json();
+          setCategories(data);
+        }
+      } catch (err) {
+        console.error("Failed to load categories:", err);
+      }
+    }
+    loadCategories();
+  }, []);
+
+  useEffect(() => {
+    if (success) {
+      const timer = setTimeout(() => {
+        router.push("/admin/products");
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [success, router]);
+
+  const languages = tenant.languages || ["en"];
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm<ProductFormData>({
+    resolver: zodResolver(productSchema) as any,
+    defaultValues: {
+      is_available: true,
+      currency: "TRY",
+    },
   });
 
   async function onSubmit(data: ProductFormData) {
@@ -42,52 +103,79 @@ export default function ProductFormPage({
     setError(null);
 
     try {
-      // Send to server action - you'll create this
-      // const result = await createOrUpdateProduct(data);
-      // router.push('/admin/products');
+      const response = await fetch("/api/admin/products", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to save product");
+      }
+
+      const result = await response.json();
+      setSuccess(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save product');
+      setError(err instanceof Error ? err.message : "Failed to save product");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="max-w-2xl">
-      <h1 className="mb-6 text-3xl font-bold">New Product</h1>
+    <div className="max-w-4xl space-y-6">
+      <h1 className="text-3xl font-bold">
+        {isEditMode ? "Ürünü Düzenle" : "Yeni Ürün"}
+      </h1>
+
+      {success && (
+        <Alert className="border-green-200 bg-green-50">
+          <CheckCircle2 className="h-4 w-4 text-green-600" />
+          <AlertTitle className="text-green-800">Başarılı!</AlertTitle>
+          <AlertDescription className="text-green-700">
+            Ürün başarıyla oluşturuldu! Yönlendiriliyorsunuz...
+          </AlertDescription>
+        </Alert>
+      )}
 
       <Card>
         <CardContent className="pt-6">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {/* Multi-language Tabs */}
-            <Tabs defaultValue="en">
+            <Tabs defaultValue={languages[0] || "en"}>
               <TabsList>
-                <TabsTrigger value="en">English</TabsTrigger>
-                <TabsTrigger value="tr">Türkçe</TabsTrigger>
+                {languages.map((lang) => (
+                  <TabsTrigger key={lang} value={lang}>
+                    {lang === "en" ? "English" : "Türkçe"}
+                  </TabsTrigger>
+                ))}
               </TabsList>
 
-              {(['en', 'tr'] as const).map((lang) => (
+              {(languages as readonly string[]).map((lang) => (
                 <TabsContent key={lang} value={lang} className="space-y-4">
-                  <div>
+                  <div className="flex flex-col">
                     <label className="mb-2 block text-sm font-medium">
-                      Product Name ({lang.toUpperCase()})
+                      Ürün Adı ({lang.toUpperCase()})
                     </label>
                     <Input
-                      placeholder="e.g. Chocolate Croissant"
+                      placeholder="örn. Çikolatalı Kruvasan"
                       {...register(`translations.${lang}.name`)}
+                      className="h-10 w-full"
                     />
                     {errors.translations?.[lang]?.name && (
-                      <p className="mt-1 text-sm text-red-600">Required</p>
+                      <p className="mt-1 text-sm text-red-600">Zorunludur</p>
                     )}
                   </div>
 
-                  <div>
+                  <div className="flex flex-col">
                     <label className="mb-2 block text-sm font-medium">
-                      Description ({lang.toUpperCase()})
+                      Açıklama ({lang.toUpperCase()})
                     </label>
                     <Textarea
-                      placeholder="Describe your product..."
+                      placeholder="Ürünü açıklayın..."
                       {...register(`translations.${lang}.description`)}
+                      className="w-full"
                       rows={4}
                     />
                   </div>
@@ -95,46 +183,78 @@ export default function ProductFormPage({
               ))}
             </Tabs>
 
-            {/* Price & Category */}
+            {/* Price & Currency & Category */}
             <div className="grid gap-4 sm:grid-cols-3">
-              <div>
-                <label className="mb-2 block text-sm font-medium">Price</label>
+              <div className="flex flex-col">
+                <label className="mb-2 block text-sm font-medium">Fiyat</label>
                 <Input
                   type="number"
                   step="0.01"
                   placeholder="0.00"
-                  {...register('price')}
+                  {...register("price")}
+                  className="h-10 w-full"
                 />
               </div>
 
-              <div>
-                <label className="mb-2 block text-sm font-medium">Currency</label>
-                <Input
-                  {...register('currency')}
+              <div className="flex flex-col">
+                <label className="mb-2 block text-sm font-medium">
+                  Para Birimi
+                </label>
+                <Select
+                  onValueChange={(value) =>
+                    setValue("currency", value as string)
+                  }
                   defaultValue="TRY"
-                />
+                >
+                  <SelectTrigger className="!h-10 w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="TRY">Turkish Lira (₺)</SelectItem>
+                    <SelectItem value="USD">US Dollar ($)</SelectItem>
+                    <SelectItem value="EUR">Euro (€)</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
-              <div>
-                <label className="mb-2 block text-sm font-medium">Category</label>
-                <select
-                  {...register('category_id')}
-                  className="w-full rounded border"
+              <div className="flex flex-col">
+                <label className="mb-2 block text-sm font-medium">
+                  Kategori
+                </label>
+                <Select
+                  onValueChange={(value) =>
+                    setValue("category_id", Number(value as string))
+                  }
                 >
-                  <option value="">Select category</option>
-                  {/* TODO: Fetch categories from DB */}
-                </select>
+                  <SelectTrigger className="!h-10 w-full">
+                    <SelectValue placeholder="Kategori seçin" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.id.toString()}>
+                        {cat.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
             {/* Availability */}
             <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                {...register('is_available')}
-                defaultChecked
+              <Checkbox
+                id="is_available"
+                checked={watch("is_available")}
+                onCheckedChange={(checked) =>
+                  setValue("is_available", Boolean(checked))
+                }
               />
-              <label className="text-sm font-medium">Available for sale</label>
+              <label
+                htmlFor="is_available"
+                className="text-sm font-medium cursor-pointer"
+              >
+                Satışa uygun
+              </label>
             </div>
 
             {error && (
@@ -145,14 +265,20 @@ export default function ProductFormPage({
 
             <div className="flex gap-3">
               <Button type="submit" disabled={loading}>
-                {loading ? 'Saving...' : 'Save Product'}
+                {loading
+                  ? isEditMode
+                    ? "Kaydediliyor..."
+                    : "Oluşturuluyor..."
+                  : isEditMode
+                    ? "Kaydet"
+                    : "Oluştur"}
               </Button>
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => router.back()}
               >
-                Cancel
+                İptal
               </Button>
             </div>
           </form>
