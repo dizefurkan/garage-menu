@@ -25,11 +25,11 @@ import Link from "next/link";
 import type { Database } from "@/lib/database.types";
 import { LayoutDashboard, Package, Tag, Settings } from "lucide-react";
 
-const NAV_ITEMS = [
-  { label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
-  { label: "Products", href: "/admin/products", icon: Package },
-  { label: "Categories", href: "/admin/categories", icon: Tag },
-  { label: "Settings", href: "/admin/settings", icon: Settings },
+const NAV_ITEMS_CONFIG = [
+  { key: "dashboard", path: "dashboard", icon: LayoutDashboard },
+  { key: "products", path: "products", icon: Package },
+  { key: "categories", path: "categories", icon: Tag },
+  { key: "settings", path: "settings", icon: Settings },
 ];
 
 interface AdminLayoutClientProps {
@@ -37,6 +37,8 @@ interface AdminLayoutClientProps {
   user: { email: string };
   tenant: Database["public"]["Tables"]["tenants"]["Row"];
   role: string;
+  lang: string;
+  messages: Record<string, any>;
 }
 
 export function AdminLayoutClient({
@@ -44,8 +46,27 @@ export function AdminLayoutClient({
   user,
   tenant,
   role,
+  lang,
+  messages,
 }: AdminLayoutClientProps) {
   const pathname = usePathname();
+
+  // Get navigation translations
+  const navigationMessages = messages.navigation || {};
+  const getTranslation = (key: string) => navigationMessages[key] || key;
+
+  const NAV_ITEMS = NAV_ITEMS_CONFIG.map((item) => ({
+    label: getTranslation(item.key),
+    href: `/admin/${lang}/${item.path}`,
+    path: item.path,
+    icon: item.icon,
+  }));
+
+  const isActive = (path: string) => {
+    return (
+      pathname.includes(`/${path}`) || pathname === `/admin/${lang}/${path}`
+    );
+  };
 
   return (
     <>
@@ -71,10 +92,10 @@ export function AdminLayoutClient({
               {NAV_ITEMS.map((item) => {
                 const Icon = item.icon;
                 return (
-                  <SidebarMenuItem key={item.href}>
+                  <SidebarMenuItem key={item.path}>
                     <SidebarMenuButton
                       asChild
-                      isActive={pathname === item.href}
+                      isActive={isActive(item.path)}
                       tooltip={item.label}
                     >
                       <Link
@@ -165,7 +186,7 @@ export function AdminLayoutClient({
               <div className="flex items-center gap-4">
                 <SidebarTrigger className="-ml-1" />
                 <a
-                  href={`/${tenant.slug}/en`}
+                  href={`/menu/${tenant.slug}/${lang}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-xs font-medium hover:underline"

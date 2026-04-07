@@ -109,6 +109,24 @@ export async function GET(request: Request) {
         };
       });
 
+    // Detect available languages from category translations
+    const availableLanguages = new Set<string>();
+    (categories || []).forEach((cat: any) => {
+      cat.category_translations?.forEach((t: any) => {
+        if (t.language_code) availableLanguages.add(t.language_code);
+      });
+    });
+
+    // Fallback to ["en", "tr"] if no translations found
+    const languages =
+      availableLanguages.size > 0
+        ? Array.from(availableLanguages).sort()
+        : tenant.languages
+          ? Array.isArray(tenant.languages)
+            ? tenant.languages
+            : JSON.parse(tenant.languages)
+          : ["en", "tr"];
+
     return Response.json({
       tenant: {
         id: tenant.id,
@@ -117,6 +135,7 @@ export async function GET(request: Request) {
         theme_config: tenant.theme_config || {},
         description: tenant.description || undefined,
         logo_url: tenant.logo_url || undefined,
+        languages: languages, // Available languages for the tenant
         contactInfo: {
           address: contactInfo.address || undefined,
           phone: contactInfo.phone || undefined,

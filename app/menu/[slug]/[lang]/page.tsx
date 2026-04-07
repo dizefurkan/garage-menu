@@ -27,10 +27,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: `Menu | ${slug}`,
     description: "Browse our menu",
     alternates: {
-      canonical: `${baseUrl}/${slug}/${lang}`,
+      canonical: `${baseUrl}/menu/${slug}/${lang}`,
       languages: {
-        en: `${baseUrl}/${slug}/en`,
-        tr: `${baseUrl}/${slug}/tr`,
+        en: `${baseUrl}/menu/${slug}/en`,
+        tr: `${baseUrl}/menu/${slug}/tr`,
       },
     },
   };
@@ -92,8 +92,8 @@ export default async function MenuPage({ params }: Props) {
       {/* Header */}
       <header className="border-b border-slate-200 bg-white/80 backdrop-blur-sm z-40">
         <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 md:gap-6">
-            <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-6">
+            <div className="flex-1">
               {tenant.logo_url && (
                 <img
                   src={tenant.logo_url}
@@ -118,12 +118,12 @@ export default async function MenuPage({ params }: Props) {
 
             {/* Language Switcher - Only show if multiple languages */}
             {tenant.languages && tenant.languages.length > 1 && (
-              <div className="flex gap-1 sm:gap-2 self-start md:self-auto">
+              <div className="flex gap-2">
                 {tenant.languages?.map((language: string) => (
                   <a
                     key={language}
-                    href={`/${slug}/${language}`}
-                    className={`inline-flex items-center gap-1 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-lg font-semibold text-xs sm:text-sm transition-all whitespace-nowrap ${
+                    href={`/menu/${slug}/${language}`}
+                    className={`inline-flex items-center gap-1 px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
                       lang === language
                         ? "text-white shadow-md"
                         : "bg-slate-100 text-slate-700 hover:bg-slate-200"
@@ -134,12 +134,8 @@ export default async function MenuPage({ params }: Props) {
                         : undefined
                     }
                   >
-                    <span className="text-sm sm:text-base">
-                      {language === "en" ? "🇬🇧" : language === "tr" ? "🇹🇷" : ""}
-                    </span>
-                    <span className="hidden sm:inline">
-                      {language.toUpperCase()}
-                    </span>
+                    {language === "en" ? "🇬🇧" : language === "tr" ? "🇹🇷" : ""}{" "}
+                    {language.toUpperCase()}
                   </a>
                 ))}
               </div>

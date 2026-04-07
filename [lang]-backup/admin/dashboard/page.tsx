@@ -8,6 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { getSessionWithTenant } from "@/lib/auth/session";
+import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
@@ -50,6 +51,7 @@ async function getDashboardStats(tenantId: number) {
 
 export default async function DashboardPage() {
   const { user, tenant, role } = await getSessionWithTenant();
+  const t = await getTranslations("dashboard");
 
   if (!user || !tenant) {
     redirect("/auth/login");
@@ -63,10 +65,10 @@ export default async function DashboardPage() {
       {/* Header */}
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl font-semibold tracking-tight">
-          Welcome back, {userName}
+          {t("welcome", { name: userName })}
         </h1>
         <p className="text-sm text-foreground/60">
-          Manage your menu and team from here
+          {t("description")}
         </p>
       </div>
 
@@ -75,13 +77,13 @@ export default async function DashboardPage() {
         <Card className="border-foreground/5">
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-medium tracking-tight text-foreground/70">
-              Products
+              {t("products_title")}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-semibold">{stats.productsCount}</div>
             <p className="text-xs text-foreground/50 mt-1">
-              {stats.productsCount === 1 ? "product" : "products"}
+              {stats.productsCount === 1 ? t("product_one") : t("product_many")}
             </p>
           </CardContent>
         </Card>
@@ -89,27 +91,29 @@ export default async function DashboardPage() {
         <Card className="border-foreground/5">
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-medium tracking-tight text-foreground/70">
-              Categories
+              {t("categories_title")}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-semibold">
               {stats.categoriesCount}
             </div>
-            <p className="text-xs text-foreground/50 mt-1">categories</p>
+            <p className="text-xs text-foreground/50 mt-1">
+              {stats.categoriesCount === 1 ? t("category_one") : t("category_many")}
+            </p>
           </CardContent>
         </Card>
 
         <Card className="border-foreground/5">
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-medium tracking-tight text-foreground/70">
-              Team
+              {t("team_title")}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-semibold">{stats.teamCount}</div>
             <p className="text-xs text-foreground/50 mt-1">
-              {stats.teamCount === 1 ? "member" : "members"}
+              {stats.teamCount === 1 ? t("member_one") : t("member_many")}
             </p>
           </CardContent>
         </Card>

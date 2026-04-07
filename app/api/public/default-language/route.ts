@@ -20,7 +20,13 @@ export async function GET(request: Request) {
       .eq("slug", slug)
       .single();
 
-    if (error || !tenant) {
+    if (error) {
+      console.error(`[API] Supabase error for slug "${slug}":`, error);
+      return Response.json({ error: "Tenant not found" }, { status: 404 });
+    }
+
+    if (!tenant) {
+      console.warn(`[API] No tenant found for slug: ${slug}`);
       return Response.json({ error: "Tenant not found" }, { status: 404 });
     }
 
@@ -31,7 +37,7 @@ export async function GET(request: Request) {
 
     return Response.json({ defaultLanguage });
   } catch (error) {
-    console.error("[API] Error:", error);
+    console.error("[API] Error fetching default language:", error);
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }
 }
