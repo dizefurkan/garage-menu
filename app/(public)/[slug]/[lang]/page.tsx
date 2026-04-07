@@ -6,13 +6,10 @@ import { Footer } from "@/components/Footer";
 import { formatPrice } from "@/lib/utils/currency";
 
 function getBaseUrl(): string {
-  if (process.env.NEXT_PUBLIC_BASE_URL) {
-    return process.env.NEXT_PUBLIC_BASE_URL;
-  }
   if (process.env.VERCEL_URL) {
     return `https://${process.env.VERCEL_URL}`;
   }
-  return "http://localhost:3000";
+  return process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
 }
 
 interface Props {
@@ -42,7 +39,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 async function getMenuData(slug: string, lang: string) {
   try {
     const baseUrl = getBaseUrl();
-    console.log("[getMenuData] Using baseUrl:", baseUrl);
     const response = await fetch(
       `${baseUrl}/api/public/menu?slug=${slug}&lang=${lang}`,
       { next: { revalidate: 3600 } }
@@ -149,7 +145,7 @@ export default async function MenuPage({ params }: Props) {
       </header>
 
       {/* Menu Content */}
-      <main className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 flex-1 w-full">
+      <main className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8 flex-1 w-full">
         {categories.length === 0 ? (
           <div className="text-center py-20">
             <p className="text-lg text-slate-600 font-medium">
