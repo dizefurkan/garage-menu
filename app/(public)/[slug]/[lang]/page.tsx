@@ -39,6 +39,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 async function getMenuData(slug: string, lang: string) {
   try {
     const baseUrl = getBaseUrl();
+    console.log("[getMenuData] Using baseUrl:", baseUrl);
     const response = await fetch(
       `${baseUrl}/api/public/menu?slug=${slug}&lang=${lang}`,
       { next: { revalidate: 3600 } }
