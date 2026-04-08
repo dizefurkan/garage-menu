@@ -51,9 +51,7 @@ export const dynamicParams = true;
 
 export async function generateStaticParams() {
   // Minimal fallback - just EN
-  const minimalFallback = [
-    { slug: "garage-chocolate-croissant", lang: "en" },
-  ];
+  const minimalFallback = [{ slug: "garage-chocolate-croissant", lang: "en" }];
 
   console.log("[generateStaticParams] Starting...");
 
@@ -85,12 +83,16 @@ export async function generateStaticParams() {
 
     if (error) {
       console.error("[generateStaticParams] Supabase error:", error);
-      console.warn("[generateStaticParams] Using minimal fallback due to error");
+      console.warn(
+        "[generateStaticParams] Using minimal fallback due to error"
+      );
       return minimalFallback;
     }
 
     if (!tenants || tenants.length === 0) {
-      console.warn("[generateStaticParams] No tenants found - using minimal fallback");
+      console.warn(
+        "[generateStaticParams] No tenants found - using minimal fallback"
+      );
       return minimalFallback;
     }
 
@@ -124,9 +126,11 @@ export async function generateStaticParams() {
 
     // Ensure garage-chocolate-croissant is fully pre-generated with all its languages
     const allParams = [...params];
-    
+
     // Find garage tenant's languages
-    const garageTenant = tenants.find((t: any) => t.slug === "garage-chocolate-croissant");
+    const garageTenant = tenants.find(
+      (t: any) => t.slug === "garage-chocolate-croissant"
+    );
     if (garageTenant) {
       // Get all configured languages for garage tenant
       let garageLanguages = [];
@@ -165,7 +169,9 @@ export async function generateStaticParams() {
     return allParams;
   } catch (error) {
     console.error("[generateStaticParams] Exception:", error);
-    console.warn("[generateStaticParams] Using minimal fallback due to exception");
+    console.warn(
+      "[generateStaticParams] Using minimal fallback due to exception"
+    );
     return minimalFallback;
   }
 }
@@ -189,7 +195,7 @@ async function getMenuData(slug: string, lang: string) {
     console.log(`[getMenuData] Using cache tags:`, uniqueTags);
 
     const response = await fetch(url, {
-      next: { 
+      next: {
         tags: uniqueTags,
         revalidate: 60, // 60-second ISR fallback for on-demand routes
       },
