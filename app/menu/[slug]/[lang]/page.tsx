@@ -50,10 +50,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export const dynamicParams = true;
 
 export async function generateStaticParams() {
-  // Hardcoded fallback for main menu
-  const fallbackParams = [
+  // Minimal fallback - just EN
+  const minimalFallback = [
     { slug: "garage-chocolate-croissant", lang: "en" },
-    { slug: "garage-chocolate-croissant", lang: "tr" },
   ];
 
   console.log("[generateStaticParams] Starting...");
@@ -65,9 +64,9 @@ export async function generateStaticParams() {
       !process.env.SUPABASE_SERVICE_ROLE_KEY
     ) {
       console.warn(
-        "[generateStaticParams] Credentials missing - using fallback"
+        "[generateStaticParams] Credentials missing - using minimal fallback"
       );
-      return fallbackParams;
+      return minimalFallback;
     }
 
     console.log("[generateStaticParams] Creating Supabase client...");
@@ -86,18 +85,33 @@ export async function generateStaticParams() {
 
     if (error) {
       console.error("[generateStaticParams] Supabase error:", error);
-      console.warn("[generateStaticParams] Using fallback due to error");
-      return fallbackParams;
+      console.warn("[generateStaticParams] Using minimal fallback due to error");
+      return minimalFallback;
     }
 
     if (!tenants || tenants.length === 0) {
-      console.warn("[generateStaticParams] No tenants found - using fallback");
-      return fallbackParams;
+      console.warn("[generateStaticParams] No tenants found - using minimal fallback");
+      return minimalFallback;
     }
 
     // Generate params for all tenant/language combinations
     const params = tenants.flatMap((tenant: any) => {
-      const languages = tenant.languages || ["en"];
+      // Safely parse languages - could be array or JSON string
+      let languages = [];
+      if (tenant.languages) {
+        if (Array.isArray(tenant.languages)) {
+          languages = tenant.languages;
+        } else if (typeof tenant.languages === "string") {
+          try {
+            languages = JSON.parse(tenant.languages);
+          } catch {
+            languages = ["en"];
+          }
+        }
+      } else {
+        languages = ["en"];
+      }
+
       return languages.map((lang: string) => ({
         slug: tenant.slug,
         lang: lang,
@@ -108,21 +122,51 @@ export async function generateStaticParams() {
       `[generateStaticParams] Generated ${params.length} routes from ${tenants.length} tenants`
     );
 
-    // Always include fallback to ensure garage-chocolate-croissant/en exists
+    // Ensure garage-chocolate-croissant is fully pre-generated with all its languages
     const allParams = [...params];
-    const hasGarage = params.some(
-      (p) => p.slug === "garage-chocolate-croissant"
-    );
-    if (!hasGarage) {
-      console.log("[generateStaticParams] Adding hardcoded fallback to params");
-      allParams.push(...fallbackParams);
+    
+    // Find garage tenant's languages
+    const garageTenant = tenants.find((t: any) => t.slug === "garage-chocolate-croissant");
+    if (garageTenant) {
+      // Get all configured languages for garage tenant
+      let garageLanguages = [];
+      if (garageTenant.languages) {
+        if (Array.isArray(garageTenant.languages)) {
+          garageLanguages = garageTenant.languages;
+        } else if (typeof garageTenant.languages === "string") {
+          try {
+            garageLanguages = JSON.parse(garageTenant.languages);
+          } catch {
+            garageLanguages = ["en"];
+          }
+        }
+      } else {
+        garageLanguages = ["en"];
+      }
+
+      // Check each language and add if missing
+      for (const lang of garageLanguages) {
+        const exists = params.some(
+          (p) => p.slug === "garage-chocolate-croissant" && p.lang === lang
+        );
+        if (!exists) {
+          console.log(
+            `[generateStaticParams] Adding ${lang} fallback for garage-chocolate-croissant`
+          );
+          allParams.push({ slug: "garage-chocolate-croissant", lang });
+        }
+      }
+    } else {
+      // Garage tenant not in DB, use minimal fallback
+      console.warn("[generateStaticParams] Garage tenant not found in DB");
+      allParams.push({ slug: "garage-chocolate-croissant", lang: "en" });
     }
 
     return allParams;
   } catch (error) {
     console.error("[generateStaticParams] Exception:", error);
-    console.warn("[generateStaticParams] Using fallback due to exception");
-    return fallbackParams;
+    console.warn("[generateStaticParams] Using minimal fallback due to exception");
+    return minimalFallback;
   }
 }
 
@@ -145,7 +189,10 @@ async function getMenuData(slug: string, lang: string) {
     console.log(`[getMenuData] Using cache tags:`, uniqueTags);
 
     const response = await fetch(url, {
-      next: { tags: uniqueTags },
+      next: { 
+        tags: uniqueTags,
+        revalidate: 60, // 60-second ISR fallback for on-demand routes
+      },
     });
 
     console.log(`[getMenuData] Response status: ${response.status}`);
