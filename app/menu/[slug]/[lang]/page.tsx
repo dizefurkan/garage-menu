@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import { createClient } from "@supabase/supabase-js";
 import { CategoriesNav } from "./categories-nav";
 import { Footer } from "@/components/Footer";
 import { formatPrice } from "@/lib/utils/currency";
@@ -34,6 +35,42 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       },
     },
   };
+}
+
+export async function generateStaticParams() {
+  try {
+    // Create Supabase admin client
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL || "",
+      process.env.SUPABASE_SERVICE_ROLE_KEY || ""
+    );
+
+    // Fetch all tenants with their languages
+    const { data: tenants, error } = await supabaseAdmin
+      .from("tenants")
+      .select("slug, languages");
+
+    if (error || !tenants) {
+      console.error("[generateStaticParams] Error fetching tenants:", error);
+      // Return empty array to not block build - routes will be generated on demand
+      return [];
+    }
+
+    // Generate params for all tenant/language combinations
+    const params = tenants.flatMap((tenant: any) => {
+      const languages = tenant.languages || ["en"];
+      return languages.map((lang: string) => ({
+        slug: tenant.slug,
+        lang: lang,
+      }));
+    });
+
+    return params;
+  } catch (error) {
+    console.error("[generateStaticParams] Error:", error);
+    // Return empty array to not block build - routes will be generated on demand
+    return [];
+  }
 }
 
 async function getMenuData(slug: string, lang: string) {
