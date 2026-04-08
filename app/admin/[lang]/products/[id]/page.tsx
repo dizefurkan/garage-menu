@@ -85,7 +85,7 @@ export default function EditProductPage() {
         // Parse translations into form structure
         // IMPORTANT: Initialize ALL tenant languages, not just existing ones
         const translations: Record<string, any> = {};
-        
+
         // First, initialize empty translations for all tenant languages
         const tenantLanguages = tenant.languages || ["en"];
         for (const lang of tenantLanguages) {
@@ -94,7 +94,7 @@ export default function EditProductPage() {
             description: "",
           };
         }
-        
+
         // Then, populate with existing translations from DB
         productData.product_translations?.forEach((trans: any) => {
           translations[trans.language_code] = {

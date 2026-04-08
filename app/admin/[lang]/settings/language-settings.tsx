@@ -3,6 +3,13 @@
 import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import type { Database } from "@/lib/database.types";
 
 type Tenant = Database["public"]["Tables"]["tenants"]["Row"];
@@ -37,8 +44,10 @@ export function LanguageSettings({ tenant }: { tenant: Tenant }) {
     }
   }
 
-  const [selectedLanguages, setSelectedLanguages] = useState<string[]>(
-    parsedLanguages
+  const [selectedLanguages, setSelectedLanguages] =
+    useState<string[]>(parsedLanguages);
+  const [defaultLanguage, setDefaultLanguage] = useState<string>(
+    tenant.default_language || "en"
   );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -65,6 +74,13 @@ export function LanguageSettings({ tenant }: { tenant: Tenant }) {
       return;
     }
 
+    // Check if default language is in selected languages
+    if (!selectedLanguages.includes(defaultLanguage)) {
+      setError("Default language must be one of the selected languages");
+      setLoading(false);
+      return;
+    }
+
     try {
       const response = await fetch("/api/admin/settings/languages", {
         method: "PATCH",
@@ -72,6 +88,7 @@ export function LanguageSettings({ tenant }: { tenant: Tenant }) {
         body: JSON.stringify({
           tenant_id: tenant.id,
           languages: selectedLanguages,
+          default_language: defaultLanguage,
         }),
       });
 
@@ -88,28 +105,62 @@ export function LanguageSettings({ tenant }: { tenant: Tenant }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <p className="text-sm text-gray-600 mb-3">
-        Select which languages will be available for your menu. At least one
-        language is required.
-      </p>
-      <div className="space-y-2">
-        {SUPPORTED_LANGUAGES.map((lang) => (
-          <div key={lang.code} className="flex items-center gap-2">
-            <Checkbox
-              id={`lang-${lang.code}`}
-              checked={selectedLanguages.includes(lang.code)}
-              onCheckedChange={() => handleLanguageChange(lang.code)}
-            />
-            <label
-              htmlFor={`lang-${lang.code}`}
-              className="text-sm cursor-pointer font-medium"
-            >
-              {lang.name} ({lang.code})
-            </label>
-          </div>
-        ))}
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Available Languages */}
+      <div>
+        <p className="text-sm text-gray-600 mb-3">
+          Select which languages will be available for your menu. At least one
+          language is required.
+        </p>
+        <div className="space-y-2">
+          {SUPPORTED_LANGUAGES.map((lang) => (
+            <div key={lang.code} className="flex items-center gap-2">
+              <Checkbox
+                id={`lang-${lang.code}`}
+                checked={selectedLanguages.includes(lang.code)}
+                onCheckedChange={() => handleLanguageChange(lang.code)}
+              />
+              <label
+                htmlFor={`lang-${lang.code}`}
+                className="text-sm cursor-pointer font-medium"
+              >
+                {lang.name} ({lang.code})
+              </label>
+            </div>
+          ))}
+        </div>
       </div>
+
+      {/* Default Language */}
+      <div>
+        <label className="mb-2 block text-sm font-medium">
+          Default Language
+        </label>
+        <p className="text-xs text-gray-500 mb-2">
+          This language will be shown when visitors first access your menu.
+        </p>
+        <Select
+          value={defaultLanguage}
+          onValueChange={(value) => {
+            if (value) setDefaultLanguage(value);
+          }}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {selectedLanguages.map((lang) => {
+              const langInfo = SUPPORTED_LANGUAGES.find((l) => l.code === lang);
+              return (
+                <SelectItem key={lang} value={lang}>
+                  {langInfo?.name} ({lang})
+                </SelectItem>
+              );
+            })}
+          </SelectContent>
+        </Select>
+      </div>
+
       {error && (
         <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">
           {error}

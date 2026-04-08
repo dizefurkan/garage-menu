@@ -10,7 +10,7 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
-    const { tenant_id, languages } = await req.json();
+    const { tenant_id, languages, default_language } = await req.json();
 
     if (tenant_id !== tenant.id) {
       return NextResponse.json({ error: "Tenant mismatch" }, { status: 403 });
@@ -23,6 +23,14 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
+    // Validate default language is in the selected languages list
+    if (default_language && !languages.includes(default_language)) {
+      return NextResponse.json(
+        { error: "Default language must be one of the selected languages" },
+        { status: 400 }
+      );
+    }
+
     if (!supabaseAdmin) {
       return NextResponse.json(
         { error: "Database connection failed" },
@@ -30,9 +38,14 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
+    const updateData: any = { languages };
+    if (default_language) {
+      updateData.default_language = default_language;
+    }
+
     const { error } = await (supabaseAdmin as any)
       .from("tenants")
-      .update({ languages })
+      .update(updateData)
       .eq("id", tenant_id);
 
     if (error) {
