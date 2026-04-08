@@ -97,24 +97,19 @@ export default async function MenuPage({ params }: Props) {
 
   // TEST: Just return simple page to verify route works
   return (
-    <html>
-      <head>
-        <title>{slug} - Menu</title>
-      </head>
-      <body style={{ padding: "2rem", fontFamily: "sans-serif" }}>
-        <h1>✅ Route Works!</h1>
-        <p>
-          <strong>Slug:</strong> {slug}
-        </p>
-        <p>
-          <strong>Language:</strong> {lang}
-        </p>
-        <p>
-          <strong>Base URL:</strong> {getBaseUrl()}
-        </p>
-        <hr />
-        <p>This is a test page. The route /menu/[slug]/[lang] IS working!</p>
-      </body>
-    </html>
+    <div style={{ padding: "2rem", fontFamily: "sans-serif" }}>
+      <h1>✅ Route Works!</h1>
+      <p>
+        <strong>Slug:</strong> {slug}
+      </p>
+      <p>
+        <strong>Language:</strong> {lang}
+      </p>
+      <p>
+        <strong>Base URL:</strong> {getBaseUrl()}
+      </p>
+      <hr />
+      <p>This is a test page. The route /menu/[slug]/[lang] IS working!</p>
+    </div>
   );
 }
