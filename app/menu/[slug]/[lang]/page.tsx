@@ -41,11 +41,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export const dynamicParams = true;
 
 export async function generateStaticParams() {
+  // Hardcoded fallback for main menu
+  const fallbackParams = [
+    { slug: "garage-chocolate-croissant", lang: "en" },
+    { slug: "garage-chocolate-croissant", lang: "tr" },
+  ];
+
   try {
     // Only attempt if environment variables are available
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-      console.warn("[generateStaticParams] Supabase credentials missing - using on-demand generation");
-      return [];
+      console.warn("[generateStaticParams] Supabase credentials missing - using fallback + on-demand generation");
+      return fallbackParams;
     }
 
     // Create Supabase admin client
@@ -61,8 +67,8 @@ export async function generateStaticParams() {
 
     if (error || !tenants) {
       console.error("[generateStaticParams] Error fetching tenants:", error);
-      console.warn("[generateStaticParams] Falling back to on-demand generation");
-      return [];
+      console.warn("[generateStaticParams] Using fallback + on-demand generation");
+      return fallbackParams;
     }
 
     console.log(`[generateStaticParams] Pre-generating ${tenants.length} tenants with their languages`);
@@ -80,8 +86,8 @@ export async function generateStaticParams() {
     return params;
   } catch (error) {
     console.error("[generateStaticParams] Error:", error);
-    console.warn("[generateStaticParams] Falling back to on-demand generation");
-    return [];
+    console.warn("[generateStaticParams] Using fallback + on-demand generation");
+    return fallbackParams;
   }
 }
 
