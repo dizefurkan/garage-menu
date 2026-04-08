@@ -87,6 +87,29 @@ export async function generateStaticParams() {
   }
 }
 
+async function getMenuData(slug: string, lang: string) {
+  try {
+    const baseUrl = getBaseUrl();
+    const response = await fetch(
+      `${baseUrl}/api/public/menu?slug=${slug}&lang=${lang}`,
+      { next: { revalidate: 3600 } }
+    );
+
+    if (!response.ok) {
+      console.error(
+        `[getMenuData] API returned ${response.status} for ${slug}/${lang}`
+      );
+      return null;
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error(`[getMenuData] Error for ${slug}/${lang}:`, error);
+    return null;
+  }
+}
+
 export default async function MenuPage({ params }: Props) {
   const { slug, lang } = await params;
 
@@ -95,21 +118,120 @@ export default async function MenuPage({ params }: Props) {
     notFound();
   }
 
-  // TEST: Just return simple page to verify route works
+  // Get menu data from API
+  const data = await getMenuData(slug, lang);
+  if (!data) {
+    notFound();
+  }
+
+  const { tenant, categories, products } = data;
+
+  // Extract theme config with fallbacks
+  const themeConfig = (tenant.theme_config as any) || {};
+  const primaryColor = themeConfig.primary || "#000000";
+
   return (
-    <div style={{ padding: "2rem", fontFamily: "sans-serif" }}>
-      <h1>✅ Route Works!</h1>
-      <p>
-        <strong>Slug:</strong> {slug}
-      </p>
-      <p>
-        <strong>Language:</strong> {lang}
-      </p>
-      <p>
-        <strong>Base URL:</strong> {getBaseUrl()}
-      </p>
-      <hr />
-      <p>This is a test page. The route /menu/[slug]/[lang] IS working!</p>
-    </div>
+    <main style={{ padding: "2rem", fontFamily: "sans-serif", maxWidth: "1200px", margin: "0 auto" }}>
+      <header style={{ marginBottom: "2rem" }}>
+        {tenant.logo_url && (
+          <img
+            src={tenant.logo_url}
+            alt={tenant.name}
+            style={{ height: "80px", marginBottom: "1rem" }}
+          />
+        )}
+        <h1 style={{ color: primaryColor, margin: "0 0 0.5rem 0" }}>
+          {tenant.name}
+        </h1>
+        {tenant.description && (
+          <p style={{ color: "#666", margin: "0" }}>{tenant.description}</p>
+        )}
+      </header>
+
+      {/* Categories */}
+      <div style={{ marginBottom: "2rem" }}>
+        {categories && categories.length > 0 && (
+          <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+            {categories.map((cat: any) => (
+              <button
+                key={cat.id}
+                style={{
+                  padding: "0.5rem 1rem",
+                  border: `2px solid ${primaryColor}`,
+                  backgroundColor: "white",
+                  color: primaryColor,
+                  cursor: "pointer",
+                  borderRadius: "4px",
+                  fontWeight: "500",
+                }}
+              >
+                {cat.name}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Products Grid */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "1rem" }}>
+        {products && products.length > 0 ? (
+          products.map((product: any) => (
+            <div
+              key={product.id}
+              style={{
+                border: "1px solid #ddd",
+                borderRadius: "8px",
+                overflow: "hidden",
+                boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+              }}
+            >
+              {product.image ? (
+                <img
+                  src={product.image}
+                  alt={product.name}
+                  style={{ width: "100%", height: "150px", objectFit: "cover" }}
+                />
+              ) : (
+                <div
+                  style={{
+                    width: "100%",
+                    height: "150px",
+                    backgroundColor: "#f0f0f0",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "#999",
+                  }}
+                >
+                  No  image
+                </div>
+              )}
+              <div style={{ padding: "1rem" }}>
+                <h3 style={{ margin: "0 0 0.5rem 0", fontSize: "1.1rem" }}>
+                  {product.name}
+                </h3>
+                {product.description && (
+                  <p style={{ margin: "0.5rem 0", fontSize: "0.9rem", color: "#666" }}>
+                    {product.description}
+                  </p>
+                )}
+                <p
+                  style={{
+                    margin: "0.5rem 0 0 0",
+                    fontSize: "1.2rem",
+                    fontWeight: "bold",
+                    color: primaryColor,
+                  }}
+                >
+                  {product.price} {product.currency}
+                </p>
+              </div>
+            </div>
+          ))
+        ) : (
+          <p>No products available</p>
+        )}
+      </div>
+    </main>
   );
 }
