@@ -1,15 +1,44 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { Database } from "@/lib/database.types";
 
 type Tenant = Database["public"]["Tables"]["tenants"]["Row"];
 
+// All supported languages in the system
+const SUPPORTED_LANGUAGES = [
+  { code: "en", name: "English" },
+  { code: "tr", name: "Türkçe" },
+  { code: "de", name: "Deutsch" },
+  { code: "fr", name: "Français" },
+  { code: "es", name: "Español" },
+  { code: "it", name: "Italiano" },
+  { code: "pt", name: "Português" },
+  { code: "ja", name: "日本語" },
+  { code: "zh", name: "中文" },
+  { code: "ru", name: "Русский" },
+  { code: "ar", name: "العربية" },
+];
+
 export function LanguageSettings({ tenant }: { tenant: Tenant }) {
+  // Parse tenant languages safely (can be array or JSON string)
+  let parsedLanguages: string[] = ["en"];
+  if (tenant.languages) {
+    if (Array.isArray(tenant.languages)) {
+      parsedLanguages = tenant.languages;
+    } else if (typeof tenant.languages === "string") {
+      try {
+        parsedLanguages = JSON.parse(tenant.languages);
+      } catch {
+        parsedLanguages = ["en"];
+      }
+    }
+  }
+
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>(
-    tenant.languages || ["en"]
+    parsedLanguages
   );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -65,18 +94,18 @@ export function LanguageSettings({ tenant }: { tenant: Tenant }) {
         language is required.
       </p>
       <div className="space-y-2">
-        {["en", "tr"].map((lang) => (
-          <div key={lang} className="flex items-center gap-2">
+        {SUPPORTED_LANGUAGES.map((lang) => (
+          <div key={lang.code} className="flex items-center gap-2">
             <Checkbox
-              id={`lang-${lang}`}
-              checked={selectedLanguages.includes(lang)}
-              onCheckedChange={() => handleLanguageChange(lang)}
+              id={`lang-${lang.code}`}
+              checked={selectedLanguages.includes(lang.code)}
+              onCheckedChange={() => handleLanguageChange(lang.code)}
             />
             <label
-              htmlFor={`lang-${lang}`}
+              htmlFor={`lang-${lang.code}`}
               className="text-sm cursor-pointer font-medium"
             >
-              {lang === "en" ? "English" : "Türkçe"}
+              {lang.name} ({lang.code})
             </label>
           </div>
         ))}
