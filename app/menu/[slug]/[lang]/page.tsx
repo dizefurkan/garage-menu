@@ -1,23 +1,24 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { createClient } from "@supabase/supabase-js";
+import { getTenantCacheTags } from "@/lib/cache/revalidation";
 
 function getBaseUrl(): string {
   // On Vercel production, use the production domain
   if (process.env.VERCEL_ENV === "production") {
     return "https://garage-menu.vercel.app";
   }
-  
+
   // On Vercel preview deployments
   if (process.env.VERCEL_URL) {
     return `https://${process.env.VERCEL_URL}`;
   }
-  
+
   // Local development
   if (process.env.NEXT_PUBLIC_BASE_URL) {
     return process.env.NEXT_PUBLIC_BASE_URL;
   }
-  
+
   return "http://localhost:3000";
 }
 
@@ -70,7 +71,7 @@ export async function generateStaticParams() {
     }
 
     console.log("[generateStaticParams] Creating Supabase client...");
-    
+
     // Create Supabase admin client
     const supabaseAdmin = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -90,9 +91,7 @@ export async function generateStaticParams() {
     }
 
     if (!tenants || tenants.length === 0) {
-      console.warn(
-        "[generateStaticParams] No tenants found - using fallback"
-      );
+      console.warn("[generateStaticParams] No tenants found - using fallback");
       return fallbackParams;
     }
 
@@ -108,15 +107,17 @@ export async function generateStaticParams() {
     console.log(
       `[generateStaticParams] Generated ${params.length} routes from ${tenants.length} tenants`
     );
-    
+
     // Always include fallback to ensure garage-chocolate-croissant/en exists
     const allParams = [...params];
-    const hasGarage = params.some(p => p.slug === "garage-chocolate-croissant");
+    const hasGarage = params.some(
+      (p) => p.slug === "garage-chocolate-croissant"
+    );
     if (!hasGarage) {
       console.log("[generateStaticParams] Adding hardcoded fallback to params");
       allParams.push(...fallbackParams);
     }
-    
+
     return allParams;
   } catch (error) {
     console.error("[generateStaticParams] Exception:", error);
@@ -129,11 +130,22 @@ async function getMenuData(slug: string, lang: string) {
   try {
     const baseUrl = getBaseUrl();
     const url = `${baseUrl}/api/public/menu?slug=${slug}&lang=${lang}`;
-    
+
     console.log(`[getMenuData] Fetching from: ${url}`);
-    
-    const response = await fetch(url, { 
-      next: { revalidate: 3600 }
+
+    // Use tag-based revalidation so mutations can invalidate the cache
+    // Include tags for both products and categories since menu displays both
+    const tags = [
+      ...getTenantCacheTags(slug, "products"),
+      ...getTenantCacheTags(slug, "categories"),
+    ];
+
+    // Remove duplicates
+    const uniqueTags = [...new Set(tags)];
+    console.log(`[getMenuData] Using cache tags:`, uniqueTags);
+
+    const response = await fetch(url, {
+      next: { tags: uniqueTags },
     });
 
     console.log(`[getMenuData] Response status: ${response.status}`);
@@ -157,7 +169,7 @@ async function getMenuData(slug: string, lang: string) {
 
 export default async function MenuPage({ params }: Props) {
   const { slug, lang } = await params;
-  
+
   console.log("[MenuPage] Rendering for:", { slug, lang });
 
   // Validate language
@@ -169,7 +181,7 @@ export default async function MenuPage({ params }: Props) {
   // Get menu data from API
   console.log("[MenuPage] Fetching menu data...");
   const data = await getMenuData(slug, lang);
-  
+
   if (!data) {
     console.log("[MenuPage] No data returned, returning notFound");
     notFound();
@@ -183,7 +195,14 @@ export default async function MenuPage({ params }: Props) {
   const primaryColor = themeConfig.primary || "#000000";
 
   return (
-    <main style={{ padding: "2rem", fontFamily: "sans-serif", maxWidth: "1200px", margin: "0 auto" }}>
+    <main
+      style={{
+        padding: "2rem",
+        fontFamily: "sans-serif",
+        maxWidth: "1200px",
+        margin: "0 auto",
+      }}
+    >
       <header style={{ marginBottom: "2rem" }}>
         {tenant.logo_url && (
           <img
@@ -225,7 +244,13 @@ export default async function MenuPage({ params }: Props) {
       </div>
 
       {/* Products Grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "1rem" }}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+          gap: "1rem",
+        }}
+      >
         {products && products.length > 0 ? (
           products.map((product: any) => (
             <div
@@ -255,7 +280,7 @@ export default async function MenuPage({ params }: Props) {
                     color: "#999",
                   }}
                 >
-                  No  image
+                  No image
                 </div>
               )}
               <div style={{ padding: "1rem" }}>
@@ -263,7 +288,13 @@ export default async function MenuPage({ params }: Props) {
                   {product.name}
                 </h3>
                 {product.description && (
-                  <p style={{ margin: "0.5rem 0", fontSize: "0.9rem", color: "#666" }}>
+                  <p
+                    style={{
+                      margin: "0.5rem 0",
+                      fontSize: "0.9rem",
+                      color: "#666",
+                    }}
+                  >
                     {product.description}
                   </p>
                 )}

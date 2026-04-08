@@ -24,7 +24,7 @@ export async function GET(request: Request) {
 
   try {
     console.log(`[API:public/menu] Querying tenant with slug: ${slug}`);
-    
+
     // Get tenant using admin client to bypass RLS
     const { data: tenant, error: tenantError } = await supabaseAdmin
       .from("tenants")
@@ -165,7 +165,13 @@ export async function GET(request: Request) {
   } catch (error) {
     console.error("[API:public/menu] Unexpected error:", error);
     console.error("[API:public/menu] Error type:", typeof error);
-    console.error("[API:public/menu] Error details:", JSON.stringify(error, null, 2));
-    return Response.json({ error: "Internal server error", details: String(error) }, { status: 500 });
+    console.error(
+      "[API:public/menu] Error details:",
+      JSON.stringify(error, null, 2)
+    );
+    return Response.json(
+      { error: "Internal server error", details: String(error) },
+      { status: 500 }
+    );
   }
 }

@@ -47,10 +47,24 @@ export default async function DeploymentDebugPage() {
   }
 
   return (
-    <div style={{ padding: "2rem", fontFamily: "monospace", fontSize: "12px", lineHeight: "1.6" }}>
+    <div
+      style={{
+        padding: "2rem",
+        fontFamily: "monospace",
+        fontSize: "12px",
+        lineHeight: "1.6",
+      }}
+    >
       <h1>🔧 Vercel Deployment Debug</h1>
 
-      <section style={{ marginTop: "1rem", padding: "1rem", border: "1px solid #ccc", borderRadius: "4px" }}>
+      <section
+        style={{
+          marginTop: "1rem",
+          padding: "1rem",
+          border: "1px solid #ccc",
+          borderRadius: "4px",
+        }}
+      >
         <h2>Build Info</h2>
         <pre>{`NODE_ENV: ${process.env.NODE_ENV}
 VERCEL: ${process.env.VERCEL ? "✅" : "❌"}
@@ -64,41 +78,81 @@ Next.js Environment:
 - GOOGLE_DRIVE_MENU_URL: ${process.env.GOOGLE_DRIVE_MENU_URL ? "✅ SET" : "❌ MISSING"}`}</pre>
       </section>
 
-      <section style={{ marginTop: "1rem", padding: "1rem", border: "1px solid #ccc", borderRadius: "4px" }}>
+      <section
+        style={{
+          marginTop: "1rem",
+          padding: "1rem",
+          border: "1px solid #ccc",
+          borderRadius: "4px",
+        }}
+      >
         <h2>Database Connection</h2>
         <pre>{`Status: ${dbCheck.status}
 Error: ${dbCheck.error ? JSON.stringify(dbCheck.error) : "None"}`}</pre>
       </section>
 
-      <section style={{ marginTop: "1rem", padding: "1rem", border: "1px solid #ccc", borderRadius: "4px" }}>
+      <section
+        style={{
+          marginTop: "1rem",
+          padding: "1rem",
+          border: "1px solid #ccc",
+          borderRadius: "4px",
+        }}
+      >
         <h2>Static Params</h2>
         <pre>{`Configured: ${params.configured}
 Tenant Routes Found: ${params.count}
 Error: ${params.error ? JSON.stringify(params.error) : "None"}`}</pre>
       </section>
 
-      <section style={{ marginTop: "1rem", padding: "1rem", border: "1px solid #0070f3", backgroundColor: "#e0eeff", borderRadius: "4px" }}>
+      <section
+        style={{
+          marginTop: "1rem",
+          padding: "1rem",
+          border: "1px solid #0070f3",
+          backgroundColor: "#e0eeff",
+          borderRadius: "4px",
+        }}
+      >
         <h2>Routes Status</h2>
         <ul>
           <li>
-            <a href="/menu/garage-chocolate-croissant/en" style={{ color: "blue" }}>
+            <a
+              href="/menu/garage-chocolate-croissant/en"
+              style={{ color: "blue" }}
+            >
               Test: /menu/garage-chocolate-croissant/en
             </a>
           </li>
           <li>
-            <a href="/api/public/menu?slug=garage-chocolate-croissant&lang=en" style={{ color: "blue" }}>
+            <a
+              href="/api/public/menu?slug=garage-chocolate-croissant&lang=en"
+              style={{ color: "blue" }}
+            >
               Test API: /api/public/menu?slug=garage-chocolate-croissant&lang=en
             </a>
           </li>
         </ul>
       </section>
 
-      <section style={{ marginTop: "1rem", padding: "1rem", border: "1px solid #ffc107", backgroundColor: "#fff3cd", borderRadius: "4px" }}>
+      <section
+        style={{
+          marginTop: "1rem",
+          padding: "1rem",
+          border: "1px solid #ffc107",
+          backgroundColor: "#fff3cd",
+          borderRadius: "4px",
+        }}
+      >
         <h2>Next Steps</h2>
         <ol>
-          <li>If Database Connection shows "error" → Check Supabase network access</li>
+          <li>
+            If Database Connection shows "error" → Check Supabase network access
+          </li>
           <li>If params show "0" → No tenants found in database</li>
-          <li>Try clicking "Test: /menu/garage-chocolate-croissant/en" link above</li>
+          <li>
+            Try clicking "Test: /menu/garage-chocolate-croissant/en" link above
+          </li>
           <li>If still 404 → Check Vercel build logs in dashboard</li>
         </ol>
       </section>
