@@ -10,15 +10,21 @@ export async function GET(request: Request) {
   const slug = searchParams.get("slug");
   const lang = searchParams.get("lang") || "en";
 
+  console.log(`[API:public/menu] Request: slug=${slug}, lang=${lang}`);
+
   if (!slug) {
+    console.warn("[API:public/menu] Missing slug parameter");
     return Response.json({ error: "Slug required" }, { status: 400 });
   }
 
   if (!["en", "tr"].includes(lang)) {
+    console.warn(`[API:public/menu] Invalid language: ${lang}`);
     return Response.json({ error: "Invalid language" }, { status: 400 });
   }
 
   try {
+    console.log(`[API:public/menu] Querying tenant with slug: ${slug}`);
+    
     // Get tenant using admin client to bypass RLS
     const { data: tenant, error: tenantError } = await supabaseAdmin
       .from("tenants")
@@ -26,9 +32,16 @@ export async function GET(request: Request) {
       .eq("slug", slug)
       .single();
 
-    if (tenantError || !tenant) {
+    if (tenantError) {
+      console.error(`[API:public/menu] Tenant query error:`, tenantError);
+    }
+
+    if (!tenant) {
+      console.warn(`[API:public/menu] Tenant not found for slug: ${slug}`);
       return Response.json({ error: "Tenant not found" }, { status: 404 });
     }
+
+    console.log(`[API:public/menu] Found tenant: ${tenant.name}`);
 
     // Parse contact_info JSON if it exists
     let contactInfo: any = {};
@@ -39,7 +52,7 @@ export async function GET(request: Request) {
             ? JSON.parse(tenant.contact_info)
             : tenant.contact_info;
       } catch (e) {
-        console.error("[API] Error parsing contact_info:", e);
+        console.error("[API:public/menu] Error parsing contact_info:", e);
       }
     }
     const { data: categories, error: categoriesError } = await supabaseAdmin
@@ -150,7 +163,9 @@ export async function GET(request: Request) {
       products: processedProducts,
     });
   } catch (error) {
-    console.error("[API] Error:", error);
-    return Response.json({ error: "Internal server error" }, { status: 500 });
+    console.error("[API:public/menu] Unexpected error:", error);
+    console.error("[API:public/menu] Error type:", typeof error);
+    console.error("[API:public/menu] Error details:", JSON.stringify(error, null, 2));
+    return Response.json({ error: "Internal server error", details: String(error) }, { status: 500 });
   }
 }

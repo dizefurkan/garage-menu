@@ -3,11 +3,22 @@ import type { Metadata } from "next";
 import { createClient } from "@supabase/supabase-js";
 
 function getBaseUrl(): string {
-  if (process.env.VERCEL_URL) {
-    const protocol = process.env.VERCEL_ENV === "production" ? "https" : "http";
-    return `${protocol}://${process.env.VERCEL_URL}`;
+  // On Vercel production, use the production domain
+  if (process.env.VERCEL_ENV === "production") {
+    return "https://garage-menu.vercel.app";
   }
-  return process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+  
+  // On Vercel preview deployments
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+  
+  // Local development
+  if (process.env.NEXT_PUBLIC_BASE_URL) {
+    return process.env.NEXT_PUBLIC_BASE_URL;
+  }
+  
+  return "http://localhost:3000";
 }
 
 interface Props {
@@ -44,6 +55,8 @@ export async function generateStaticParams() {
     { slug: "garage-chocolate-croissant", lang: "tr" },
   ];
 
+  console.log("[generateStaticParams] Starting...");
+
   try {
     // Only attempt if environment variables are available
     if (
@@ -56,6 +69,8 @@ export async function generateStaticParams() {
       return fallbackParams;
     }
 
+    console.log("[generateStaticParams] Creating Supabase client...");
+    
     // Create Supabase admin client
     const supabaseAdmin = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -63,12 +78,21 @@ export async function generateStaticParams() {
     );
 
     // Fetch all tenants with their languages
+    console.log("[generateStaticParams] Fetching tenants...");
     const { data: tenants, error } = await supabaseAdmin
       .from("tenants")
       .select("slug, languages");
 
-    if (error || !tenants) {
-      console.error("[generateStaticParams] Error:", error);
+    if (error) {
+      console.error("[generateStaticParams] Supabase error:", error);
+      console.warn("[generateStaticParams] Using fallback due to error");
+      return fallbackParams;
+    }
+
+    if (!tenants || tenants.length === 0) {
+      console.warn(
+        "[generateStaticParams] No tenants found - using fallback"
+      );
       return fallbackParams;
     }
 
@@ -81,9 +105,22 @@ export async function generateStaticParams() {
       }));
     });
 
-    return params;
+    console.log(
+      `[generateStaticParams] Generated ${params.length} routes from ${tenants.length} tenants`
+    );
+    
+    // Always include fallback to ensure garage-chocolate-croissant/en exists
+    const allParams = [...params];
+    const hasGarage = params.some(p => p.slug === "garage-chocolate-croissant");
+    if (!hasGarage) {
+      console.log("[generateStaticParams] Adding hardcoded fallback to params");
+      allParams.push(...fallbackParams);
+    }
+    
+    return allParams;
   } catch (error) {
-    console.error("[generateStaticParams] Error:", error);
+    console.error("[generateStaticParams] Exception:", error);
+    console.warn("[generateStaticParams] Using fallback due to exception");
     return fallbackParams;
   }
 }
@@ -91,15 +128,13 @@ export async function generateStaticParams() {
 async function getMenuData(slug: string, lang: string) {
   try {
     const baseUrl = getBaseUrl();
-    console.log(`[getMenuData] Fetching from: ${baseUrl}/api/public/menu?slug=${slug}&lang=${lang}`);
+    const url = `${baseUrl}/api/public/menu?slug=${slug}&lang=${lang}`;
     
-    const response = await fetch(
-      `${baseUrl}/api/public/menu?slug=${slug}&lang=${lang}`,
-      { 
-        next: { revalidate: 3600 },
-        headers: { "User-Agent": "Next.js Server" }
-      }
-    );
+    console.log(`[getMenuData] Fetching from: ${url}`);
+    
+    const response = await fetch(url, { 
+      next: { revalidate: 3600 }
+    });
 
     console.log(`[getMenuData] Response status: ${response.status}`);
 
