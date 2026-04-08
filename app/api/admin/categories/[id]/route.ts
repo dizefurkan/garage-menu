@@ -1,5 +1,6 @@
 import { getSessionWithTenant } from "@/lib/auth/session";
 import { supabaseAdmin } from "@/lib/supabase";
+import { revalidateTenant } from "@/lib/cache/revalidation";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function DELETE(
@@ -54,6 +55,10 @@ export async function DELETE(
       console.error("Category deletion error:", deleteError);
       return NextResponse.json({ error: deleteError.message }, { status: 500 });
     }
+
+    // Revalidate menu pages for this tenant
+    console.log(`[Category Delete] Revalidating tenant menu: ${tenant.slug}`);
+    await revalidateTenant(tenant.slug, ["categories"]);
 
     return NextResponse.json({ success: true });
   } catch (error) {

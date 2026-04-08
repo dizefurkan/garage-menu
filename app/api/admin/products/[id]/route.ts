@@ -1,5 +1,6 @@
 import { getSessionWithTenant } from "@/lib/auth/session";
 import { supabaseAdmin } from "@/lib/supabase";
+import { revalidateTenant } from "@/lib/cache/revalidation";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function DELETE(
@@ -51,6 +52,10 @@ export async function DELETE(
       console.error("Product deletion error:", deleteError);
       return NextResponse.json({ error: deleteError.message }, { status: 500 });
     }
+
+    // Revalidate menu pages for this tenant
+    console.log(`[Product Delete] Revalidating tenant menu: ${tenant.slug}`);
+    await revalidateTenant(tenant.slug, ["products"]);
 
     return NextResponse.json({ success: true });
   } catch (error) {
@@ -193,6 +198,10 @@ export async function PUT(
         );
       }
     }
+
+    // Revalidate menu pages for this tenant
+    console.log(`[Product Update] Revalidating tenant menu: ${tenant.slug}`);
+    await revalidateTenant(tenant.slug, ["products"]);
 
     return NextResponse.json({ success: true, product_id: productId });
   } catch (error) {

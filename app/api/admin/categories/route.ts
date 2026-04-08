@@ -1,5 +1,6 @@
 import { getSessionWithTenant } from "@/lib/auth/session";
 import { supabaseAdmin } from "@/lib/supabase";
+import { revalidateTenant } from "@/lib/cache/revalidation";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
@@ -109,6 +110,10 @@ export async function POST(req: NextRequest) {
         { status: 500 }
       );
     }
+
+    // Revalidate menu pages for this tenant
+    console.log(`[Category Create] Revalidating tenant menu: ${tenant.slug}`);
+    await revalidateTenant(tenant.slug, ["categories"]);
 
     return NextResponse.json({ success: true, category_id: category.id });
   } catch (error) {
