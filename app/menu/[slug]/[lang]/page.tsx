@@ -49,8 +49,13 @@ export async function generateStaticParams() {
 
   try {
     // Only attempt if environment variables are available
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-      console.warn("[generateStaticParams] Supabase credentials missing - using fallback + on-demand generation");
+    if (
+      !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+      !process.env.SUPABASE_SERVICE_ROLE_KEY
+    ) {
+      console.warn(
+        "[generateStaticParams] Supabase credentials missing - using fallback + on-demand generation"
+      );
       return fallbackParams;
     }
 
@@ -67,11 +72,15 @@ export async function generateStaticParams() {
 
     if (error || !tenants) {
       console.error("[generateStaticParams] Error fetching tenants:", error);
-      console.warn("[generateStaticParams] Using fallback + on-demand generation");
+      console.warn(
+        "[generateStaticParams] Using fallback + on-demand generation"
+      );
       return fallbackParams;
     }
 
-    console.log(`[generateStaticParams] Pre-generating ${tenants.length} tenants with their languages`);
+    console.log(
+      `[generateStaticParams] Pre-generating ${tenants.length} tenants with their languages`
+    );
 
     // Generate params for all tenant/language combinations
     const params = tenants.flatMap((tenant: any) => {
@@ -82,11 +91,15 @@ export async function generateStaticParams() {
       }));
     });
 
-    console.log(`[generateStaticParams] Generated ${params.length} static routes`);
+    console.log(
+      `[generateStaticParams] Generated ${params.length} static routes`
+    );
     return params;
   } catch (error) {
     console.error("[generateStaticParams] Error:", error);
-    console.warn("[generateStaticParams] Using fallback + on-demand generation");
+    console.warn(
+      "[generateStaticParams] Using fallback + on-demand generation"
+    );
     return fallbackParams;
   }
 }
@@ -94,15 +107,19 @@ export async function generateStaticParams() {
 async function getMenuData(slug: string, lang: string) {
   try {
     const baseUrl = getBaseUrl();
-    console.log(`[getMenuData] Fetching menu for ${slug}/${lang} from ${baseUrl}`);
-    
+    console.log(
+      `[getMenuData] Fetching menu for ${slug}/${lang} from ${baseUrl}`
+    );
+
     const response = await fetch(
       `${baseUrl}/api/public/menu?slug=${slug}&lang=${lang}`,
       { next: { revalidate: 3600 } }
     );
 
     if (!response.ok) {
-      console.error(`[getMenuData] API returned ${response.status} for ${slug}/${lang}`);
+      console.error(
+        `[getMenuData] API returned ${response.status} for ${slug}/${lang}`
+      );
       const errorText = await response.text().catch(() => "");
       console.error(`[getMenuData] Response: ${errorText.slice(0, 200)}`);
       return null;
@@ -112,7 +129,10 @@ async function getMenuData(slug: string, lang: string) {
     console.log(`[getMenuData] Successfully fetched menu for ${slug}/${lang}`);
     return data;
   } catch (error) {
-    console.error(`[getMenuData] Error fetching menu for ${slug}/${lang}:`, error);
+    console.error(
+      `[getMenuData] Error fetching menu for ${slug}/${lang}:`,
+      error
+    );
     return null;
   }
 }
