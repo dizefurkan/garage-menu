@@ -84,6 +84,16 @@ export default function ProductFormPage() {
 
   const languages = tenant.languages || ["en"];
 
+  // Initialize translations for all tenant languages
+  const defaultTranslations: Record<string, any> = {};
+  const tenantLanguages = tenant.languages || ["en"];
+  for (const lang of tenantLanguages) {
+    defaultTranslations[lang] = {
+      name: "",
+      description: "",
+    };
+  }
+
   const {
     register,
     handleSubmit,
@@ -95,6 +105,7 @@ export default function ProductFormPage() {
     defaultValues: {
       is_available: true,
       currency: "TRY",
+      translations: defaultTranslations,
     },
   });
 

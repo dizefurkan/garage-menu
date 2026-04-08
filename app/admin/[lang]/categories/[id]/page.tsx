@@ -39,13 +39,14 @@ export default function EditCategoryPage() {
         const data = await response.json();
         setCategory(data);
 
-        // Initialize form with translations
+        // Initialize form with translations for ALL tenant languages
         const languages = tenant.languages || ["en"];
         const initialData = languages.reduce(
           (acc, lang) => {
             const translation = data.category_translations?.find(
               (t: any) => t.language_code === lang
             );
+            // Use existing translation or empty string for new languages
             acc[lang] = {
               name: translation?.name || "",
               description: translation?.description || "",
