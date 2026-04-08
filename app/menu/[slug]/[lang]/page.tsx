@@ -4,7 +4,8 @@ import { createClient } from "@supabase/supabase-js";
 
 function getBaseUrl(): string {
   if (process.env.VERCEL_URL) {
-    return `https://${process.env.VERCEL_URL}`;
+    const protocol = process.env.VERCEL_ENV === "production" ? "https" : "http";
+    return `${protocol}://${process.env.VERCEL_URL}`;
   }
   return process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
 }
@@ -90,40 +91,56 @@ export async function generateStaticParams() {
 async function getMenuData(slug: string, lang: string) {
   try {
     const baseUrl = getBaseUrl();
+    console.log(`[getMenuData] Fetching from: ${baseUrl}/api/public/menu?slug=${slug}&lang=${lang}`);
+    
     const response = await fetch(
       `${baseUrl}/api/public/menu?slug=${slug}&lang=${lang}`,
-      { next: { revalidate: 3600 } }
+      { 
+        next: { revalidate: 3600 },
+        headers: { "User-Agent": "Next.js Server" }
+      }
     );
 
+    console.log(`[getMenuData] Response status: ${response.status}`);
+
     if (!response.ok) {
+      const errorText = await response.text().catch(() => "");
       console.error(
-        `[getMenuData] API returned ${response.status} for ${slug}/${lang}`
+        `[getMenuData] API error ${response.status}: ${errorText.slice(0, 100)}`
       );
       return null;
     }
 
     const data = await response.json();
+    console.log(`[getMenuData] Success: Got data for slug=${slug}`);
     return data;
   } catch (error) {
-    console.error(`[getMenuData] Error for ${slug}/${lang}:`, error);
+    console.error(`[getMenuData] Exception:`, error);
     return null;
   }
 }
 
 export default async function MenuPage({ params }: Props) {
   const { slug, lang } = await params;
+  
+  console.log("[MenuPage] Rendering for:", { slug, lang });
 
   // Validate language
   if (!["en", "tr"].includes(lang)) {
+    console.log("[MenuPage] Invalid language, returning notFound");
     notFound();
   }
 
   // Get menu data from API
+  console.log("[MenuPage] Fetching menu data...");
   const data = await getMenuData(slug, lang);
+  
   if (!data) {
+    console.log("[MenuPage] No data returned, returning notFound");
     notFound();
   }
 
+  console.log("[MenuPage] Data received, rendering page");
   const { tenant, categories, products } = data;
 
   // Extract theme config with fallbacks
