@@ -7,13 +7,7 @@ import { cn } from "@/lib/utils";
 import { ChevronRightIcon, CheckIcon } from "lucide-react";
 
 function DropdownMenu({ ...props }: MenuPrimitive.Root.Props) {
-  return (
-    <MenuPrimitive.Root
-      data-slot="dropdown-menu"
-      suppressHydrationWarning
-      {...props}
-    />
-  );
+  return <MenuPrimitive.Root data-slot="dropdown-menu" {...props} />;
 }
 
 function DropdownMenuPortal({ ...props }: MenuPrimitive.Portal.Props) {
@@ -21,13 +15,7 @@ function DropdownMenuPortal({ ...props }: MenuPrimitive.Portal.Props) {
 }
 
 function DropdownMenuTrigger({ ...props }: MenuPrimitive.Trigger.Props) {
-  return (
-    <MenuPrimitive.Trigger
-      data-slot="dropdown-menu-trigger"
-      suppressHydrationWarning
-      {...props}
-    />
-  );
+  return <MenuPrimitive.Trigger data-slot="dropdown-menu-trigger" {...props} />;
 }
 
 function DropdownMenuContent({

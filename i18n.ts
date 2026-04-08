@@ -10,7 +10,7 @@ const KNOWN_LOCALES = ["en", "tr"] as const;
 export default getRequestConfig(async ({ requestLocale }) => {
   // Get locale - can come from URL param or be default
   // requestLocale is set by middleware or is the default
-  let locale = (requestLocale || "en") as string;
+  let locale = (await requestLocale) || "en";
 
   // Validate locale
   if (!KNOWN_LOCALES.includes(locale as any)) {

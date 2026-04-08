@@ -1,5 +1,3 @@
-"use client";
-
 import Link from "next/link";
 import {
   ArrowRight,
@@ -9,89 +7,105 @@ import {
   Users,
   Globe,
   BarChart3,
-  Clock,
-  Shield,
   Settings,
-  Smartphone as MobileIcon,
-  TrendingUp,
   CheckCircle2,
 } from "lucide-react";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
-export default function LandingPage() {
-  const locale = "en";
+interface Props {
+  params: Promise<{
+    lang: string;
+  }>;
+}
+
+async function getMessages(lang: string) {
+  try {
+    const messages = await import(`@/messages/${lang}.json`).then(
+      (module) => module.default
+    );
+    return messages;
+  } catch {
+    // Fallback to English if language not found
+    const messages = await import("@/messages/en.json").then(
+      (module) => module.default
+    );
+    return messages;
+  }
+}
+
+export default async function LandingPage({ params }: Props) {
+  const { lang } = await params;
+  const messages = await getMessages(lang);
+  const t = messages.landing;
   const year = new Date().getFullYear();
 
   const features = [
     {
       icon: QrCode,
-      title: "Beautiful Menu Display",
-      description:
-        "Professional digital menu with customizable colors and themes",
+      title: t.feature_1_title,
+      description: t.feature_1_desc,
     },
     {
       icon: Zap,
-      title: "Easy to Update",
-      description: "Instantly update prices, items, and descriptions anytime",
+      title: t.feature_2_title,
+      description: t.feature_2_desc,
     },
     {
       icon: Smartphone,
-      title: "Mobile First",
-      description: "Perfect experience on phones, tablets, and desktops",
+      title: t.feature_3_title,
+      description: t.feature_3_desc,
     },
     {
       icon: Users,
-      title: "Multi-Language",
-      description:
-        "Display your menu in English and Turkish (and more coming soon)",
+      title: t.feature_4_title,
+      description: t.feature_4_desc,
     },
     {
       icon: Globe,
-      title: "Shareable URLs",
-      description: "Get unique links for each restaurant and language variant",
+      title: t.feature_5_title,
+      description: t.feature_5_desc,
     },
     {
       icon: Settings,
-      title: "Full Control",
-      description: "Manage categories, products, pricing, and branding",
+      title: t.feature_6_title,
+      description: t.feature_6_desc,
     },
   ];
 
   const benefits = [
-    { number: "10K+", label: "Restaurants Worldwide" },
-    { number: "99.9%", label: "Uptime Guarantee" },
-    { number: "24/7", label: "Customer Support" },
-    { number: "30s", label: "Setup Time" },
+    { number: "10K+", label: t.benefits_restaurants },
+    { number: "99.9%", label: t.benefits_uptime },
+    { number: "24/7", label: t.benefits_support },
   ];
 
   const steps = [
     {
       number: "1",
-      title: "Create Account",
-      description: "Sign up with your email to get started",
+      title: t.step_1_title,
+      description: t.step_1_desc,
     },
     {
       number: "2",
-      title: "Add Your Products",
-      description: "Create categories and add menu items with prices",
+      title: t.step_2_title,
+      description: t.step_2_desc,
     },
     {
       number: "3",
-      title: "Customize & Translate",
-      description: "Set theme colors and customize menu in multiple languages",
+      title: t.step_3_title,
+      description: t.step_3_desc,
     },
     {
       number: "4",
-      title: "Share Your Menu",
-      description: "Get your unique menu URL and share with customers",
+      title: t.step_4_title,
+      description: t.step_4_desc,
     },
   ];
 
   const pricingPlans = [
     {
-      name: "Starter",
-      price: "$0",
-      description: "Perfect for small restaurants",
+      name: t.plan_starter_name,
+      price: t.plan_starter_price,
+      description: t.plan_starter_desc,
       features: [
         "Up to 50 products",
         "1 restaurant location",
@@ -100,13 +114,13 @@ export default function LandingPage() {
         "Mobile responsive",
         "Email support",
       ],
-      cta: "Start Free",
+      cta: t.plan_cta_starter,
       highlighted: false,
     },
     {
-      name: "Professional",
-      price: "$19",
-      description: "Most popular for growing restaurants",
+      name: t.plan_professional_name,
+      price: t.plan_professional_price,
+      description: t.plan_professional_desc,
       features: [
         "Unlimited products",
         "Up to 5 locations",
@@ -117,13 +131,13 @@ export default function LandingPage() {
         "Priority support",
         "Monthly updates",
       ],
-      cta: "Start Free Trial",
+      cta: t.plan_cta_professional,
       highlighted: true,
     },
     {
-      name: "Enterprise",
-      price: "Custom",
-      description: "For restaurant chains & groups",
+      name: t.plan_enterprise_name,
+      price: t.plan_enterprise_price,
+      description: t.plan_enterprise_desc,
       features: [
         "Unlimited everything",
         "Unlimited locations",
@@ -134,7 +148,7 @@ export default function LandingPage() {
         "24/7 phone support",
         "Training & onboarding",
       ],
-      cta: "Contact Sales",
+      cta: t.plan_cta_enterprise,
       highlighted: false,
     },
   ];
@@ -153,7 +167,7 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="flex gap-4 items-center">
-            <LanguageSwitcher currentLang={locale as "en" | "tr"} compact />
+            <LanguageSwitcher currentLang={lang as "en" | "tr"} compact />
             <Link
               href="/auth/login"
               className="hidden sm:block px-4 py-2 text-gray-700 hover:text-gray-900 font-medium transition-colors"
@@ -180,16 +194,14 @@ export default function LandingPage() {
           </div>
 
           <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-gray-900 mb-8 leading-tight">
-            Transform Your Restaurant
+            {t.heroTitle}
             <span className="block bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-              with Digital Menus
+              {t.heroSubtitle}
             </span>
           </h1>
 
           <p className="text-lg sm:text-xl text-gray-600 mb-10 max-w-3xl mx-auto leading-relaxed">
-            Create beautiful, professional digital menus in minutes. Manage
-            products, customize themes, and share with customers in multiple
-            languages—no coding required.
+            {t.heroDescription}
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
@@ -197,11 +209,11 @@ export default function LandingPage() {
               href="/auth/login"
               className="px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:shadow-xl transition-all font-semibold flex items-center gap-2 text-lg"
             >
-              Get Started Free
+              {t.cta_primary}
               <ArrowRight size={22} />
             </Link>
             <button className="px-8 py-4 border-2 border-gray-300 text-gray-900 rounded-lg hover:border-gray-400 font-semibold transition-all text-lg">
-              Watch Demo
+              {t.cta_secondary}
             </button>
           </div>
 
@@ -225,11 +237,10 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
-              Powerful Features
+              {t.features_title}
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Everything you need to create and manage your professional digital
-              menu
+              {t.features_subtitle}
             </p>
           </div>
 
@@ -260,10 +271,10 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
-              How It Works
+              {t.howItWorks_title}
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Get your digital menu up and running in just 4 simple steps
+              {t.howItWorks_subtitle}
             </p>
           </div>
 
@@ -290,10 +301,10 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
-              Transparent Pricing
+              {t.pricing_title}
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Start free, upgrade when you're ready. No credit card required.
+              {t.pricing_subtitle}
             </p>
           </div>
 
@@ -309,7 +320,7 @@ export default function LandingPage() {
               >
                 {plan.highlighted && (
                   <div className="inline-block px-3 py-1 bg-blue-600 text-white text-xs font-semibold rounded-full mb-4">
-                    Most Popular
+                    {t.plan_professional_badge}
                   </div>
                 )}
                 <h3 className="text-2xl font-bold text-gray-900 mb-2">
@@ -357,17 +368,16 @@ export default function LandingPage() {
       <section className="py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-4xl sm:text-5xl font-bold mb-6">
-            Ready to Launch Your Digital Menu?
+            {t.cta_section_title}
           </h2>
           <p className="text-xl mb-8 text-blue-100 max-w-2xl mx-auto">
-            Join thousands of restaurants already using Digital Menu to showcase
-            their offerings professionally.
+            {t.cta_section_desc}
           </p>
           <Link
             href="/auth/login"
             className="inline-block px-10 py-4 bg-white text-blue-600 rounded-lg hover:bg-blue-50 font-bold text-lg transition-all hover:shadow-xl"
           >
-            Start Your Free Trial
+            {t.cta_section_button}
           </Link>
         </div>
       </section>
@@ -446,10 +456,7 @@ export default function LandingPage() {
           </div>
 
           <div className="border-t border-gray-800 pt-8 text-center text-gray-400">
-            <p>
-              &copy; {year} Digital Menu. All rights reserved. Built with ❤️ for
-              restaurants worldwide.
-            </p>
+            <p>{t.footer_text.replace("{year}", year.toString())}</p>
           </div>
         </div>
       </footer>
