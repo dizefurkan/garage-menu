@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import * as React from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -10,6 +10,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Combobox,
+  ComboboxChip,
+  ComboboxChips,
+  ComboboxChipsInput,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxItem,
+  ComboboxList,
+  ComboboxValue,
+  useComboboxAnchor,
+} from "@/components/ui/combobox";
 import type { Database } from "@/lib/database.types";
 
 type Tenant = Database["public"]["Tables"]["tenants"]["Row"];
@@ -52,16 +64,15 @@ export function LanguageSettings({ tenant }: { tenant: Tenant }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleLanguageChange = (lang: string) => {
-    setSelectedLanguages((prev) => {
-      if (prev.includes(lang)) {
-        // Don't allow removing all languages
-        if (prev.length === 1) return prev;
-        return prev.filter((l) => l !== lang);
-      }
-      return [...prev, lang];
-    });
-  };
+  // Ensure default language is in selected languages
+  React.useEffect(() => {
+    if (
+      selectedLanguages.length > 0 &&
+      !selectedLanguages.includes(defaultLanguage)
+    ) {
+      setDefaultLanguage(selectedLanguages[0]);
+    }
+  }, [selectedLanguages, defaultLanguage]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -106,29 +117,21 @@ export function LanguageSettings({ tenant }: { tenant: Tenant }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Available Languages */}
+      {/* Available Languages - Multi-Select with Popover */}
       <div>
-        <p className="text-sm text-gray-600 mb-3">
+        <label className="mb-2 block text-sm font-medium">
+          Available Languages
+        </label>
+        <p className="text-xs text-gray-500 mb-3">
           Select which languages will be available for your menu. At least one
           language is required.
         </p>
-        <div className="space-y-2">
-          {SUPPORTED_LANGUAGES.map((lang) => (
-            <div key={lang.code} className="flex items-center gap-2">
-              <Checkbox
-                id={`lang-${lang.code}`}
-                checked={selectedLanguages.includes(lang.code)}
-                onCheckedChange={() => handleLanguageChange(lang.code)}
-              />
-              <label
-                htmlFor={`lang-${lang.code}`}
-                className="text-sm cursor-pointer font-medium"
-              >
-                {lang.name} ({lang.code})
-              </label>
-            </div>
-          ))}
-        </div>
+
+        {/* Available Languages - Multi-Select Combobox */}
+        <LanguageCombobox
+          selectedLanguages={selectedLanguages}
+          onLanguagesChange={setSelectedLanguages}
+        />
       </div>
 
       {/* Default Language */}
@@ -140,13 +143,28 @@ export function LanguageSettings({ tenant }: { tenant: Tenant }) {
           This language will be shown when visitors first access your menu.
         </p>
         <Select
-          value={defaultLanguage}
+          value={
+            selectedLanguages.includes(defaultLanguage) ? defaultLanguage : ""
+          }
           onValueChange={(value) => {
             if (value) setDefaultLanguage(value);
           }}
+          disabled={selectedLanguages.length === 0}
         >
           <SelectTrigger className="w-full">
-            <SelectValue />
+            <SelectValue
+              placeholder={
+                selectedLanguages.length === 0
+                  ? "Select at least one language first"
+                  : undefined
+              }
+              render={() => {
+                const lang = SUPPORTED_LANGUAGES.find(
+                  (l) => l.code === defaultLanguage
+                );
+                return lang ? `${lang.name} (${lang.code})` : defaultLanguage;
+              }}
+            />
           </SelectTrigger>
           <SelectContent>
             {selectedLanguages.map((lang) => {
@@ -170,5 +188,81 @@ export function LanguageSettings({ tenant }: { tenant: Tenant }) {
         {loading ? "Saving..." : "Save Languages"}
       </Button>
     </form>
+  );
+}
+
+/**
+ * Language Combobox Component - Multi-select with chips
+ */
+interface LanguageComboboxProps {
+  selectedLanguages: string[];
+  onLanguagesChange: (languages: string[]) => void;
+}
+
+function LanguageCombobox({
+  selectedLanguages,
+  onLanguagesChange,
+}: LanguageComboboxProps) {
+  const anchor = useComboboxAnchor();
+
+  // Ensure at least one language is always selected
+  const handleLanguageChange = (languages: string[]) => {
+    if (languages.length > 0) {
+      onLanguagesChange(languages);
+    }
+  };
+
+  return (
+    <Combobox
+      multiple
+      autoHighlight
+      items={SUPPORTED_LANGUAGES.map((lang) => lang.code)}
+      value={selectedLanguages}
+      onValueChange={handleLanguageChange}
+    >
+      <ComboboxChips ref={anchor} className="w-full">
+        <ComboboxValue>
+          {(values: string[]) => (
+            <React.Fragment>
+              {values.map((langCode: string) => {
+                const lang = SUPPORTED_LANGUAGES.find(
+                  (l) => l.code === langCode
+                );
+                return (
+                  <ComboboxChip
+                    key={langCode}
+                    value={langCode}
+                    onRemove={() => {
+                      const updated = selectedLanguages.filter(
+                        (l) => l !== langCode
+                      );
+                      if (updated.length > 0) {
+                        handleLanguageChange(updated);
+                      }
+                    }}
+                  >
+                    {lang?.name} ({langCode})
+                  </ComboboxChip>
+                );
+              })}
+              <ComboboxChipsInput placeholder="Add language..." />
+            </React.Fragment>
+          )}
+        </ComboboxValue>
+      </ComboboxChips>
+      <ComboboxContent anchor={anchor}>
+        <ComboboxEmpty>No languages found.</ComboboxEmpty>
+        <ComboboxList>
+          {(langCode: string) => {
+            const lang = SUPPORTED_LANGUAGES.find((l) => l.code === langCode);
+            return (
+              <ComboboxItem key={langCode} value={langCode}>
+                {lang?.name} ({langCode})
+              </ComboboxItem>
+            );
+          }}
+        </ComboboxList>
+      </ComboboxContent>
+    </Combobox>
   );
 }
