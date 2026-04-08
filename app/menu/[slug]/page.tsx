@@ -1,5 +1,8 @@
 import { notFound, redirect } from "next/navigation";
 
+// Allow dynamic route generation for any slug
+export const dynamicParams = true;
+
 // List of known locales to distinguish from menu slugs
 const KNOWN_LOCALES = ["en", "tr"];
 
