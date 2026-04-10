@@ -463,6 +463,20 @@ CREATE POLICY "Ops: Allow service role full access"
 
 -- Create `product-images` bucket in Supabase console first!
 
+-- Drop old storage policies
+DROP POLICY IF EXISTS "Users can upload product images" ON storage.objects;
+DROP POLICY IF EXISTS "Public read access to product images" ON storage.objects;
+DROP POLICY IF EXISTS "Users can delete own images" ON storage.objects;
+DROP POLICY IF EXISTS "Ops: Allow service role full access to product images" ON storage.objects;
+
+-- Service role has full access (for backend/API uploads via supabaseAdmin)
+CREATE POLICY "Ops: Allow service role full access to product images"
+  ON storage.objects
+  USING (
+    bucket_id = 'product-images'
+    AND auth.role() = 'service_role'
+  );
+
 -- Allow authenticated users to upload to their tenant's folder
 CREATE POLICY "Users can upload product images"
   ON storage.objects FOR INSERT
