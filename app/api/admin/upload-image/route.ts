@@ -53,12 +53,13 @@ export async function POST(request: Request) {
       .webp({ quality: 82, effort: 4 })
       .toBuffer();
 
-    // Generate unique filename: tenantId-timestamp.webp
-    // This avoids special character encoding issues
+    // Generate unique filename with tenant folder structure
+    // Storage RLS policy requires: (storage.foldername(name))[1] = tenant_id::TEXT
+    // So path must be: tenant_id/timestamp.webp
     const timestamp = Date.now();
     const filename = tenantId
-      ? `${tenantId}-${timestamp}.webp`
-      : `${timestamp}.webp`;
+      ? `${tenantId}/${timestamp}.webp`
+      : `uncategorized/${timestamp}.webp`;
 
     // Upload to Supabase Storage
     const { data, error } = await supabaseAdmin.storage
