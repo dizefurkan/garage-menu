@@ -109,14 +109,21 @@ export function LanguageSettings({
     setLoading(true);
 
     if (selectedLanguages.length === 0) {
-      toast.error(t("minimumOneLanguageRequired", "At least one language is required"));
+      toast.error(
+        t("minimumOneLanguageRequired", "At least one language is required")
+      );
       setLoading(false);
       return;
     }
 
     // Check if default language is in selected languages
     if (!selectedLanguages.includes(defaultLanguage)) {
-      toast.error(t("defaultLanguageMustBeSelected", "Default language must be one of the selected languages"));
+      toast.error(
+        t(
+          "defaultLanguageMustBeSelected",
+          "Default language must be one of the selected languages"
+        )
+      );
       setLoading(false);
       return;
     }
@@ -138,10 +145,14 @@ export function LanguageSettings({
       });
 
       if (!response.ok) {
-        throw new Error(t("failedToUpdateLanguages", "Failed to update languages"));
+        throw new Error(
+          t("failedToUpdateLanguages", "Failed to update languages")
+        );
       }
 
-      toast.success(t("menuLanguagesUpdatedSuccess", "Menu languages updated successfully!"));
+      toast.success(
+        t("menuLanguagesUpdatedSuccess", "Menu languages updated successfully!")
+      );
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "An error occurred");
     } finally {
@@ -157,14 +168,19 @@ export function LanguageSettings({
           {t("dashboardLanguage", "Dashboard Language")}
         </label>
         <p className="text-xs text-gray-500 mb-2">
-          {t("dashboardLanguageDescription", "Choose the language for your admin dashboard interface")}
+          {t(
+            "dashboardLanguageDescription",
+            "Choose the language for your admin dashboard interface"
+          )}
         </p>
         <Select
           value={currentLang}
           onValueChange={handleDashboardLanguageChange}
         >
           <SelectTrigger className="w-full">
-            <SelectValue placeholder={t("selectLanguagePlaceholder", "Select language")}>
+            <SelectValue
+              placeholder={t("selectLanguagePlaceholder", "Select language")}
+            >
               {currentLang === "en"
                 ? t("englishEN", "English (EN)")
                 : t("turkishTR", "Türkçe (TR)")}
@@ -183,7 +199,10 @@ export function LanguageSettings({
           {t("menuLanguages", "Menu Languages")}
         </label>
         <p className="text-xs text-gray-500 mb-3">
-          {t("menuLanguagesDescription", "Select which languages will be available for your menu. At least one language is required.")}
+          {t(
+            "menuLanguagesDescription",
+            "Select which languages will be available for your menu. At least one language is required."
+          )}
         </p>
 
         {/* Available Languages - Multi-Select Combobox */}
@@ -199,7 +218,10 @@ export function LanguageSettings({
           {t("defaultMenuLanguage", "Default Menu Language")}
         </label>
         <p className="text-xs text-gray-500 mb-2">
-          {t("defaultMenuLanguageDescription", "This language will be shown when visitors first access your menu.")}
+          {t(
+            "defaultMenuLanguageDescription",
+            "This language will be shown when visitors first access your menu."
+          )}
         </p>
         <Select
           value={
@@ -214,7 +236,10 @@ export function LanguageSettings({
             <SelectValue
               placeholder={
                 selectedLanguages.length === 0
-                  ? t("selectOneLanguageFirst", "Select at least one language first")
+                  ? t(
+                      "selectOneLanguageFirst",
+                      "Select at least one language first"
+                    )
                   : undefined
               }
             >
@@ -237,7 +262,9 @@ export function LanguageSettings({
       </div>
 
       <Button type="submit" disabled={loading}>
-        {loading ? t("savingLanguages", "Saving...") : t("saveLanguages", "Save Languages")}
+        {loading
+          ? t("savingLanguages", "Saving...")
+          : t("saveLanguages", "Save Languages")}
       </Button>
     </form>
   );

@@ -172,11 +172,11 @@ export async function GET(request: Request) {
         slug: tenant.slug,
         theme_config: tenant.theme_config || {},
         description: tenant.description || undefined,
+        phone: tenant.phone || undefined,
         logo_url: tenant.logo_url || undefined,
         languages: languages, // Available languages for the tenant
-        contactInfo: {
+        contact_info: {
           address: contactInfo.address || undefined,
-          phone: contactInfo.phone || undefined,
           email: contactInfo.email || undefined,
           facebook: contactInfo.facebook || undefined,
           instagram: contactInfo.instagram || undefined,
