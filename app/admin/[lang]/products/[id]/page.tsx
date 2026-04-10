@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -14,9 +15,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Switch } from "@/components/ui/switch";
-import { CheckCircle2, AlertCircle, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -48,8 +48,6 @@ export default function EditProductPage() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
   const [categories, setCategories] = useState<
     Array<{ id: number; name: string }>
   >([]);
@@ -118,7 +116,9 @@ export default function EditProductPage() {
           setCategories(catData);
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Veri yüklenmede hata");
+        toast.error(
+          err instanceof Error ? err.message : "Failed to load product"
+        );
       } finally {
         setLoading(false);
       }
@@ -129,18 +129,8 @@ export default function EditProductPage() {
     }
   }, [productId, setValue]);
 
-  useEffect(() => {
-    if (success) {
-      const timer = setTimeout(() => {
-        router.push("/admin/products");
-      }, 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [success, router]);
-
   async function onSubmit(data: ProductFormData) {
     setSaving(true);
-    setError(null);
 
     try {
       const response = await fetch(`/api/admin/products/${productId}`, {
@@ -151,12 +141,15 @@ export default function EditProductPage() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Ürün güncellemesi başarısız");
+        throw new Error(errorData.error || "Failed to update product");
       }
 
-      setSuccess(true);
+      toast.success("Product updated successfully!");
+      setTimeout(() => router.push("/admin/products"), 1000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Hata oluştu");
+      toast.error(
+        err instanceof Error ? err.message : "Failed to save product"
+      );
     } finally {
       setSaving(false);
     }
@@ -182,15 +175,13 @@ export default function EditProductPage() {
           <Button variant="ghost" size="sm" onClick={() => router.back()}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <h1 className="text-3xl font-bold">Ürünü Düzenle</h1>
+          <h1 className="text-3xl font-bold">Edit Product</h1>
         </div>
-        <Alert className="border-red-200 bg-red-50">
-          <AlertCircle className="h-4 w-4 text-red-600" />
-          <AlertTitle className="text-red-800">Hata</AlertTitle>
-          <AlertDescription className="text-red-700">
-            Ürün bulunamadı
-          </AlertDescription>
-        </Alert>
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-center text-gray-600">Product not found</p>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -224,24 +215,6 @@ export default function EditProductPage() {
           />
         </div>
       </div>
-
-      {success && (
-        <Alert className="border-green-200 bg-green-50">
-          <CheckCircle2 className="h-4 w-4 text-green-600" />
-          <AlertTitle className="text-green-800">Başarılı!</AlertTitle>
-          <AlertDescription className="text-green-700">
-            Ürün başarıyla güncellendi! Yönlendiriliyorsunuz...
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {error && (
-        <Alert className="border-red-200 bg-red-50">
-          <AlertCircle className="h-4 w-4 text-red-600" />
-          <AlertTitle className="text-red-800">Hata</AlertTitle>
-          <AlertDescription className="text-red-700">{error}</AlertDescription>
-        </Alert>
-      )}
 
       <Card>
         <CardContent className="pt-6">

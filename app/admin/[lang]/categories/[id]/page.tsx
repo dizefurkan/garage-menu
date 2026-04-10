@@ -2,13 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { CheckCircle2, AlertCircle, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useTenant } from "@/lib/context/tenant-context";
 
 export default function EditCategoryPage() {
@@ -19,8 +19,6 @@ export default function EditCategoryPage() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
   const [category, setCategory] = useState<any>(null);
   const [formData, setFormData] = useState<
     Record<string, { name: string; description: string }>
@@ -57,7 +55,9 @@ export default function EditCategoryPage() {
         );
         setFormData(initialData);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Veri yüklenmede hata");
+        toast.error(
+          err instanceof Error ? err.message : "Failed to load category"
+        );
       } finally {
         setLoading(false);
       }
@@ -68,26 +68,16 @@ export default function EditCategoryPage() {
     }
   }, [categoryId, tenant]);
 
-  useEffect(() => {
-    if (success) {
-      const timer = setTimeout(() => {
-        router.push("/admin/categories");
-      }, 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [success, router]);
-
   const languages = tenant.languages || ["en"];
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError(null);
     setSaving(true);
 
     // Validate that at least one language has a name
     const hasAnyName = Object.values(formData).some((lang) => lang.name.trim());
     if (!hasAnyName) {
-      setError("En az bir kategori adı gereklidir");
+      toast.error("At least one category name is required");
       setSaving(false);
       return;
     }
@@ -101,12 +91,15 @@ export default function EditCategoryPage() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Kategori güncellemesi başarısız");
+        throw new Error(errorData.error || "Failed to update category");
       }
 
-      setSuccess(true);
+      toast.success("Category updated successfully!");
+      setTimeout(() => router.push("/admin/categories"), 1000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Hata oluştu");
+      toast.error(
+        err instanceof Error ? err.message : "Failed to update category"
+      );
     } finally {
       setSaving(false);
     }
@@ -132,15 +125,13 @@ export default function EditCategoryPage() {
           <Button variant="ghost" size="sm" onClick={() => router.back()}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <h1 className="text-3xl font-bold">Kategoriyi Düzenle</h1>
+          <h1 className="text-3xl font-bold">Edit Category</h1>
         </div>
-        <Alert className="border-red-200 bg-red-50">
-          <AlertCircle className="h-4 w-4 text-red-600" />
-          <AlertTitle className="text-red-800">Hata</AlertTitle>
-          <AlertDescription className="text-red-700">
-            Kategori bulunamadı
-          </AlertDescription>
-        </Alert>
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-center text-gray-600">Category not found</p>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -151,26 +142,8 @@ export default function EditCategoryPage() {
         <Button variant="ghost" size="sm" onClick={() => router.back()}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <h1 className="text-3xl font-bold">Kategoriyi Düzenle</h1>
+        <h1 className="text-3xl font-bold">Edit Category</h1>
       </div>
-
-      {success && (
-        <Alert className="border-green-200 bg-green-50">
-          <CheckCircle2 className="h-4 w-4 text-green-600" />
-          <AlertTitle className="text-green-800">Başarılı!</AlertTitle>
-          <AlertDescription className="text-green-700">
-            Kategori başarıyla güncellendi! Yönlendiriliyorsunuz...
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {error && (
-        <Alert className="border-red-200 bg-red-50">
-          <AlertCircle className="h-4 w-4 text-red-600" />
-          <AlertTitle className="text-red-800">Hata</AlertTitle>
-          <AlertDescription className="text-red-700">{error}</AlertDescription>
-        </Alert>
-      )}
 
       <Card>
         <CardContent className="pt-6">

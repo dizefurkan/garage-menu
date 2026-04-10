@@ -8,7 +8,16 @@ import type { Database } from "@/lib/database.types";
 
 type Tenant = Database["public"]["Tables"]["tenants"]["Row"];
 
-export function ThemeSettings({ tenant }: { tenant: Tenant }) {
+interface ThemeSettingsProps {
+  tenant: Tenant;
+  messages?: Record<string, string>;
+}
+
+export function ThemeSettings({ tenant, messages = {} }: ThemeSettingsProps) {
+  const t = (key: string, defaultValue: string = "") => {
+    return (messages[key] as string) || defaultValue;
+  };
+
   const themeConfig = (tenant.theme_config as {
     primary: string;
     secondary: string;
@@ -48,7 +57,9 @@ export function ThemeSettings({ tenant }: { tenant: Tenant }) {
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || "Failed to update theme");
+        throw new Error(
+          data.error || t("failedToUpdate", "Failed to update theme")
+        );
       }
 
       setSuccess(true);
@@ -65,7 +76,7 @@ export function ThemeSettings({ tenant }: { tenant: Tenant }) {
       <div className="space-y-4">
         <div>
           <label className="mb-3 block text-sm font-medium">
-            Primary Color
+            {t("primaryColor", "Primary Color")}
           </label>
           <div className="flex items-center gap-3">
             <input
@@ -89,7 +100,7 @@ export function ThemeSettings({ tenant }: { tenant: Tenant }) {
 
         <div>
           <label className="mb-3 block text-sm font-medium">
-            Secondary Color
+            {t("secondaryColor", "Secondary Color")}
           </label>
           <div className="flex items-center gap-3">
             <input
@@ -111,7 +122,7 @@ export function ThemeSettings({ tenant }: { tenant: Tenant }) {
 
         <div>
           <label className="mb-3 block text-sm font-medium">
-            Accent Color (Optional)
+            {t("accentColor", "Accent Color")} (Optional)
           </label>
           <div className="flex items-center gap-3">
             <input
@@ -172,12 +183,12 @@ export function ThemeSettings({ tenant }: { tenant: Tenant }) {
 
       {success && (
         <div className="rounded-md bg-green-50 p-4 text-sm text-green-700">
-          Theme updated successfully!
+          {t("themeSaved", "Theme settings updated successfully")}
         </div>
       )}
 
       <Button type="submit" disabled={loading}>
-        {loading ? "Saving..." : "Save Theme"}
+        {loading ? "Saving..." : t("saveChanges", "Save Theme")}
       </Button>
     </form>
   );

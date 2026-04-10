@@ -16,7 +16,7 @@ export async function GET(request: Request) {
   try {
     const { data: tenant, error } = await supabaseAdmin
       .from("tenants")
-      .select("languages")
+      .select("languages, default_language")
       .eq("slug", slug)
       .single();
 
@@ -30,10 +30,13 @@ export async function GET(request: Request) {
       return Response.json({ error: "Tenant not found" }, { status: 404 });
     }
 
+    // Return default_language if set, otherwise first language, otherwise fallback to en
     const defaultLanguage =
-      tenant.languages && tenant.languages.length > 0
+      tenant.default_language ||
+      (tenant.languages && tenant.languages.length > 0
         ? tenant.languages[0]
-        : "en";
+        : null) ||
+      "en";
 
     return Response.json({ defaultLanguage });
   } catch (error) {

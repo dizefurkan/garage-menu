@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -15,8 +16,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { CheckCircle2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -43,8 +42,6 @@ export default function ProductFormPage() {
   const params = useParams();
   const tenant = useTenant();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [categories, setCategories] = useState<
     Array<{ id: number; name: string }>
@@ -72,15 +69,6 @@ export default function ProductFormPage() {
     }
     loadCategories();
   }, []);
-
-  useEffect(() => {
-    if (success) {
-      const timer = setTimeout(() => {
-        router.push("/admin/products");
-      }, 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [success, router]);
 
   const languages = tenant.languages || ["en"];
 
@@ -111,7 +99,6 @@ export default function ProductFormPage() {
 
   async function onSubmit(data: ProductFormData) {
     setLoading(true);
-    setError(null);
 
     try {
       const response = await fetch("/api/admin/products", {
@@ -125,10 +112,12 @@ export default function ProductFormPage() {
         throw new Error(error.error || "Failed to save product");
       }
 
-      const result = await response.json();
-      setSuccess(true);
+      toast.success("Product created successfully!");
+      setTimeout(() => router.push("/admin/products"), 1000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save product");
+      toast.error(
+        err instanceof Error ? err.message : "Failed to save product"
+      );
     } finally {
       setLoading(false);
     }
@@ -139,16 +128,6 @@ export default function ProductFormPage() {
       <h1 className="text-3xl font-bold">
         {isEditMode ? "Ürünü Düzenle" : "Yeni Ürün"}
       </h1>
-
-      {success && (
-        <Alert className="border-green-200 bg-green-50">
-          <CheckCircle2 className="h-4 w-4 text-green-600" />
-          <AlertTitle className="text-green-800">Başarılı!</AlertTitle>
-          <AlertDescription className="text-green-700">
-            Ürün başarıyla oluşturuldu! Yönlendiriliyorsunuz...
-          </AlertDescription>
-        </Alert>
-      )}
 
       <Card>
         <CardContent className="pt-6">
@@ -267,12 +246,6 @@ export default function ProductFormPage() {
                 Satışa uygun
               </label>
             </div>
-
-            {error && (
-              <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">
-                {error}
-              </div>
-            )}
 
             <div className="flex gap-3">
               <Button type="submit" disabled={loading}>

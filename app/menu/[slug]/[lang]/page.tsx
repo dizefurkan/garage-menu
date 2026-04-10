@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { createClient } from "@supabase/supabase-js";
 import { getTenantCacheTags } from "@/lib/cache/revalidation";
@@ -208,7 +208,13 @@ async function getMenuData(slug: string, lang: string) {
       console.error(
         `[getMenuData] API error ${response.status}: ${errorText.slice(0, 100)}`
       );
-      return null;
+      // Parse error response to get available languages if available
+      try {
+        const errorData = JSON.parse(errorText);
+        return { error: true, errorData };
+      } catch {
+        return null;
+      }
     }
 
     const data = await response.json();
@@ -225,18 +231,48 @@ export default async function MenuPage({ params }: Props) {
 
   console.log("[MenuPage] Rendering for:", { slug, lang });
 
-  // Validate language
-  if (!["en", "tr"].includes(lang)) {
-    console.log("[MenuPage] Invalid language, returning notFound");
-    notFound();
-  }
-
   // Get menu data from API
   console.log("[MenuPage] Fetching menu data...");
   const data = await getMenuData(slug, lang);
 
   if (!data) {
     console.log("[MenuPage] No data returned, returning notFound");
+    notFound();
+  }
+
+  // If API returned an error with available languages, redirect to default language
+  if (data.error && data.errorData?.availableLanguages) {
+    const availableLanguages = data.errorData.availableLanguages;
+    console.log(
+      `[MenuPage] Language ${lang} not available. Fetching default language...`
+    );
+
+    try {
+      const baseUrl = getBaseUrl();
+      const defaultLangResponse = await fetch(
+        `${baseUrl}/api/public/default-language?slug=${slug}`
+      );
+      if (defaultLangResponse.ok) {
+        const defaultLangData = await defaultLangResponse.json();
+        const defaultLanguage =
+          defaultLangData.defaultLanguage || availableLanguages[0] || "en";
+        console.log(
+          `[MenuPage] Redirecting to default language: ${defaultLanguage}`
+        );
+        redirect(`/menu/${slug}/${defaultLanguage}`);
+      }
+    } catch (e) {
+      console.error(
+        "[MenuPage] Error fetching default language, using first available:",
+        e
+      );
+    }
+
+    redirect(`/menu/${slug}/${availableLanguages[0] || "en"}`);
+  }
+
+  if (data.error) {
+    console.log("[MenuPage] API error, returning notFound");
     notFound();
   }
 

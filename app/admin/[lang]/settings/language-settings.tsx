@@ -1,7 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -41,7 +43,23 @@ const SUPPORTED_LANGUAGES = [
   { code: "ar", name: "العربية" },
 ];
 
-export function LanguageSettings({ tenant }: { tenant: Tenant }) {
+interface LanguageSettingsProps {
+  tenant: Tenant;
+  currentLang: string;
+  messages?: Record<string, string>;
+}
+
+export function LanguageSettings({
+  tenant,
+  currentLang,
+  messages = {},
+}: LanguageSettingsProps) {
+  const router = useRouter();
+
+  const t = (key: string, defaultValue: string = "") => {
+    return (messages[key] as string) || defaultValue;
+  };
+
   // Parse tenant languages safely (can be array or JSON string)
   let parsedLanguages: string[] = ["en"];
   if (tenant.languages) {
@@ -74,25 +92,41 @@ export function LanguageSettings({ tenant }: { tenant: Tenant }) {
     }
   }, [selectedLanguages, defaultLanguage]);
 
+  const handleDashboardLanguageChange = (value: string | null) => {
+    if (value && value !== currentLang) {
+      // Redirect immediately without saving to database
+      router.push(`/admin/${value}/settings`);
+    }
+  };
+
+  const getMenuLanguageLabel = (code: string) => {
+    const lang = SUPPORTED_LANGUAGES.find((l) => l.code === code);
+    return lang ? `${lang.name} (${lang.code})` : code;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
     setLoading(true);
 
     if (selectedLanguages.length === 0) {
-      setError("At least one language is required");
+      toast.error(t("minimumOneLanguageRequired", "At least one language is required"));
       setLoading(false);
       return;
     }
 
     // Check if default language is in selected languages
     if (!selectedLanguages.includes(defaultLanguage)) {
-      setError("Default language must be one of the selected languages");
+      toast.error(t("defaultLanguageMustBeSelected", "Default language must be one of the selected languages"));
       setLoading(false);
       return;
     }
 
     try {
+      const previousDefaultLanguage = tenant.default_language || "en";
+      const languageChanged =
+        currentLang !== defaultLanguage &&
+        defaultLanguage !== previousDefaultLanguage;
+
       const response = await fetch("/api/admin/settings/languages", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -104,12 +138,12 @@ export function LanguageSettings({ tenant }: { tenant: Tenant }) {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to update languages");
+        throw new Error(t("failedToUpdateLanguages", "Failed to update languages"));
       }
 
-      alert("Languages updated successfully!");
+      toast.success(t("menuLanguagesUpdatedSuccess", "Menu languages updated successfully!"));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      toast.error(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setLoading(false);
     }
@@ -117,14 +151,39 @@ export function LanguageSettings({ tenant }: { tenant: Tenant }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Available Languages - Multi-Select with Popover */}
+      {/* Dashboard Language */}
       <div>
         <label className="mb-2 block text-sm font-medium">
-          Available Languages
+          {t("dashboardLanguage", "Dashboard Language")}
+        </label>
+        <p className="text-xs text-gray-500 mb-2">
+          {t("dashboardLanguageDescription", "Choose the language for your admin dashboard interface")}
+        </p>
+        <Select
+          value={currentLang}
+          onValueChange={handleDashboardLanguageChange}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder={t("selectLanguagePlaceholder", "Select language")}>
+              {currentLang === "en"
+                ? t("englishEN", "English (EN)")
+                : t("turkishTR", "Türkçe (TR)")}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="en">{t("englishEN", "English (EN)")}</SelectItem>
+            <SelectItem value="tr">{t("turkishTR", "Türkçe (TR)")}</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Menu Languages - Multi-Select with Popover */}
+      <div>
+        <label className="mb-2 block text-sm font-medium">
+          {t("menuLanguages", "Menu Languages")}
         </label>
         <p className="text-xs text-gray-500 mb-3">
-          Select which languages will be available for your menu. At least one
-          language is required.
+          {t("menuLanguagesDescription", "Select which languages will be available for your menu. At least one language is required.")}
         </p>
 
         {/* Available Languages - Multi-Select Combobox */}
@@ -134,13 +193,13 @@ export function LanguageSettings({ tenant }: { tenant: Tenant }) {
         />
       </div>
 
-      {/* Default Language */}
+      {/* Default Menu Language */}
       <div>
         <label className="mb-2 block text-sm font-medium">
-          Default Language
+          {t("defaultMenuLanguage", "Default Menu Language")}
         </label>
         <p className="text-xs text-gray-500 mb-2">
-          This language will be shown when visitors first access your menu.
+          {t("defaultMenuLanguageDescription", "This language will be shown when visitors first access your menu.")}
         </p>
         <Select
           value={
@@ -155,16 +214,14 @@ export function LanguageSettings({ tenant }: { tenant: Tenant }) {
             <SelectValue
               placeholder={
                 selectedLanguages.length === 0
-                  ? "Select at least one language first"
+                  ? t("selectOneLanguageFirst", "Select at least one language first")
                   : undefined
               }
-              render={() => {
-                const lang = SUPPORTED_LANGUAGES.find(
-                  (l) => l.code === defaultLanguage
-                );
-                return lang ? `${lang.name} (${lang.code})` : defaultLanguage;
-              }}
-            />
+            >
+              {selectedLanguages.includes(defaultLanguage)
+                ? getMenuLanguageLabel(defaultLanguage)
+                : ""}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             {selectedLanguages.map((lang) => {
@@ -179,13 +236,8 @@ export function LanguageSettings({ tenant }: { tenant: Tenant }) {
         </Select>
       </div>
 
-      {error && (
-        <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">
-          {error}
-        </div>
-      )}
       <Button type="submit" disabled={loading}>
-        {loading ? "Saving..." : "Save Languages"}
+        {loading ? t("savingLanguages", "Saving...") : t("saveLanguages", "Save Languages")}
       </Button>
     </form>
   );
@@ -231,7 +283,6 @@ function LanguageCombobox({
                 return (
                   <ComboboxChip
                     key={langCode}
-                    value={langCode}
                     onRemove={() => {
                       const updated = selectedLanguages.filter(
                         (l) => l !== langCode

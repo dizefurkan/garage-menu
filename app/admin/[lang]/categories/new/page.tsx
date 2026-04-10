@@ -2,13 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { CheckCircle2 } from "lucide-react";
 import { useTenant } from "@/lib/context/tenant-context";
 
 export default function CategoryFormPage() {
@@ -16,8 +15,6 @@ export default function CategoryFormPage() {
   const params = useParams();
   const tenant = useTenant();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [formData, setFormData] = useState<
     Record<string, { name: string; description: string }>
@@ -40,26 +37,16 @@ export default function CategoryFormPage() {
     setFormData(initialData);
   }, [tenant, isEdit]);
 
-  useEffect(() => {
-    if (success) {
-      const timer = setTimeout(() => {
-        router.push("/admin/categories");
-      }, 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [success, router]);
-
   const languages = tenant.languages || ["en"];
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError(null);
     setLoading(true);
 
     // Validate that at least one language has a name
     const hasAnyName = Object.values(formData).some((lang) => lang.name.trim());
     if (!hasAnyName) {
-      setError("At least one category name is required");
+      toast.error("At least one category name is required");
       setLoading(false);
       return;
     }
@@ -76,9 +63,12 @@ export default function CategoryFormPage() {
         throw new Error(error.error || "Failed to save category");
       }
 
-      setSuccess(true);
+      toast.success("Category created successfully!");
+      setTimeout(() => router.push("/admin/categories"), 1000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save category");
+      toast.error(
+        err instanceof Error ? err.message : "Failed to save category"
+      );
     } finally {
       setLoading(false);
     }
@@ -89,16 +79,6 @@ export default function CategoryFormPage() {
       <h1 className="text-3xl font-bold">
         {isEditMode ? "Edit Category" : "New Category"}
       </h1>
-
-      {success && (
-        <Alert className="border-green-200 bg-green-50">
-          <CheckCircle2 className="h-4 w-4 text-green-600" />
-          <AlertTitle className="text-green-800">Success!</AlertTitle>
-          <AlertDescription className="text-green-700">
-            Category created successfully! Redirecting...
-          </AlertDescription>
-        </Alert>
-      )}
 
       <Card>
         <CardContent className="pt-6">
@@ -153,12 +133,6 @@ export default function CategoryFormPage() {
                 </TabsContent>
               ))}
             </Tabs>
-
-            {error && (
-              <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">
-                {error}
-              </div>
-            )}
 
             <div className="flex gap-3">
               <Button type="submit" disabled={loading}>

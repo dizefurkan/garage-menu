@@ -12,9 +12,11 @@ export default async function SlugPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
+  console.log(`[SlugPage] Rendering for slug: ${slug}`);
 
   // If slug is a known locale, redirect to landing page
   if (KNOWN_LOCALES.includes(slug)) {
+    console.log(`[SlugPage] Slug is a known locale, redirecting to /${slug}`);
     redirect(`/${slug}`);
   }
 
@@ -24,6 +26,7 @@ export default async function SlugPage({
       ? `https://${process.env.VERCEL_URL}`
       : process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
 
+    console.log(`[SlugPage] Fetching default language for slug: ${slug}`);
     const response = await fetch(
       `${baseUrl}/api/public/default-language?slug=${slug}`,
       {
@@ -41,6 +44,9 @@ export default async function SlugPage({
 
     const data = await response.json();
     const defaultLanguage = data.defaultLanguage || "en";
+    console.log(
+      `[SlugPage] Got defaultLanguage: ${defaultLanguage}, redirecting to /menu/${slug}/${defaultLanguage}`
+    );
 
     // Redirect to menu with default language
     redirect(`/menu/${slug}/${defaultLanguage}`);

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Inter } from "next/font/google";
+import { Toaster } from "sonner";
 import { cn } from "@/lib/utils";
 
 const inter = Inter({
@@ -29,7 +30,10 @@ export default function RootLayout({
           src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1"
         ></script>
       </head>
-      <body className={cn("font-sans", inter.variable)}>{children}</body>
+      <body className={cn("font-sans", inter.variable)}>
+        {children}
+        <Toaster />
+      </body>
     </html>
   );
 }

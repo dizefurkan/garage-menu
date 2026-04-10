@@ -17,11 +17,6 @@ export async function GET(request: Request) {
     return Response.json({ error: "Slug required" }, { status: 400 });
   }
 
-  if (!["en", "tr"].includes(lang)) {
-    console.warn(`[API:public/menu] Invalid language: ${lang}`);
-    return Response.json({ error: "Invalid language" }, { status: 400 });
-  }
-
   try {
     console.log(`[API:public/menu] Querying tenant with slug: ${slug}`);
 
@@ -42,6 +37,36 @@ export async function GET(request: Request) {
     }
 
     console.log(`[API:public/menu] Found tenant: ${tenant.name}`);
+
+    // Parse tenant languages - could be array or JSON string
+    let tenantLanguages = ["en"];
+    if (tenant.languages) {
+      if (Array.isArray(tenant.languages)) {
+        tenantLanguages = tenant.languages;
+      } else if (typeof tenant.languages === "string") {
+        try {
+          tenantLanguages = JSON.parse(tenant.languages);
+        } catch {
+          tenantLanguages = ["en"];
+        }
+      }
+    }
+
+    console.log(`[API:public/menu] Tenant languages:`, tenantLanguages);
+
+    // Validate that requested language is in tenant's available languages
+    if (!tenantLanguages.includes(lang)) {
+      console.warn(
+        `[API:public/menu] Language ${lang} not available for tenant ${slug}. Available: ${tenantLanguages.join(", ")}`
+      );
+      return Response.json(
+        {
+          error: `Language ${lang} not available`,
+          availableLanguages: tenantLanguages,
+        },
+        { status: 400 }
+      );
+    }
 
     // Parse contact_info JSON if it exists
     let contactInfo: any = {};

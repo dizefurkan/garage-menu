@@ -4,33 +4,55 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LanguageSettings } from "./language-settings";
+import { LanguageSettingsWrapper } from "./language-settings-wrapper";
 import { ThemeSettings } from "./theme-settings";
 import { ContactSettings } from "./contact-settings";
 
-export default async function SettingsPage() {
+interface Props {
+  params: Promise<{
+    lang: string;
+  }>;
+}
+
+export default async function SettingsPage({ params }: Props) {
+  const { lang } = await params;
   const { user, tenant, role } = await getSessionWithTenant();
 
   if (!user || !tenant || role !== "owner") {
     redirect("/admin/dashboard");
   }
 
+  // Load messages for this locale
+  const messages = (await import(`@/messages/${lang}.json`)).default;
+  const settingsMessages = messages.settings || {};
+
+  const t = (key: string, defaultValue: string = "") => {
+    return (
+      (settingsMessages[key as keyof typeof settingsMessages] as string) ||
+      defaultValue
+    );
+  };
+
   return (
     <div className="max-w-2xl space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
-        <p className="mt-2 text-gray-600">Manage your restaurant information</p>
+        <h1 className="text-3xl font-bold tracking-tight">
+          {t("title", "Settings")}
+        </h1>
+        <p className="mt-2 text-gray-600">
+          {t("description", "Manage your restaurant information")}
+        </p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Basic Information</CardTitle>
+          <CardTitle>{t("basicInformation", "Basic Information")}</CardTitle>
         </CardHeader>
         <CardContent>
           <form className="space-y-4">
             <div>
               <label className="mb-2 block text-sm font-medium">
-                Restaurant Name
+                {t("restaurantName", "Restaurant Name")}
               </label>
               <Input
                 defaultValue={tenant.name}
@@ -39,7 +61,9 @@ export default async function SettingsPage() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium">Email</label>
+              <label className="mb-2 block text-sm font-medium">
+                {t("email", "Email")}
+              </label>
               <Input
                 type="email"
                 defaultValue={tenant.email || ""}
@@ -48,7 +72,9 @@ export default async function SettingsPage() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium">Phone</label>
+              <label className="mb-2 block text-sm font-medium">
+                {t("phone", "Phone")}
+              </label>
               <Input
                 defaultValue={tenant.phone || ""}
                 placeholder="+90 555 123 4567"
@@ -57,43 +83,58 @@ export default async function SettingsPage() {
 
             <div>
               <label className="mb-2 block text-sm font-medium">
-                Menu Slug
+                {t("menuSlug", "Menu Slug")}
               </label>
               <Input value={tenant.slug} disabled className="bg-gray-100" />
               <p className="mt-1 text-xs text-gray-500">
-                Your public menu URL: /{tenant.slug}/en
+                {t(
+                  "slugDescription",
+                  `Your public menu URL: /${tenant.slug}/en`
+                )}
               </p>
             </div>
 
-            <Button type="submit">Save Changes</Button>
+            <Button type="submit">{t("saveChanges", "Save Changes")}</Button>
           </form>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>Languages</CardTitle>
+          <CardTitle>{t("languages", "Languages")}</CardTitle>
         </CardHeader>
         <CardContent>
-          <LanguageSettings tenant={tenant} />
+          <LanguageSettingsWrapper
+            tenant={tenant}
+            currentLang={lang}
+            messages={settingsMessages as Record<string, string>}
+          />
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>Appearance</CardTitle>
+          <CardTitle>{t("appearance", "Appearance")}</CardTitle>
         </CardHeader>
         <CardContent>
-          <ThemeSettings tenant={tenant} />
+          <ThemeSettings
+            tenant={tenant}
+            messages={settingsMessages as Record<string, string>}
+          />
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>Contact Information</CardTitle>
+          <CardTitle>
+            {t("contactInformation", "Contact Information")}
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <ContactSettings tenant={tenant} />
+          <ContactSettings
+            tenant={tenant}
+            messages={settingsMessages as Record<string, string>}
+          />
         </CardContent>
       </Card>
 
