@@ -258,7 +258,7 @@ export default function ProductFormPage() {
                 value={watch("image_url")}
                 onChange={(url) => setValue("image_url", url)}
                 disabled={loading}
-                tenantId={tenant?.id}
+                tenantId={tenant?.id?.toString()}
               />
             </div>
 
