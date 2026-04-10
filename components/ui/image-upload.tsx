@@ -20,6 +20,17 @@ interface ImageUploadProps {
   tenantId?: string;
 }
 
+// Vercel serverless function payload limit
+const MAX_FILE_SIZE = 4 * 1024 * 1024; // 4MB (safe margin for Vercel)
+
+const formatFileSize = (bytes: number): string => {
+  if (bytes === 0) return "0 Bytes";
+  const k = 1024;
+  const sizes = ["Bytes", "KB", "MB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
+};
+
 export function ImageUpload({
   value,
   onChange,
@@ -28,6 +39,7 @@ export function ImageUpload({
 }: ImageUploadProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedFileSize, setSelectedFileSize] = useState<number | null>(null);
   const [showGallery, setShowGallery] = useState(false);
   const [galleryImages, setGalleryImages] = useState<string[]>([]);
   const [galleryLoading, setGalleryLoading] = useState(false);
@@ -37,13 +49,17 @@ export function ImageUpload({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = async (file: File) => {
+    setSelectedFileSize(file.size);
+
     if (!file.type.startsWith("image/")) {
       setError("Lütfen bir görsel dosyası seçiniz");
       return;
     }
 
-    if (file.size > 10 * 1024 * 1024) {
-      setError("Dosya boyutu 10MB'den küçük olmalıdır");
+    if (file.size > MAX_FILE_SIZE) {
+      setError(
+        `Dosya çok büyük (${formatFileSize(file.size)}). Maksimum ${formatFileSize(MAX_FILE_SIZE)} yükleyebilirsiniz.`
+      );
       return;
     }
 
@@ -129,7 +145,14 @@ export function ImageUpload({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
+      {/* Helper Text */}
+      <div className="text-xs text-gray-600 bg-blue-50 border border-blue-100 rounded p-2">
+        <p>
+          📁 Maksimum {formatFileSize(MAX_FILE_SIZE)} dosya yükleyebilirsiniz
+        </p>
+      </div>
+
       {/* Upload Area - Hide when preview exists */}
       {!value && (
         <>
@@ -168,6 +191,13 @@ export function ImageUpload({
                 veya dosyayı buraya sürükleyin
               </p>
             </div>
+
+            {/* File Size Display */}
+            {selectedFileSize && (
+              <p className="text-xs text-gray-600 mt-2">
+                Seçilen dosya: {formatFileSize(selectedFileSize)}
+              </p>
+            )}
           </div>
 
           {/* Select from Gallery Button */}
