@@ -17,9 +17,15 @@ interface ImageUploadProps {
   value?: string | null;
   onChange: (url: string | null) => void;
   disabled?: boolean;
+  tenantId?: string;
 }
 
-export function ImageUpload({ value, onChange, disabled }: ImageUploadProps) {
+export function ImageUpload({
+  value,
+  onChange,
+  disabled,
+  tenantId,
+}: ImageUploadProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showGallery, setShowGallery] = useState(false);
@@ -48,6 +54,9 @@ export function ImageUpload({ value, onChange, disabled }: ImageUploadProps) {
       // Create form data
       const formData = new FormData();
       formData.append("file", file);
+      if (tenantId) {
+        formData.append("tenantId", tenantId);
+      }
 
       // Upload to API
       const response = await fetch("/api/admin/upload-image", {

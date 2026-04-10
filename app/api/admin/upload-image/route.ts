@@ -19,6 +19,7 @@ export async function POST(request: Request) {
   try {
     const formData = await request.formData();
     const file = formData.get("file") as File;
+    const tenantId = formData.get("tenantId") as string | null;
 
     if (!file) {
       return NextResponse.json(
@@ -52,13 +53,12 @@ export async function POST(request: Request) {
       .webp({ quality: 82, effort: 4 })
       .toBuffer();
 
-    // Generate unique filename with .webp extension
+    // Generate unique filename: tenantId-timestamp.webp
+    // This avoids special character encoding issues
     const timestamp = Date.now();
-    const random = Math.random().toString(36).substring(2, 8);
-    const baseFilename = file.name
-      .replace(/\.[^/.]+$/, "") // Remove original extension
-      .replace(/[^a-zA-Z0-9.-]/g, "_");
-    const filename = `${timestamp}-${random}-${baseFilename}.webp`;
+    const filename = tenantId
+      ? `${tenantId}-${timestamp}.webp`
+      : `${timestamp}.webp`;
 
     // Upload to Supabase Storage
     const { data, error } = await supabaseAdmin.storage

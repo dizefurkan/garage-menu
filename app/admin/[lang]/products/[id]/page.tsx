@@ -331,6 +331,7 @@ export default function EditProductPage() {
                 value={watch("image_url")}
                 onChange={(url) => setValue("image_url", url)}
                 disabled={saving}
+                tenantId={tenant?.id}
               />
             </div>
 
