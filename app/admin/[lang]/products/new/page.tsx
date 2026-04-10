@@ -20,12 +20,14 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTenant } from "@/lib/context/tenant-context";
+import { ImageUpload } from "@/components/ui/image-upload";
 
 const productSchema = z.object({
   price: z.coerce.number().min(0).max(999999),
   currency: z.string().default("TRY"),
   is_available: z.boolean().default(true),
   category_id: z.coerce.number(),
+  image_url: z.string().optional().nullable(),
   translations: z.record(
     z.string(),
     z.object({
@@ -245,6 +247,19 @@ export default function ProductFormPage() {
               >
                 Satışa uygun
               </label>
+            </div>
+
+            {/* Image Upload */}
+            <div className="flex flex-col">
+              <label className="mb-2 block text-sm font-medium">
+                Ürün Görseli
+              </label>
+              <ImageUpload
+                value={watch("image_url")}
+                onChange={(url) => setValue("image_url", url)}
+                disabled={loading}
+                tenantId={tenant?.id}
+              />
             </div>
 
             <div className="flex gap-3">
