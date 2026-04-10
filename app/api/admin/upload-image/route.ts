@@ -47,10 +47,15 @@ export async function POST(request: Request) {
     // Read file buffer
     const buffer = await file.arrayBuffer();
 
-    // Convert to WebP format (reduces file size by 50-70%)
+    // Convert to WebP format with compression optimized for Vercel size limits
+    // Resize to max 1200px width to reduce payload size further
     const webpBuffer = await sharp(Buffer.from(buffer))
       .rotate()
-      .webp({ quality: 82, effort: 4 })
+      .resize(1200, 1200, {
+        fit: "inside",
+        withoutEnlargement: true,
+      })
+      .webp({ quality: 90, effort: 6 })
       .toBuffer();
 
     // Generate unique filename with tenant folder structure
