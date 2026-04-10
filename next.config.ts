@@ -9,12 +9,6 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  // Increase API route body size for image uploads (Vercel default is ~4.5MB)
-  api: {
-    bodyParser: {
-      sizeLimit: "50mb",
-    },
-  },
 };
 
 export default nextConfig;

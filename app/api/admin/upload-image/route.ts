@@ -4,6 +4,11 @@ import sharp from "sharp";
 
 export const runtime = "nodejs";
 
+// Configure body parser for large image uploads
+export const config = {
+  maxDuration: 60,
+};
+
 const NO_STORE_HEADERS = { "Cache-Control": "no-store" };
 const BUCKET_NAME = "product-images";
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
