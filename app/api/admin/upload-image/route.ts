@@ -26,10 +26,21 @@ export async function POST(request: Request) {
     const file = formData.get("file") as File;
     const tenantId = formData.get("tenantId") as string | null;
 
+    // Debug logging
+    console.log("[ImageUpload] tenantId:", tenantId, "| file size:", file.size);
+
     if (!file) {
       return NextResponse.json(
         { error: "Dosya bulunamadı" },
         { status: 400, headers: NO_STORE_HEADERS }
+      );
+    }
+
+    // Tenant ID is required
+    if (!tenantId) {
+      return NextResponse.json(
+        { error: "Tenant bilgisi bulunamadı" },
+        { status: 401, headers: NO_STORE_HEADERS }
       );
     }
 
@@ -67,9 +78,7 @@ export async function POST(request: Request) {
     // Storage RLS policy requires: (storage.foldername(name))[1] = tenant_id::TEXT
     // So path must be: tenant_id/timestamp.webp
     const timestamp = Date.now();
-    const filename = tenantId
-      ? `${tenantId}/${timestamp}.webp`
-      : `uncategorized/${timestamp}.webp`;
+    const filename = `${tenantId}/${timestamp}.webp`;
 
     // Upload to Supabase Storage
     const { data, error } = await supabaseAdmin.storage
