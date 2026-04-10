@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
-export function EmptyCategoriesState() {
+export function EmptyCategoriesState({ lang = "en" }: { lang?: string }) {
   return (
     <div className="rounded-lg border border-dashed border-gray-300 bg-gradient-to-br from-gray-50 to-gray-100 py-16 px-8 text-center">
       {/* Illustration */}
@@ -103,7 +103,7 @@ export function EmptyCategoriesState() {
       </p>
 
       {/* Button */}
-      <Link href="/admin/categories/new">
+      <Link href={`/admin/${lang}/categories/new`}>
         <Button size="lg" className="gap-2">
           + Kategori Oluştur
         </Button>

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
-export function EmptyProductsState() {
+export function EmptyProductsState({ lang = "en" }: { lang?: string }) {
   return (
     <div className="rounded-lg border border-dashed border-gray-300 bg-gradient-to-br from-gray-50 to-gray-100 py-16 px-8 text-center">
       {/* Illustration */}
@@ -144,7 +144,7 @@ export function EmptyProductsState() {
       </p>
 
       {/* Button */}
-      <Link href="/admin/products/new">
+      <Link href={`/admin/${lang}/products/new`}>
         <Button size="lg" className="gap-2">
           + Ürün Oluştur
         </Button>

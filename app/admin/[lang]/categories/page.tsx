@@ -1,6 +1,9 @@
 import { getSessionWithTenant } from "@/lib/auth/session";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { supabaseAdmin } from "@/lib/supabase";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 import { DataTable } from "@/components/ui/data-table";
 import { EmptyCategoriesState } from "@/components/sections/EmptyCategoriesState";
 import { columns } from "./columns";
@@ -48,7 +51,12 @@ async function getCategories(tenantId: number) {
   return categoriesWithCount;
 }
 
-export default async function CategoriesPage() {
+export default async function CategoriesPage({
+  params,
+}: {
+  params: Promise<{ lang: string }>;
+}) {
+  const { lang } = await params;
   const { user, tenant, role } = await getSessionWithTenant();
 
   if (!user || !tenant || (role !== "owner" && role !== "editor")) {
@@ -59,13 +67,23 @@ export default async function CategoriesPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Kategoriler</h1>
-        <p className="mt-2 text-gray-600">Menünüzü organize edin</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Kategoriler</h1>
+          <p className="mt-2 text-gray-600">Menünüzü organize edin</p>
+        </div>
+        {categories.length > 0 && (
+          <Link href={`/admin/${lang}/categories/new`}>
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Yeni Kategori
+            </Button>
+          </Link>
+        )}
       </div>
 
       {categories.length === 0 ? (
-        <EmptyCategoriesState />
+        <EmptyCategoriesState lang={lang} />
       ) : (
         <DataTable columns={columns} data={categories} />
       )}

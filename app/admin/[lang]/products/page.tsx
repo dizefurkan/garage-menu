@@ -1,6 +1,9 @@
 import { getSessionWithTenant } from "@/lib/auth/session";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { supabaseAdmin } from "@/lib/supabase";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 import { EmptyProductsState } from "@/components/sections/EmptyProductsState";
 import { ProductsFilterBar } from "./products-filter-bar";
 
@@ -46,7 +49,12 @@ async function getCategories(tenantId: number) {
   });
 }
 
-export default async function ProductsPage() {
+export default async function ProductsPage({
+  params,
+}: {
+  params: Promise<{ lang: string }>;
+}) {
+  const { lang } = await params;
   const { user, tenant, role } = await getSessionWithTenant();
 
   if (!user || !tenant || (role !== "owner" && role !== "editor")) {
@@ -57,13 +65,23 @@ export default async function ProductsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Ürünler</h1>
-        <p className="mt-2 text-gray-600">Menü ürünlerinizi yönetin</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Ürünler</h1>
+          <p className="mt-2 text-gray-600">Menü ürünlerinizi yönetin</p>
+        </div>
+        {categories.length > 0 && (
+          <Link href={`/admin/${lang}/products/new`}>
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Yeni Ürün
+            </Button>
+          </Link>
+        )}
       </div>
 
       {categories.length === 0 ? (
-        <EmptyProductsState />
+        <EmptyProductsState lang={lang} />
       ) : (
         <ProductsFilterBar tenantId={tenant.id} categories={categories} />
       )}
