@@ -52,15 +52,15 @@ export async function POST(request: Request) {
     // Read file buffer
     const buffer = await file.arrayBuffer();
 
-    // Convert to WebP format with aggressive compression for large files
-    // Resize to max 1024px to significantly reduce payload size
+    // Convert to WebP format with very aggressive compression
+    // Reduce to 800px maximum dimension to significantly cut payload
     const webpBuffer = await sharp(Buffer.from(buffer))
       .rotate()
-      .resize(1024, 1024, {
+      .resize(800, 800, {
         fit: "inside",
         withoutEnlargement: true,
       })
-      .webp({ quality: 80, effort: 6 })
+      .webp({ quality: 75, effort: 6 })
       .toBuffer();
 
     // Generate unique filename with tenant folder structure
