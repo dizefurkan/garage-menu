@@ -61,7 +61,10 @@ type Props = {
   targetLanguageOptions: string[];
 };
 
-function getLanguageLabel(languageCode: string, labels: Record<string, string>) {
+function getLanguageLabel(
+  languageCode: string,
+  labels: Record<string, string>
+) {
   return labels[languageCode] || languageCode.toUpperCase();
 }
 
@@ -70,14 +73,22 @@ function getTranslationValue(
   languageCode: string,
   field: keyof TranslationDraft
 ) {
-  return translations?.find((translation) => translation.language_code === languageCode)?.[field] || "";
+  return (
+    translations?.find(
+      (translation) => translation.language_code === languageCode
+    )?.[field] || ""
+  );
 }
 
 function getRequiredFieldCount(source: TranslationDraft) {
-  return [source.name, source.description].filter((value) => value.trim()).length;
+  return [source.name, source.description].filter((value) => value.trim())
+    .length;
 }
 
-function getCompletedFieldCount(source: TranslationDraft, target: TranslationDraft) {
+function getCompletedFieldCount(
+  source: TranslationDraft,
+  target: TranslationDraft
+) {
   return [source.name, source.description].reduce((count, value, index) => {
     if (!value.trim()) {
       return count;
@@ -88,7 +99,10 @@ function getCompletedFieldCount(source: TranslationDraft, target: TranslationDra
   }, 0);
 }
 
-function getCompletionPercent(source: TranslationDraft, target: TranslationDraft) {
+function getCompletionPercent(
+  source: TranslationDraft,
+  target: TranslationDraft
+) {
   const required = getRequiredFieldCount(source);
   if (required === 0) return 100;
 
@@ -111,9 +125,12 @@ export function TranslationsWorkbench({
 
   const [activeType, setActiveType] = useState<ItemType>(initialEntityType);
   const [activeId, setActiveId] = useState<number | null>(initialEntityId);
-  const [activeTargetLanguage, setActiveTargetLanguage] = useState(targetLanguage);
+  const [activeTargetLanguage, setActiveTargetLanguage] =
+    useState(targetLanguage);
   const [drafts, setDrafts] = useState<Record<string, TranslationDraft>>({});
-  const [originals, setOriginals] = useState<Record<string, TranslationDraft>>({});
+  const [originals, setOriginals] = useState<Record<string, TranslationDraft>>(
+    {}
+  );
   const [saving, setSaving] = useState(false);
   const hasTargetLanguages = targetLanguageOptions.length > 0;
 
@@ -144,7 +161,8 @@ export function TranslationsWorkbench({
   const categoryItems = useMemo(
     () =>
       [...categories].sort(
-        (left, right) => (left.display_order || left.id) - (right.display_order || right.id)
+        (left, right) =>
+          (left.display_order || left.id) - (right.display_order || right.id)
       ),
     [categories]
   );
@@ -152,7 +170,8 @@ export function TranslationsWorkbench({
   const productItems = useMemo(
     () =>
       [...products].sort(
-        (left, right) => (left.display_order || left.id) - (right.display_order || right.id)
+        (left, right) =>
+          (left.display_order || left.id) - (right.display_order || right.id)
       ),
     [products]
   );
@@ -166,7 +185,11 @@ export function TranslationsWorkbench({
         const key = `product:${item.id}:${lang}`;
         newOriginals[key] = {
           name: getTranslationValue(item.product_translations, lang, "name"),
-          description: getTranslationValue(item.product_translations, lang, "description"),
+          description: getTranslationValue(
+            item.product_translations,
+            lang,
+            "description"
+          ),
         };
       });
     });
@@ -176,7 +199,11 @@ export function TranslationsWorkbench({
         const key = `category:${item.id}:${lang}`;
         newOriginals[key] = {
           name: getTranslationValue(item.category_translations, lang, "name"),
-          description: getTranslationValue(item.category_translations, lang, "description"),
+          description: getTranslationValue(
+            item.category_translations,
+            lang,
+            "description"
+          ),
         };
       });
     });
@@ -204,23 +231,43 @@ export function TranslationsWorkbench({
     activeType === "product"
       ? productItems.find((item) => item.id === activeId)
       : categoryItems.find((item) => item.id === activeId);
+  const activeProductItem =
+    activeType === "product" ? (activeItem as ProductItem | undefined) : undefined;
+  const activeCategoryItem =
+    activeType === "category" ? (activeItem as CategoryItem | undefined) : undefined;
 
   const sourceDraft = useMemo(() => {
-    if (!activeItem) {
+    if (!activeProductItem && !activeCategoryItem) {
       return { name: "", description: "" };
     }
 
     return {
       name:
         activeType === "product"
-          ? getTranslationValue(activeItem.product_translations, sourceLanguage, "name")
-          : getTranslationValue(activeItem.category_translations, sourceLanguage, "name"),
+          ? getTranslationValue(
+              activeProductItem?.product_translations,
+              sourceLanguage,
+              "name"
+            )
+          : getTranslationValue(
+              activeCategoryItem?.category_translations,
+              sourceLanguage,
+              "name"
+            ),
       description:
         activeType === "product"
-          ? getTranslationValue(activeItem.product_translations, sourceLanguage, "description")
-          : getTranslationValue(activeItem.category_translations, sourceLanguage, "description"),
+          ? getTranslationValue(
+              activeProductItem?.product_translations,
+              sourceLanguage,
+              "description"
+            )
+          : getTranslationValue(
+              activeCategoryItem?.category_translations,
+              sourceLanguage,
+              "description"
+            ),
     };
-  }, [activeItem, activeType, sourceLanguage]);
+  }, [activeCategoryItem, activeProductItem, activeType, sourceLanguage]);
 
   // Helper function to check if a draft differs from original
   const isDraftDirty = (draftKey: string): boolean => {
@@ -229,21 +276,43 @@ export function TranslationsWorkbench({
 
     if (!draft || !original) return false;
 
-    return draft.name !== original.name || draft.description !== original.description;
+    return (
+      draft.name !== original.name || draft.description !== original.description
+    );
   };
 
-  const activeDraftKey = getDraftKey(activeType, activeId, activeTargetLanguage);
+  const activeDraftKey = getDraftKey(
+    activeType,
+    activeId,
+    activeTargetLanguage
+  );
 
   const currentDraft = drafts[activeDraftKey] || {
     name: activeItem
       ? activeType === "product"
-        ? getTranslationValue(activeItem.product_translations, activeTargetLanguage, "name")
-        : getTranslationValue(activeItem.category_translations, activeTargetLanguage, "name")
+        ? getTranslationValue(
+            activeProductItem?.product_translations,
+            activeTargetLanguage,
+            "name"
+          )
+        : getTranslationValue(
+            activeCategoryItem?.category_translations,
+            activeTargetLanguage,
+            "name"
+          )
       : "",
     description: activeItem
       ? activeType === "product"
-        ? getTranslationValue(activeItem.product_translations, activeTargetLanguage, "description")
-        : getTranslationValue(activeItem.category_translations, activeTargetLanguage, "description")
+        ? getTranslationValue(
+            activeProductItem?.product_translations,
+            activeTargetLanguage,
+            "description"
+          )
+        : getTranslationValue(
+            activeCategoryItem?.category_translations,
+            activeTargetLanguage,
+            "description"
+          )
       : "",
   };
 
@@ -251,27 +320,66 @@ export function TranslationsWorkbench({
   const currentProgress = getCompletionPercent(sourceDraft, currentDraft);
 
   const summary = useMemo(() => {
-    const buildSummary = (items: CategoryItem[] | ProductItem[], type: ItemType) => {
+    const buildSummary = (
+      items: CategoryItem[] | ProductItem[],
+      type: ItemType
+    ) => {
       return items.map((item) => {
+        const typedProductItem =
+          type === "product" ? (item as ProductItem) : undefined;
+        const typedCategoryItem =
+          type === "category" ? (item as CategoryItem) : undefined;
         const source = {
           name:
             type === "product"
-              ? getTranslationValue(item.product_translations, sourceLanguage, "name")
-              : getTranslationValue(item.category_translations, sourceLanguage, "name"),
+              ? getTranslationValue(
+                  typedProductItem?.product_translations,
+                  sourceLanguage,
+                  "name"
+                )
+              : getTranslationValue(
+                  typedCategoryItem?.category_translations,
+                  sourceLanguage,
+                  "name"
+                ),
           description:
             type === "product"
-              ? getTranslationValue(item.product_translations, sourceLanguage, "description")
-              : getTranslationValue(item.category_translations, sourceLanguage, "description"),
+              ? getTranslationValue(
+                  typedProductItem?.product_translations,
+                  sourceLanguage,
+                  "description"
+                )
+              : getTranslationValue(
+                  typedCategoryItem?.category_translations,
+                  sourceLanguage,
+                  "description"
+                ),
         };
         const target = {
           name:
             type === "product"
-              ? getTranslationValue(item.product_translations, activeTargetLanguage, "name")
-              : getTranslationValue(item.category_translations, activeTargetLanguage, "name"),
+              ? getTranslationValue(
+                  typedProductItem?.product_translations,
+                  activeTargetLanguage,
+                  "name"
+                )
+              : getTranslationValue(
+                  typedCategoryItem?.category_translations,
+                  activeTargetLanguage,
+                  "name"
+                ),
           description:
             type === "product"
-              ? getTranslationValue(item.product_translations, activeTargetLanguage, "description")
-              : getTranslationValue(item.category_translations, activeTargetLanguage, "description"),
+              ? getTranslationValue(
+                  typedProductItem?.product_translations,
+                  activeTargetLanguage,
+                  "description"
+                )
+              : getTranslationValue(
+                  typedCategoryItem?.category_translations,
+                  activeTargetLanguage,
+                  "description"
+                ),
         };
         const progress = getCompletionPercent(source, target);
         const completed = getCompletedFieldCount(source, target);
@@ -298,16 +406,25 @@ export function TranslationsWorkbench({
       categorySummary,
       totalCompleted,
       totalRequired,
-      productsFullyTranslated: productSummary.filter((item) => item.required > 0 && item.progress === 100)
-        .length,
-      categoriesFullyTranslated: categorySummary.filter((item) => item.required > 0 && item.progress === 100)
-        .length,
+      productsFullyTranslated: productSummary.filter(
+        (item) => item.required > 0 && item.progress === 100
+      ).length,
+      categoriesFullyTranslated: categorySummary.filter(
+        (item) => item.required > 0 && item.progress === 100
+      ).length,
     };
   }, [activeTargetLanguage, categoryItems, productItems, sourceLanguage]);
 
-  const overallProgress = summary.totalRequired === 0 ? 100 : Math.round((summary.totalCompleted / summary.totalRequired) * 100);
+  const overallProgress =
+    summary.totalRequired === 0
+      ? 100
+      : Math.round((summary.totalCompleted / summary.totalRequired) * 100);
 
-  const syncUrl = (nextType: ItemType, nextId: number | null, nextTargetLanguage: string) => {
+  const syncUrl = (
+    nextType: ItemType,
+    nextId: number | null,
+    nextTargetLanguage: string
+  ) => {
     const params = new URLSearchParams(Array.from(searchParams.entries()));
     params.set("type", nextType);
     if (nextId !== null) {
@@ -319,7 +436,8 @@ export function TranslationsWorkbench({
     router.replace(`${pathname}?${params.toString()}`);
   };
 
-  const getItemsByType = (type: ItemType) => (type === "product" ? productItems : categoryItems);
+  const getItemsByType = (type: ItemType) =>
+    type === "product" ? productItems : categoryItems;
 
   const getItemIndex = (type: ItemType, id: number | null) => {
     if (id === null) return -1;
@@ -355,15 +473,16 @@ export function TranslationsWorkbench({
     }
 
     if (meta.type === "product") {
-      const response = await fetch(`/api/admin/products/${item.id}`, {
+      const productItem = item as ProductItem;
+      const response = await fetch(`/api/admin/products/${productItem.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          price: item.price,
-          currency: item.currency,
-          category_id: item.category_id,
-          image_url: item.image_url,
-          is_available: item.is_available,
+          price: productItem.price,
+          currency: productItem.currency,
+          category_id: productItem.category_id,
+          image_url: productItem.image_url,
+          is_available: productItem.is_available,
           translations: {
             [meta.targetLanguage]: {
               name: draft.name,
@@ -381,11 +500,12 @@ export function TranslationsWorkbench({
       return true;
     }
 
-    const response = await fetch(`/api/admin/categories/${item.id}`, {
+    const categoryItem = item as CategoryItem;
+    const response = await fetch(`/api/admin/categories/${categoryItem.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        id: item.id,
+        id: categoryItem.id,
         translations: {
           [meta.targetLanguage]: {
             name: draft.name,
@@ -428,7 +548,9 @@ export function TranslationsWorkbench({
       toast.success("Translation saved");
       return true;
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to save translation");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to save translation"
+      );
       return false;
     } finally {
       setSaving(false);
@@ -500,8 +622,8 @@ export function TranslationsWorkbench({
   };
 
   const activeCategoryName =
-    activeType === "product"
-      ? categories.find((category) => category.id === activeItem?.category_id)
+    activeType === "product" && activeProductItem
+      ? categories.find((category) => category.id === activeProductItem.category_id)
       : null;
 
   return (
@@ -541,15 +663,22 @@ export function TranslationsWorkbench({
               <span>{overallProgress}%</span>
             </div>
             <div className="h-2 rounded-full bg-muted overflow-hidden">
-              <div className="h-full bg-primary" style={{ width: `${overallProgress}%` }} />
+              <div
+                className="h-full bg-primary"
+                style={{ width: `${overallProgress}%` }}
+              />
             </div>
             <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
               <div>
-                <strong className="block text-foreground">{summary.productsFullyTranslated}</strong>
+                <strong className="block text-foreground">
+                  {summary.productsFullyTranslated}
+                </strong>
                 Products complete
               </div>
               <div>
-                <strong className="block text-foreground">{summary.categoriesFullyTranslated}</strong>
+                <strong className="block text-foreground">
+                  {summary.categoriesFullyTranslated}
+                </strong>
                 Categories complete
               </div>
             </div>
@@ -557,35 +686,78 @@ export function TranslationsWorkbench({
 
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <span>{activeList.length} items</span>
-            <span>{getLanguageLabel(sourceLanguage, targetLanguageLabels)} → {getLanguageLabel(activeTargetLanguage, targetLanguageLabels)}</span>
+            <span>
+              {getLanguageLabel(sourceLanguage, targetLanguageLabels)} →{" "}
+              {getLanguageLabel(activeTargetLanguage, targetLanguageLabels)}
+            </span>
           </div>
         </CardHeader>
 
         <CardContent className="space-y-2">
           {activeList.map((item) => {
+            const queueProductItem =
+              activeType === "product" ? (item as ProductItem) : undefined;
+            const queueCategoryItem =
+              activeType === "category" ? (item as CategoryItem) : undefined;
             const itemSource =
               activeType === "product"
                 ? {
-                    name: getTranslationValue(item.product_translations, sourceLanguage, "name"),
-                    description: getTranslationValue(item.product_translations, sourceLanguage, "description"),
+                    name: getTranslationValue(
+                      queueProductItem?.product_translations,
+                      sourceLanguage,
+                      "name"
+                    ),
+                    description: getTranslationValue(
+                      queueProductItem?.product_translations,
+                      sourceLanguage,
+                      "description"
+                    ),
                   }
                 : {
-                    name: getTranslationValue(item.category_translations, sourceLanguage, "name"),
-                    description: getTranslationValue(item.category_translations, sourceLanguage, "description"),
+                    name: getTranslationValue(
+                      queueCategoryItem?.category_translations,
+                      sourceLanguage,
+                      "name"
+                    ),
+                    description: getTranslationValue(
+                      queueCategoryItem?.category_translations,
+                      sourceLanguage,
+                      "description"
+                    ),
                   };
             const itemTarget =
               activeType === "product"
                 ? {
-                    name: getTranslationValue(item.product_translations, activeTargetLanguage, "name"),
-                    description: getTranslationValue(item.product_translations, activeTargetLanguage, "description"),
+                    name: getTranslationValue(
+                      queueProductItem?.product_translations,
+                      activeTargetLanguage,
+                      "name"
+                    ),
+                    description: getTranslationValue(
+                      queueProductItem?.product_translations,
+                      activeTargetLanguage,
+                      "description"
+                    ),
                   }
                 : {
-                    name: getTranslationValue(item.category_translations, activeTargetLanguage, "name"),
-                    description: getTranslationValue(item.category_translations, activeTargetLanguage, "description"),
+                    name: getTranslationValue(
+                      queueCategoryItem?.category_translations,
+                      activeTargetLanguage,
+                      "name"
+                    ),
+                    description: getTranslationValue(
+                      queueCategoryItem?.category_translations,
+                      activeTargetLanguage,
+                      "description"
+                    ),
                   };
             const percent = getCompletionPercent(itemSource, itemTarget);
             const isActive = item.id === activeId;
-            const queueItemDraftKey = getDraftKey(activeType, item.id, activeTargetLanguage);
+            const queueItemDraftKey = getDraftKey(
+              activeType,
+              item.id,
+              activeTargetLanguage
+            );
             const isNotSaved = isDraftDirty(queueItemDraftKey);
             const label =
               activeType === "product"
@@ -605,16 +777,24 @@ export function TranslationsWorkbench({
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <div className="truncate font-medium">{label}</div>
-                    {activeType === "product" && activeItem && item.id === activeItem.id && activeCategoryName ? (
+                    {activeType === "product" &&
+                    activeItem &&
+                    item.id === activeItem.id &&
+                    activeCategoryName ? (
                       <div className="mt-1 text-xs text-muted-foreground">
-                        {activeCategoryName.category_translations?.[0]?.name || "Category"}
+                        {activeCategoryName.category_translations?.[0]?.name ||
+                          "Category"}
                       </div>
                     ) : null}
                     {isNotSaved ? (
-                      <div className="mt-1 text-xs font-medium text-amber-700">Not saved</div>
+                      <div className="mt-1 text-xs font-medium text-amber-700">
+                        Not saved
+                      </div>
                     ) : null}
                   </div>
-                  <Badge variant={percent === 100 ? "default" : "outline"}>{percent}%</Badge>
+                  <Badge variant={percent === 100 ? "default" : "outline"}>
+                    {percent}%
+                  </Badge>
                 </div>
               </button>
             );
@@ -628,7 +808,9 @@ export function TranslationsWorkbench({
             <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <div>
                 <CardTitle>
-                  {activeType === "product" ? "Product Translation" : "Category Translation"}
+                  {activeType === "product"
+                    ? "Product Translation"
+                    : "Category Translation"}
                 </CardTitle>
                 <p className="text-sm text-muted-foreground">
                   {activeItem
@@ -680,7 +862,12 @@ export function TranslationsWorkbench({
                 <Button
                   type="button"
                   onClick={() => void saveActiveItem()}
-                  disabled={!activeItem || saving || !hasTargetLanguages || !isActiveDraftDirty}
+                  disabled={
+                    !activeItem ||
+                    saving ||
+                    !hasTargetLanguages ||
+                    !isActiveDraftDirty
+                  }
                 >
                   <Save className="mr-2 h-4 w-4" />
                   Save Current
@@ -689,9 +876,19 @@ export function TranslationsWorkbench({
                   type="button"
                   variant="outline"
                   onClick={() => void saveAllDrafts()}
-                  disabled={saving || !hasTargetLanguages || Object.keys(drafts).filter((key) => isDraftDirty(key)).length === 0}
+                  disabled={
+                    saving ||
+                    !hasTargetLanguages ||
+                    Object.keys(drafts).filter((key) => isDraftDirty(key))
+                      .length === 0
+                  }
                 >
-                  Save All ({Object.keys(drafts).filter((key) => isDraftDirty(key)).length})
+                  Save All (
+                  {
+                    Object.keys(drafts).filter((key) => isDraftDirty(key))
+                      .length
+                  }
+                  )
                 </Button>
               </div>
             </div>
@@ -702,7 +899,10 @@ export function TranslationsWorkbench({
                 <span>{currentProgress}%</span>
               </div>
               <div className="h-2 rounded-full bg-muted overflow-hidden">
-                <div className="h-full bg-primary" style={{ width: `${currentProgress}%` }} />
+                <div
+                  className="h-full bg-primary"
+                  style={{ width: `${currentProgress}%` }}
+                />
               </div>
             </div>
           </CardHeader>
@@ -712,33 +912,55 @@ export function TranslationsWorkbench({
               <div className="grid gap-6 lg:grid-cols-2">
                 <div className="space-y-4 rounded-2xl border bg-muted/20 p-4">
                   <div>
-                    <p className="text-xs uppercase tracking-wide text-muted-foreground">Original</p>
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                      Original
+                    </p>
                     <h3 className="mt-1 text-lg font-semibold">
                       {getLanguageLabel(sourceLanguage, targetLanguageLabels)}
                     </h3>
                   </div>
                   <div className="space-y-4">
                     <div>
-                      <label className="mb-2 block text-sm font-medium">Name</label>
-                      <Input value={sourceDraft.name} readOnly className="bg-background" />
+                      <label className="mb-2 block text-sm font-medium">
+                        Name
+                      </label>
+                      <Input
+                        value={sourceDraft.name}
+                        readOnly
+                        className="bg-background"
+                      />
                     </div>
                     <div>
-                      <label className="mb-2 block text-sm font-medium">Description</label>
-                      <Textarea value={sourceDraft.description} readOnly rows={8} className="bg-background" />
+                      <label className="mb-2 block text-sm font-medium">
+                        Description
+                      </label>
+                      <Textarea
+                        value={sourceDraft.description}
+                        readOnly
+                        rows={8}
+                        className="bg-background"
+                      />
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-4 rounded-2xl border bg-background p-4">
                   <div>
-                    <p className="text-xs uppercase tracking-wide text-muted-foreground">Translation</p>
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                      Translation
+                    </p>
                     <h3 className="mt-1 text-lg font-semibold">
-                      {getLanguageLabel(activeTargetLanguage, targetLanguageLabels)}
+                      {getLanguageLabel(
+                        activeTargetLanguage,
+                        targetLanguageLabels
+                      )}
                     </h3>
                   </div>
                   <div className="space-y-4">
                     <div>
-                      <label className="mb-2 block text-sm font-medium">Name</label>
+                      <label className="mb-2 block text-sm font-medium">
+                        Name
+                      </label>
                       <Input
                         value={currentDraft.name}
                         onChange={(event) => {
@@ -754,7 +976,9 @@ export function TranslationsWorkbench({
                       />
                     </div>
                     <div>
-                      <label className="mb-2 block text-sm font-medium">Description</label>
+                      <label className="mb-2 block text-sm font-medium">
+                        Description
+                      </label>
                       <Textarea
                         value={currentDraft.description}
                         onChange={(event) => {

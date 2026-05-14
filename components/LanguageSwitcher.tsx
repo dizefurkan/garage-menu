@@ -77,6 +77,7 @@ export function LanguageSwitcher({
       <Select
         value={normalizedLang}
         onValueChange={(lang) => {
+          if (!lang) return;
           window.location.href = getLanguagePath(lang);
         }}
       >
@@ -102,6 +103,7 @@ export function LanguageSwitcher({
     <Select
       value={normalizedLang}
       onValueChange={(lang) => {
+        if (!lang) return;
         window.location.href = getLanguagePath(lang);
       }}
     >

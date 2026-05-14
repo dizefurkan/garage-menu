@@ -43,13 +43,16 @@ export default async function TranslationPage({ params, searchParams }: Props) {
     notFound();
   }
 
-  const languages = Array.isArray(tenant.languages) && tenant.languages.length
-    ? tenant.languages
-    : [tenant.default_language || "en"];
+  const languages =
+    Array.isArray(tenant.languages) && tenant.languages.length
+      ? tenant.languages
+      : [tenant.default_language || "en"];
 
   const sourceLanguage = languages[0] || tenant.default_language || "en";
   const availableTargetLanguages =
-    languages.length > 1 ? languages.filter((language) => language !== sourceLanguage) : languages;
+    languages.length > 1
+      ? languages.filter((language) => language !== sourceLanguage)
+      : languages;
 
   const targetLanguage =
     query.target && availableTargetLanguages.includes(query.target)
@@ -59,12 +62,16 @@ export default async function TranslationPage({ params, searchParams }: Props) {
   const [categoriesResult, productsResult] = await Promise.all([
     (supabaseAdmin as any)
       .from("categories")
-      .select("id, display_order, created_at, category_translations(language_code, name, description)")
+      .select(
+        "id, display_order, created_at, category_translations(language_code, name, description)"
+      )
       .eq("tenant_id", tenant.id)
       .order("id"),
     (supabaseAdmin as any)
       .from("products")
-      .select("id, category_id, price, currency, image_url, is_available, is_draft, created_at, display_order, product_translations(language_code, name, description)")
+      .select(
+        "id, category_id, price, currency, image_url, is_available, is_draft, created_at, display_order, product_translations(language_code, name, description)"
+      )
       .eq("tenant_id", tenant.id)
       .order("id"),
   ]);
@@ -91,7 +98,9 @@ export default async function TranslationPage({ params, searchParams }: Props) {
 
       <TranslationsWorkbench
         categories={categories}
-        initialEntityId={Number.isFinite(initialId as number) ? initialId : null}
+        initialEntityId={
+          Number.isFinite(initialId as number) ? initialId : null
+        }
         initialEntityType={initialType}
         products={products}
         sourceLanguage={sourceLanguage}
