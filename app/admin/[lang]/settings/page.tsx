@@ -1,5 +1,6 @@
 import { getSessionWithTenant } from "@/lib/auth/session";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -109,6 +110,27 @@ export default async function SettingsPage({ params }: Props) {
             currentLang={lang}
             messages={settingsMessages as Record<string, string>}
           />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{t("translations", "Translations")}</CardTitle>
+        </CardHeader>
+        <CardContent className="flex items-center justify-between gap-4">
+          <div>
+            <p className="text-sm text-gray-600">
+              {t(
+                "translationsDescription",
+                "Translate products and categories faster"
+              )}
+            </p>
+          </div>
+          <Button type="button" asChild>
+            <Link href={`/admin/${lang}/settings/translations`}>
+              {t("openTranslations", "Open")}
+            </Link>
+          </Button>
         </CardContent>
       </Card>
 

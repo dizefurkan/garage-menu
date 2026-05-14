@@ -35,7 +35,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const baseUrl = getBaseUrl();
   let restaurantName = "Menu";
 
-  if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  if (
+    process.env.NEXT_PUBLIC_SUPABASE_URL &&
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  ) {
     try {
       const supabaseAdmin = createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -306,8 +309,7 @@ export default async function MenuPage({ params }: Props) {
     : Array.isArray(tenant.languages)
       ? tenant.languages
       : [];
-  const shouldShowLanguageSwitcher =
-    configuredMenuLanguages.length >= 2;
+  const shouldShowLanguageSwitcher = configuredMenuLanguages.length >= 2;
 
   // Extract theme config with fallbacks
   const themeConfig = (tenant.theme_config as any) || {};

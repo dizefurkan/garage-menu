@@ -82,7 +82,9 @@ export function LanguageSwitcher({
       >
         <SelectTrigger className="h-9 w-9 md:w-36 gap-2 md:gap-2 justify-center md:justify-start">
           <Globe className="h-4 w-4 text-muted-foreground" />
-          <span className="hidden md:inline truncate text-sm">{getLanguageLabel(normalizedLang)}</span>
+          <span className="hidden md:inline truncate text-sm">
+            {getLanguageLabel(normalizedLang)}
+          </span>
         </SelectTrigger>
         <SelectContent>
           {availableLanguages.map((language) => (

@@ -463,35 +463,50 @@ CREATE POLICY "Ops: Allow service role full access"
 
 -- Create `product-images` bucket in Supabase console first!
 
--- Drop old storage policies
+-- Drop all old storage policies
+DROP POLICY IF EXISTS "service_role_all_access" ON storage.objects;
+DROP POLICY IF EXISTS "service_role_insert" ON storage.objects;
+DROP POLICY IF EXISTS "service_role_delete" ON storage.objects;
 DROP POLICY IF EXISTS "Users can upload product images" ON storage.objects;
 DROP POLICY IF EXISTS "Public read access to product images" ON storage.objects;
 DROP POLICY IF EXISTS "Users can delete own images" ON storage.objects;
 DROP POLICY IF EXISTS "Ops: Allow service role full access to product images" ON storage.objects;
+DROP POLICY IF EXISTS "Allow service role full access" ON storage.objects;
+DROP POLICY IF EXISTS "Allow public read" ON storage.objects;
+DROP POLICY IF EXISTS "Allow authenticated upload" ON storage.objects;
+DROP POLICY IF EXISTS "Allow delete own images" ON storage.objects;
+DROP POLICY IF EXISTS "Allow all on product-images" ON storage.objects;
 
--- Service role has full access (for backend/API uploads via supabaseAdmin)
-CREATE POLICY "Ops: Allow service role full access to product images"
-  ON storage.objects
-  USING (
-    bucket_id = 'product-images'
-    AND auth.role() = 'service_role'
-  );
+-- PRODUCTION POLICY (SECURE - proper tenant isolation)
+-- Service role bypasses checks (backend/API)
+-- Public read: Everyone can view product images (QR menu is public)
+-- Authenticated write/delete: Only own tenant's files
 
--- Allow authenticated users to upload to their tenant's folder
-CREATE POLICY "Users can upload product images"
+-- 1. Service role INSERT access (backend/API uploads)
+CREATE POLICY "service_role_insert"
+  ON storage.objects FOR INSERT
+  USING (auth.role() = 'service_role' AND bucket_id = 'product-images');
+
+-- 2. Service role DELETE access
+CREATE POLICY "service_role_delete"
+  ON storage.objects FOR DELETE
+  USING (auth.role() = 'service_role' AND bucket_id = 'product-images');
+
+-- 3. PUBLIC READ - Everyone can view product images (QR menu displays images)
+CREATE POLICY "public_read"
+  ON storage.objects FOR SELECT
+  USING (bucket_id = 'product-images');
+
+-- 4. Authenticated users can INSERT only to their tenant's folder
+CREATE POLICY "authenticated_insert"
   ON storage.objects FOR INSERT
   WITH CHECK (
     bucket_id = 'product-images'
     AND (storage.foldername(name))[1] = (public.user_tenant_id())::TEXT
   );
 
--- Allow public read access (images are public)
-CREATE POLICY "Public read access to product images"
-  ON storage.objects FOR SELECT
-  USING (bucket_id = 'product-images');
-
--- Allow authenticated users to delete their own uploads
-CREATE POLICY "Users can delete own images"
+-- 5. Authenticated users can DELETE only their tenant's files
+CREATE POLICY "authenticated_delete"
   ON storage.objects FOR DELETE
   USING (
     bucket_id = 'product-images'
