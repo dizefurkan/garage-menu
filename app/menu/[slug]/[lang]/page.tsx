@@ -33,9 +33,31 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug, lang } = await params;
   const baseUrl = getBaseUrl();
+  let restaurantName = "Menu";
+
+  if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    try {
+      const supabaseAdmin = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL,
+        process.env.SUPABASE_SERVICE_ROLE_KEY
+      );
+
+      const { data: tenant } = await supabaseAdmin
+        .from("tenants")
+        .select("name")
+        .eq("slug", slug)
+        .single();
+
+      if (tenant?.name) {
+        restaurantName = tenant.name;
+      }
+    } catch (error) {
+      console.warn("[generateMetadata] Failed to load tenant name:", error);
+    }
+  }
 
   return {
-    title: `Menu | ${slug}`,
+    title: restaurantName,
     description: "Browse our menu",
     alternates: {
       canonical: `${baseUrl}/menu/${slug}/${lang}`,
