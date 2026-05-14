@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { createClient } from "@supabase/supabase-js";
 import { getTenantCacheTags } from "@/lib/cache/revalidation";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 function getBaseUrl(): string {
   // On Vercel production, use the production domain
@@ -278,6 +279,13 @@ export default async function MenuPage({ params }: Props) {
 
   console.log("[MenuPage] Data received, rendering page");
   const { tenant, categories, products } = data;
+  const configuredMenuLanguages = Array.isArray(tenant.menu_languages)
+    ? tenant.menu_languages
+    : Array.isArray(tenant.languages)
+      ? tenant.languages
+      : [];
+  const shouldShowLanguageSwitcher =
+    configuredMenuLanguages.length >= 2;
 
   // Extract theme config with fallbacks
   const themeConfig = (tenant.theme_config as any) || {};
@@ -295,7 +303,22 @@ export default async function MenuPage({ params }: Props) {
       }
     >
       {/* Header */}
-      <Header tenant={tenant} primaryColor={primaryColor} />
+      <Header
+        tenant={tenant}
+        primaryColor={primaryColor}
+        currentLang={lang}
+        showLanguageSwitcher={shouldShowLanguageSwitcher}
+        menuLanguages={configuredMenuLanguages}
+      />
+
+      {/* Mobile Floating Language Button */}
+      {shouldShowLanguageSwitcher && (
+        <MobileLanguageButton
+          currentLang={lang}
+          menuLanguages={configuredMenuLanguages}
+          slug={slug}
+        />
+      )}
 
       {/* Category Navigation */}
       <CategoryNav categories={categories} products={products} />
@@ -342,9 +365,15 @@ export default async function MenuPage({ params }: Props) {
 function Header({
   tenant,
   primaryColor,
+  currentLang,
+  showLanguageSwitcher,
+  menuLanguages,
 }: {
   tenant: any;
   primaryColor: string;
+  currentLang: string;
+  showLanguageSwitcher: boolean;
+  menuLanguages: string[];
 }) {
   return (
     <header className="bg-white border-b border-gray-100 shadow-sm">
@@ -370,6 +399,16 @@ function Header({
               )}
             </div>
           </div>
+
+          {showLanguageSwitcher && (
+            <div className="hidden md:block">
+              <LanguageSwitcher
+                currentLang={currentLang}
+                compact
+                languages={menuLanguages}
+              />
+            </div>
+          )}
         </div>
       </div>
     </header>
@@ -447,6 +486,62 @@ function MobileCategoryButton({
                     className="block px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors text-sm font-medium"
                   >
                     {cat.name} <span className="text-gray-500">({count})</span>
+                  </a>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      </details>
+    </div>
+  );
+}
+
+// Mobile Floating Language Button
+function MobileLanguageButton({
+  currentLang,
+  menuLanguages,
+  slug,
+}: {
+  currentLang: string;
+  menuLanguages: string[];
+  slug: string;
+}) {
+  const getLanguageLabel = (languageCode: string) => {
+    try {
+      const normalizedCode = languageCode.toLowerCase();
+      const baseLanguage = normalizedCode.split("-")[0];
+      const displayNames = new Intl.DisplayNames([normalizedCode], {
+        type: "language",
+      });
+      return displayNames.of(baseLanguage) || languageCode.toUpperCase();
+    } catch {
+      return languageCode.toUpperCase();
+    }
+  };
+
+  return (
+    <div className="md:hidden fixed bottom-6 left-6 z-40">
+      <details className="group">
+        <summary className="list-none cursor-pointer bg-white/20 backdrop-blur-md text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow border border-white/30">
+          <span className="text-xl">🌐</span>
+        </summary>
+        <div className="absolute bottom-16 left-0 bg-white rounded-2xl shadow-2xl p-3 min-w-40 border border-gray-100">
+          <ul className="space-y-1">
+            {menuLanguages.map((language) => {
+              const isActive = language === currentLang;
+
+              return (
+                <li key={language}>
+                  <a
+                    href={`/menu/${slug}/${language}`}
+                    className={`block px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
+                      isActive
+                        ? "bg-gray-100 text-black"
+                        : "hover:bg-gray-100 text-gray-700"
+                    }`}
+                  >
+                    {getLanguageLabel(language)}
                   </a>
                 </li>
               );

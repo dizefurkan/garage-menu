@@ -174,6 +174,7 @@ export async function GET(request: Request) {
         description: tenant.description || undefined,
         phone: tenant.phone || undefined,
         logo_url: tenant.logo_url || undefined,
+        menu_languages: tenantLanguages,
         languages: languages, // Available languages for the tenant
         contact_info: {
           address: contactInfo.address || undefined,

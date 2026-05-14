@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import Link from "next/link";
+import { Globe } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -13,84 +13,105 @@ import {
 interface LanguageSwitcherProps {
   currentLang?: string;
   compact?: boolean;
+  languages?: string[];
 }
 
 export function LanguageSwitcher({
   currentLang = "en",
   compact = false,
+  languages,
 }: LanguageSwitcherProps) {
   const pathname = usePathname();
+  const availableLanguages =
+    languages && languages.length > 0 ? [...new Set(languages)] : ["en", "tr"];
+  const normalizedLang = availableLanguages.includes(currentLang)
+    ? currentLang
+    : availableLanguages[0];
+
+  const getLanguageLabel = (languageCode: string) => {
+    try {
+      const normalizedCode = languageCode.toLowerCase();
+      const baseLanguage = normalizedCode.split("-")[0];
+      const displayNames = new Intl.DisplayNames([normalizedCode], {
+        type: "language",
+      });
+
+      return displayNames.of(baseLanguage) || languageCode.toUpperCase();
+    } catch {
+      return languageCode.toUpperCase();
+    }
+  };
 
   // Extract the current locale and construct paths for both languages
-  const getLanguagePath = (lang: "en" | "tr") => {
-    const KNOWN_LOCALES = ["en", "tr"];
+  const getLanguagePath = (lang: string) => {
     const parts = pathname.split("/").filter(Boolean);
-    
+
     // For /admin/[lang]/... pages
-    if (parts[0] === "admin" && parts.length >= 2 && KNOWN_LOCALES.includes(parts[1])) {
+    if (parts[0] === "admin" && parts.length >= 2) {
       // Replace locale at position 1
       parts[1] = lang;
       return "/" + parts.join("/");
     }
-    
+
     // For /menu/[slug]/[lang]/... pages
-    if (parts[0] === "menu" && parts.length >= 3 && KNOWN_LOCALES.includes(parts[2])) {
+    if (parts[0] === "menu" && parts.length >= 3) {
       // Replace locale at position 2
       parts[2] = lang;
       return "/" + parts.join("/");
     }
-    
+
     // For /[lang] landing pages or unknown structure
-    if (parts.length >= 1 && KNOWN_LOCALES.includes(parts[0])) {
+    if (parts.length >= 1) {
       // Replace locale at position 0
       parts[0] = lang;
       return "/" + parts.join("/");
     }
-    
+
     // Fallback to root locale
     return `/${lang}`;
   };
 
   if (compact) {
-    // Compact version: Just show EN | TR links
+    // Compact version: icon-based dropdown
     return (
-      <div className="flex items-center gap-2 text-sm">
-        <Link
-          href={getLanguagePath("en")}
-          className={`px-2 py-1 rounded ${
-            currentLang === "en"
-              ? "bg-primary text-primary-foreground"
-              : "hover:bg-muted"
-          }`}
-        >
-          EN
-        </Link>
-        <span className="text-muted-foreground">|</span>
-        <Link
-          href={getLanguagePath("tr")}
-          className={`px-2 py-1 rounded ${
-            currentLang === "tr"
-              ? "bg-primary text-primary-foreground"
-              : "hover:bg-muted"
-          }`}
-        >
-          TR
-        </Link>
-      </div>
+      <Select
+        value={normalizedLang}
+        onValueChange={(lang) => {
+          window.location.href = getLanguagePath(lang);
+        }}
+      >
+        <SelectTrigger className="h-9 w-9 md:w-36 gap-2 md:gap-2 justify-center md:justify-start">
+          <Globe className="h-4 w-4 text-muted-foreground" />
+          <span className="hidden md:inline truncate text-sm">{getLanguageLabel(normalizedLang)}</span>
+        </SelectTrigger>
+        <SelectContent>
+          {availableLanguages.map((language) => (
+            <SelectItem key={language} value={language}>
+              {getLanguageLabel(language)}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     );
   }
 
   // Full version: Dropdown select
   return (
-    <Select value={currentLang} onValueChange={(lang) => {
-      window.location.href = getLanguagePath(lang as "en" | "tr");
-    }}>
-      <SelectTrigger className="w-[100px]">
-        <SelectValue placeholder="Language" />
+    <Select
+      value={normalizedLang}
+      onValueChange={(lang) => {
+        window.location.href = getLanguagePath(lang);
+      }}
+    >
+      <SelectTrigger className="w-40">
+        <SelectValue placeholder={getLanguageLabel(normalizedLang)} />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value="en">English</SelectItem>
-        <SelectItem value="tr">Türkçe</SelectItem>
+        {availableLanguages.map((language) => (
+          <SelectItem key={language} value={language}>
+            {getLanguageLabel(language)}
+          </SelectItem>
+        ))}
       </SelectContent>
     </Select>
   );
