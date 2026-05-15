@@ -145,11 +145,11 @@ export function ProductsFilterBar({
   const filterElement = (
     <div
       suppressHydrationWarning
-      className="flex items-center gap-2 px-3 py-2 rounded-md border border-input bg-background"
+      className="flex h-10 items-center gap-2 rounded-md border border-input bg-background pl-3 pr-2"
     >
       <Filter className="h-4 w-4 text-muted-foreground" />
       <Select value={selectedCategory} onValueChange={handleCategoryChange}>
-        <SelectTrigger className="w-48 border-0 focus:ring-0 focus:ring-offset-0 p-0 h-auto bg-transparent">
+        <SelectTrigger className="h-full w-48 border-0 bg-transparent p-0 focus-visible:border-transparent focus-visible:ring-0 focus-visible:ring-offset-0">
           <SelectValue>
             {selectedCategory === "all"
               ? `Tüm Kategoriler (${totalAllProducts})`

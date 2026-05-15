@@ -232,9 +232,13 @@ export function TranslationsWorkbench({
       ? productItems.find((item) => item.id === activeId)
       : categoryItems.find((item) => item.id === activeId);
   const activeProductItem =
-    activeType === "product" ? (activeItem as ProductItem | undefined) : undefined;
+    activeType === "product"
+      ? (activeItem as ProductItem | undefined)
+      : undefined;
   const activeCategoryItem =
-    activeType === "category" ? (activeItem as CategoryItem | undefined) : undefined;
+    activeType === "category"
+      ? (activeItem as CategoryItem | undefined)
+      : undefined;
 
   const sourceDraft = useMemo(() => {
     if (!activeProductItem && !activeCategoryItem) {
@@ -623,7 +627,9 @@ export function TranslationsWorkbench({
 
   const activeCategoryName =
     activeType === "product" && activeProductItem
-      ? categories.find((category) => category.id === activeProductItem.category_id)
+      ? categories.find(
+          (category) => category.id === activeProductItem.category_id
+        )
       : null;
 
   return (

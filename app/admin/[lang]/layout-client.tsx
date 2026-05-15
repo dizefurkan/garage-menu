@@ -95,6 +95,7 @@ export function AdminLayoutClient({
                   <SidebarMenuItem key={item.path}>
                     <SidebarMenuButton
                       asChild
+                      closeOnClick
                       isActive={isActive(item.path)}
                       tooltip={item.label}
                     >

@@ -44,6 +44,20 @@ export const columns: ColumnDef<Category>[] = [
         <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
+    cell: ({ row }) => {
+      const category = row.original;
+      const name = row.getValue("name") as string;
+      const router = useRouter();
+
+      return (
+        <div
+          className="cursor-pointer truncate transition-opacity hover:opacity-75"
+          onClick={() => router.push(`/admin/categories/${category.id}`)}
+        >
+          {name}
+        </div>
+      );
+    },
   },
   {
     accessorKey: "productCount",
@@ -134,7 +148,7 @@ function ActionsCell({ category }: { category: Category }) {
           <span className="sr-only">Menüyü aç</span>
           <MoreHorizontal className="h-4 w-4" />
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
+        <DropdownMenuContent align="end" className="w-56">
           <DropdownMenuGroup>
             <DropdownMenuLabel>İşlemler</DropdownMenuLabel>
             <DropdownMenuItem
