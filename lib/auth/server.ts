@@ -5,22 +5,40 @@
  */
 
 import { cookies } from "next/headers";
-import { supabaseAdmin, supabase } from "./supabase";
+import { createServerClient } from "@supabase/ssr";
+import { supabase } from "./supabase";
+import type { Database } from "@/lib/database.types";
 import type { TenantUser, Tenant } from "@/lib/db/schema";
+
+async function createServerSupabase() {
+  const cookieStore = await cookies();
+
+  return createServerClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll() {
+          // No-op in server components: cookie mutation is only allowed in Server Actions or Route Handlers.
+        },
+      },
+    }
+  );
+}
 
 // ============================================================================
 // GET CURRENT USER SESSION
 // ============================================================================
 export async function getCurrentUser() {
-  const cookieStore = await cookies();
-  const sessionCookie = cookieStore.get("sb-auth-token")?.value;
+  const supabaseServer = await createServerSupabase();
+  const {
+    data: { user },
+  } = await supabaseServer.auth.getUser();
 
-  if (!sessionCookie) {
-    return null;
-  }
-
-  const { data } = await supabase.auth.getUser(sessionCookie);
-  return data.user;
+  return user;
 }
 
 // ============================================================================
@@ -31,8 +49,10 @@ export async function getCurrentTenant(): Promise<Tenant | null> {
   const user = await getCurrentUser();
   if (!user) return null;
 
+  const supabaseServer = await createServerSupabase();
+
   // Query tenant_users to get user's tenant_id
-  const { data: tenantUser, error } = await (supabase as any)
+  const { data: tenantUser, error } = await (supabaseServer as any)
     .from("tenant_users")
     .select("tenant_id")
     .eq("user_id", user.id)
@@ -45,7 +65,7 @@ export async function getCurrentTenant(): Promise<Tenant | null> {
   }
 
   // Fetch the tenant
-  const { data: tenant, error: tenantError } = await (supabase as any)
+  const { data: tenant, error: tenantError } = await (supabaseServer as any)
     .from("tenants")
     .select("*")
     .eq("id", (tenantUser as any).tenant_id)
@@ -66,7 +86,9 @@ export async function getCurrentTenantId(): Promise<bigint | null> {
   const user = await getCurrentUser();
   if (!user) return null;
 
-  const { data } = await (supabase as any)
+  const supabaseServer = await createServerSupabase();
+
+  const { data } = await (supabaseServer as any)
     .from("tenant_users")
     .select("tenant_id")
     .eq("user_id", user.id)
@@ -86,7 +108,9 @@ export async function getUserRole(
   const tenantId = await getCurrentTenantId();
   if (!tenantId) return null;
 
-  const { data } = await (supabase as any)
+  const supabaseServer = await createServerSupabase();
+
+  const { data } = await (supabaseServer as any)
     .from("tenant_users")
     .select("role")
     .eq("tenant_id", tenantId)
@@ -104,7 +128,9 @@ export async function verifyTenantAccess(tenantId: bigint): Promise<boolean> {
   const user = await getCurrentUser();
   if (!user) return false;
 
-  const { data } = await (supabase as any)
+  const supabaseServer = await createServerSupabase();
+
+  const { data } = await (supabaseServer as any)
     .from("tenant_users")
     .select("id")
     .eq("tenant_id", tenantId)
@@ -122,7 +148,9 @@ export async function verifyCanEdit(tenantId: bigint): Promise<boolean> {
   const user = await getCurrentUser();
   if (!user) return false;
 
-  const { data } = await supabase
+  const supabaseServer = await createServerSupabase();
+
+  const { data } = await (supabaseServer as any)
     .from("tenant_users")
     .select("role")
     .eq("tenant_id", tenantId)
@@ -141,7 +169,9 @@ export async function verifyIsOwner(tenantId: bigint): Promise<boolean> {
   const user = await getCurrentUser();
   if (!user) return false;
 
-  const { data } = await supabase
+  const supabaseServer = await createServerSupabase();
+
+  const { data } = await (supabaseServer as any)
     .from("tenant_users")
     .select("role")
     .eq("tenant_id", tenantId)

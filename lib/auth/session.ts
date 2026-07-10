@@ -16,14 +16,8 @@ export async function getSession() {
         getAll() {
           return cookieStore.getAll();
         },
-        setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            );
-          } catch {
-            // Error handling is done in the middleware
-          }
+        setAll() {
+          // No-op in server components: cookie mutation is only allowed in Server Actions or Route Handlers.
         },
       },
     }

@@ -23,10 +23,11 @@ import {
 } from "@/components/ui/sidebar";
 import Link from "next/link";
 import type { Database } from "@/lib/database.types";
-import { LayoutDashboard, Package, Tag, Settings } from "lucide-react";
+import { BarChart3, LayoutDashboard, Package, Tag, Settings } from "lucide-react";
 
 const NAV_ITEMS_CONFIG = [
   { key: "dashboard", path: "dashboard", icon: LayoutDashboard },
+  { key: "analytics", path: "analytics", icon: BarChart3 },
   { key: "products", path: "products", icon: Package },
   { key: "categories", path: "categories", icon: Tag },
   { key: "settings", path: "settings", icon: Settings },
