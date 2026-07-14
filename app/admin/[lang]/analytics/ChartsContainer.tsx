@@ -1,6 +1,12 @@
-'use client';
+"use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   LineChart,
   Line,
@@ -15,14 +21,14 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-} from 'recharts';
+} from "recharts";
 
 import type {
   TimeSeriesPoint,
   DeviceAnalytics,
   ReferrerAnalytics,
   GeographicAnalytics,
-} from '@/types/analytics';
+} from "@/types/analytics";
 
 interface ChartsContainerProps {
   timeSeries: TimeSeriesPoint[];
@@ -32,7 +38,7 @@ interface ChartsContainerProps {
   isLoading?: boolean;
 }
 
-const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
 
 /**
  * Charts Container Component
@@ -51,7 +57,9 @@ export function ChartsContainer({
       <Card className="lg:col-span-2">
         <CardHeader>
           <CardTitle>Page Views Over Time</CardTitle>
-          <CardDescription>Daily visitor counts for the selected period</CardDescription>
+          <CardDescription>
+            Daily visitor counts for the selected period
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {timeSeries.length > 0 ? (
@@ -62,19 +70,24 @@ export function ChartsContainer({
                   dataKey="date"
                   tick={{ fontSize: 12 }}
                   tickFormatter={(value) =>
-                    new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                    new Date(value).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                    })
                   }
                 />
                 <YAxis tick={{ fontSize: 12 }} />
                 <Tooltip
                   formatter={(value) =>
-                    typeof value === 'number' ? value.toLocaleString() : String(value)
+                    typeof value === "number"
+                      ? value.toLocaleString()
+                      : String(value)
                   }
                   labelFormatter={(label) =>
-                    new Date(label).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric',
+                    new Date(label).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
                     })
                   }
                 />
@@ -99,7 +112,7 @@ export function ChartsContainer({
             </ResponsiveContainer>
           ) : (
             <div className="h-[300px] flex items-center justify-center text-slate-500">
-              {isLoading ? 'Loading chart data...' : 'No data available'}
+              {isLoading ? "Loading chart data..." : "No data available"}
             </div>
           )}
         </CardContent>
@@ -124,22 +137,31 @@ export function ChartsContainer({
                   cy="50%"
                   labelLine={false}
                   label={({ name, percent }) =>
-                    `${name} ${percent !== undefined ? (percent * 100).toFixed(0) : '0'}%`
+                    `${name} ${percent !== undefined ? (percent * 100).toFixed(0) : "0"}%`
                   }
                   outerRadius={80}
                   fill="#8884d8"
                   dataKey="value"
                 >
                   {devices.map((_, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                    />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value) => (typeof value === 'number' ? value.toLocaleString() : String(value))} />
+                <Tooltip
+                  formatter={(value) =>
+                    typeof value === "number"
+                      ? value.toLocaleString()
+                      : String(value)
+                  }
+                />
               </PieChart>
             </ResponsiveContainer>
           ) : (
             <div className="h-[300px] flex items-center justify-center text-slate-500">
-              {isLoading ? 'Loading...' : 'No data available'}
+              {isLoading ? "Loading..." : "No data available"}
             </div>
           )}
         </CardContent>
@@ -156,22 +178,35 @@ export function ChartsContainer({
             <ResponsiveContainer width="100%" height={300}>
               <BarChart
                 data={referrers.slice(0, 8).map((r) => ({
-                  name: !r.referrerSource || r.referrerSource === 'direct'
-                    ? 'Direct'
-                    : r.referrerSource.replace(/https?:\/\/(www\.)?/, ''),
+                  name:
+                    !r.referrerSource || r.referrerSource === "direct"
+                      ? "Direct"
+                      : r?.referrerSource?.replace(/https?:\/\/(www\.)?/, ""),
                   views: r.viewCount,
                 }))}
               >
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} tick={{ fontSize: 12 }} />
+                <XAxis
+                  dataKey="name"
+                  angle={-45}
+                  textAnchor="end"
+                  height={80}
+                  tick={{ fontSize: 12 }}
+                />
                 <YAxis tick={{ fontSize: 12 }} />
-                  <Tooltip formatter={(value) => (typeof value === 'number' ? value.toLocaleString() : String(value))} />
+                <Tooltip
+                  formatter={(value) =>
+                    typeof value === "number"
+                      ? value.toLocaleString()
+                      : String(value)
+                  }
+                />
                 <Bar dataKey="views" fill="#3b82f6" />
               </BarChart>
             </ResponsiveContainer>
           ) : (
             <div className="h-[300px] flex items-center justify-center text-slate-500">
-              {isLoading ? 'Loading...' : 'No data available'}
+              {isLoading ? "Loading..." : "No data available"}
             </div>
           )}
         </CardContent>
@@ -195,8 +230,19 @@ export function ChartsContainer({
               >
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis type="number" tick={{ fontSize: 12 }} />
-                <YAxis dataKey="name" type="category" width={100} tick={{ fontSize: 11 }} />
-                  <Tooltip formatter={(value) => (typeof value === 'number' ? value.toLocaleString() : String(value))} />
+                <YAxis
+                  dataKey="name"
+                  type="category"
+                  width={100}
+                  tick={{ fontSize: 11 }}
+                />
+                <Tooltip
+                  formatter={(value) =>
+                    typeof value === "number"
+                      ? value.toLocaleString()
+                      : String(value)
+                  }
+                />
                 <Bar dataKey="views" fill="#10b981" />
               </BarChart>
             </ResponsiveContainer>
