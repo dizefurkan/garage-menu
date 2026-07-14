@@ -8,6 +8,7 @@ import { KPICard } from './KPICard';
 import { DateRangePicker } from './DateRangePicker';
 import { ChartsContainer } from './ChartsContainer';
 import { HeatmapTabs } from './HeatmapTabs';
+import { AnalyticsRefreshDebug } from '@/components/analytics/AnalyticsRefreshDebug';
 
 import type {
   AnalyticsSummary,
@@ -115,6 +116,9 @@ export default function AnalyticsDashboard({
         categoryHeatmap={initialCategoryHeatmap}
         isLoading={isLoading}
       />
+
+      {/* Debug Section */}
+      <AnalyticsRefreshDebug />
     </div>
   );
 }

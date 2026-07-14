@@ -153,16 +153,21 @@ export class PageTracker {
   private expandedCategories: Set<number> = new Set();
 
   constructor(config: TrackingConfig) {
+    console.log('[PageTracker] Constructor called for:', config.tenantSlug);
     this.config = config;
     this.sessionId = this.generateSessionId();
     this.startTime = Date.now();
     this.lastActivityTime = Date.now();
+
+    console.log('[PageTracker] Generated sessionId:', this.sessionId.slice(0, 8));
 
     // Measure page load time
     this.measurePageLoadTime();
 
     // Initialize tracking
     this.initializeTracking();
+
+    console.log('[PageTracker] Initialization complete');
   }
 
   /**
@@ -411,11 +416,15 @@ export class PageTracker {
    * Send tracking event to server
    */
   private sendTrackingEvent(payload: TrackingPayload): void {
+    console.log('[PageTracker] Sending tracking event:', payload.eventType);
+
     // Use sendBeacon if available (more reliable) for non-critical events
     // Otherwise use fetch
     if (typeof navigator.sendBeacon === 'function') {
+      console.log('[PageTracker] Using sendBeacon API');
       this.sendBeacon(payload);
     } else {
+      console.log('[PageTracker] Using fetch API');
       fetch(this.config.apiEndpoint, {
         method: "POST",
         headers: {
@@ -424,10 +433,14 @@ export class PageTracker {
         body: JSON.stringify(payload),
         // Use 'keepalive' to ensure request completes even if page unloads
         keepalive: true,
-      }).catch((error) => {
-        // Silently fail - don't impact user experience
-        console.debug("[Analytics] Tracking event failed:", error);
-      });
+      })
+        .then((response) => {
+          console.log('[PageTracker] Event sent, response status:', response.status);
+        })
+        .catch((error) => {
+          // Log error - it might impact user experience
+          console.error("[PageTracker] Tracking event failed:", error);
+        });
     }
   }
 
@@ -457,5 +470,6 @@ export function initializeAnalytics(config: TrackingConfig): PageTracker {
     throw new Error("Analytics can only be initialized in browser context");
   }
 
+  console.log('[PageTracker] Creating new PageTracker instance for:', config.tenantSlug);
   return new PageTracker(config);
 }

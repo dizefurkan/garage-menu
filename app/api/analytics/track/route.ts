@@ -68,7 +68,14 @@ async function handlePageView(
   sessionId: string,
   event: TrackingEvent
 ): Promise<void> {
-  const { error } = await supabase.from('page_views').insert({
+  console.log('[Analytics] handlePageView - Inserting page_view:', {
+    tenant_id: tenantId,
+    session_id: sessionId?.slice(0, 8),
+    device_type: event.deviceType,
+    browser_name: event.browserName,
+  });
+
+  const { error, data } = await supabase.from('page_views').insert({
     tenant_id: tenantId,
     session_id: sessionId,
     referrer: event.referrer || null,
@@ -90,6 +97,8 @@ async function handlePageView(
 
   if (error) {
     console.error('[Analytics] Failed to insert page_view:', error);
+  } else {
+    console.log('[Analytics] Successfully inserted page_view for tenant:', tenantId);
   }
 }
 
@@ -107,6 +116,13 @@ async function handleProductInteraction(
     return;
   }
 
+  console.log('[Analytics] handleProductInteraction - Inserting:', {
+    tenant_id: tenantId,
+    product_id: event.productId,
+    category_id: event.categoryId,
+    interaction_type: event.interactionType,
+  });
+
   const { error } = await supabase.from('product_interactions').insert({
     tenant_id: tenantId,
     session_id: sessionId,
@@ -118,6 +134,8 @@ async function handleProductInteraction(
 
   if (error) {
     console.error('[Analytics] Failed to insert product_interaction:', error);
+  } else {
+    console.log('[Analytics] Successfully inserted product_interaction');
   }
 }
 
@@ -135,6 +153,12 @@ async function handleCategoryInteraction(
     return;
   }
 
+  console.log('[Analytics] handleCategoryInteraction - Inserting:', {
+    tenant_id: tenantId,
+    category_id: event.categoryId,
+    interaction_type: event.interactionType,
+  });
+
   const { error } = await supabase.from('category_interactions').insert({
     tenant_id: tenantId,
     session_id: sessionId,
@@ -144,6 +168,8 @@ async function handleCategoryInteraction(
 
   if (error) {
     console.error('[Analytics] Failed to insert category_interaction:', error);
+  } else {
+    console.log('[Analytics] Successfully inserted category_interaction');
   }
 }
 
@@ -154,42 +180,57 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     // Parse request body
     const body = await request.json();
+    console.log('[Analytics] Received tracking event:', {
+      eventType: body.eventType,
+      tenantSlug: body.tenantSlug,
+      sessionId: body.sessionId?.slice(0, 8),
+    });
 
     // Validate event
     if (!validateEvent(body)) {
+      console.warn('[Analytics] Invalid event structure:', body);
       return NextResponse.json({ error: 'Invalid event' }, { status: 400 });
     }
 
     // Get tenant ID
     const tenantId = await getTenantId(body.tenantSlug);
     if (!tenantId) {
+      console.error('[Analytics] Tenant not found:', body.tenantSlug);
       return NextResponse.json({ error: 'Tenant not found' }, { status: 404 });
     }
+
+    console.log('[Analytics] Processing event for tenant:', tenantId);
 
     // Route to appropriate handler
     switch (body.eventType) {
       case 'page_view':
+        console.log('[Analytics] Tracking page_view');
         await handlePageView(tenantId, body.sessionId, body);
         break;
 
       case 'product_interaction':
+        console.log('[Analytics] Tracking product_interaction for product:', body.productId);
         await handleProductInteraction(tenantId, body.sessionId, body);
         break;
 
       case 'category_interaction':
+        console.log('[Analytics] Tracking category_interaction for category:', body.categoryId);
         await handleCategoryInteraction(tenantId, body.sessionId, body);
         break;
 
       case 'page_exit':
         // For page_exit, we already have the duration in the page_view record
         // Just use this for logging or metrics
+        console.log('[Analytics] Page exit event (duration:', body.durationSeconds, 'seconds)');
         break;
 
       default:
+        console.warn('[Analytics] Unknown event type:', body.eventType);
         return NextResponse.json({ error: 'Unknown event type' }, { status: 400 });
     }
 
     // Return success
+    console.log('[Analytics] Event successfully tracked');
     return NextResponse.json(
       { success: true, message: 'Event tracked' },
       { status: 200 }

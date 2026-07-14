@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { createClient } from "@supabase/supabase-js";
 import { getTenantCacheTags } from "@/lib/cache/revalidation";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { AnalyticsTracker } from "@/components/AnalyticsTracker";
 
 function getBaseUrl(): string {
   // On Vercel production, use the production domain
@@ -326,6 +327,9 @@ export default async function MenuPage({ params }: Props) {
         } as React.CSSProperties
       }
     >
+      {/* Analytics Tracker */}
+      <AnalyticsTracker tenantSlug={slug} />
+
       {/* Header */}
       <Header
         tenant={tenant}
@@ -604,6 +608,7 @@ function CategorySection({
           <ProductCard
             key={product.id}
             product={product}
+            categoryId={id}
             primaryColor={primaryColor}
           />
         ))}
@@ -615,13 +620,19 @@ function CategorySection({
 // Product Card Component
 function ProductCard({
   product,
+  categoryId,
   primaryColor,
 }: {
   product: any;
+  categoryId: string;
   primaryColor: string;
 }) {
   return (
-    <div className="group rounded-2xl overflow-hidden bg-white border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 hover:scale-105">
+    <div
+      className="group rounded-2xl overflow-hidden bg-white border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 hover:scale-105"
+      data-product-id={product.id}
+      data-category-id={categoryId}
+    >
       {/* Image */}
       <div className="relative w-full aspect-video bg-gradient-to-br from-gray-100 to-gray-50 overflow-hidden">
         {product.image ? (
