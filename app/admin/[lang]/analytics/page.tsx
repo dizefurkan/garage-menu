@@ -66,16 +66,29 @@ export default async function AnalyticsPage({ params }: AnalyticsPageProps) {
     const messages = await loadLocaleMessages(lang);
     const t = createTranslator(messages);
 
-    // Fetch all analytics data in parallel
+    // Default empty values for analytics data
+    const defaultSummary = {
+      totalViews: 0,
+      uniqueSessions: 0,
+      avgDuration: 0,
+      bounceRate: 0,
+      avgPageLoad: 0,
+      dailyData: [],
+    };
+
+    // Fetch all analytics data in parallel with error handling
     const [summary, productHeatmap, categoryHeatmap, devices, geographic, referrers, timeSeries] =
       await Promise.all([
-        getAnalyticsSummary('month'),
-        getProductHeatmap(30, lang),
-        getCategoryHeatmap(30, lang),
-        getDeviceBreakdown(),
-        getGeographicBreakdown(),
-        getReferrerBreakdown(),
-        getTimeSeriesData(30),
+        getAnalyticsSummary('month').catch((err) => {
+          console.error('Failed to fetch analytics summary:', err);
+          return defaultSummary;
+        }),
+        getProductHeatmap(30, lang).catch(() => []),
+        getCategoryHeatmap(30, lang).catch(() => []),
+        getDeviceBreakdown().catch(() => []),
+        getGeographicBreakdown().catch(() => []),
+        getReferrerBreakdown().catch(() => []),
+        getTimeSeriesData(30).catch(() => []),
       ]);
 
     return (
