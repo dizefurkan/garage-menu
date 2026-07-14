@@ -222,22 +222,24 @@ export function DataTable<TData, TValue>({
       </div>
 
       <div className="flex items-center justify-between space-x-2 py-4">
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">{t('rowsPerPage')}:</span>
-          <select
-            value={table.getState().pagination.pageSize}
-            onChange={(e) => {
-              table.setPageSize(Number(e.target.value));
-            }}
-            className="border border-input rounded px-2 py-1 text-sm"
-          >
-            {[5, 10, 20].map((pageSize) => (
-              <option key={pageSize} value={pageSize}>
-                {pageSize}
-              </option>
-            ))}
-          </select>
-        </div>
+        {!isServerSidePagination && (
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">{t('rowsPerPage')}:</span>
+            <select
+              value={table.getState().pagination?.pageSize || 5}
+              onChange={(e) => {
+                table.setPageSize(Number(e.target.value));
+              }}
+              className="border border-input rounded px-2 py-1 text-sm"
+            >
+              {[5, 10, 20].map((pageSize) => (
+                <option key={pageSize} value={pageSize}>
+                  {pageSize}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
         <div className="text-sm text-muted-foreground">
           {(() => {
             if (isServerSidePagination) {
