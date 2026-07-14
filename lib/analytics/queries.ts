@@ -31,7 +31,6 @@ export async function getAnalyticsSummary(
   dateRange: "day" | "week" | "month" | "year" = "month"
 ) {
   const tenant = await getCurrentTenant();
-  console.log("tenant", tenant);
   if (!tenant) throw new Error("Unauthorized");
 
   const daysMap = { day: 1, week: 7, month: 30, year: 365 };
@@ -90,7 +89,7 @@ export async function getProductHeatmap(days: number = 30, language: string = "e
       avg_time_on_product_seconds,
       unique_viewers,
       click_through_rate_percent,
-      products(id, price, product_translations(name, language_code))
+      products(id, price, image_url, category_id, product_translations(name, language_code))
     `
     )
     .eq("tenant_id", tenant.id)
@@ -118,6 +117,8 @@ export async function getProductHeatmap(days: number = 30, language: string = "e
         uniqueViewers: item.unique_viewers,
         clickThroughRate: item.click_through_rate_percent,
         price: item.products?.price,
+        imageUrl: item.products?.image_url,
+        categoryId: item.products?.category_id,
       };
     }) || []
   );

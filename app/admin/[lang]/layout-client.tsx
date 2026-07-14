@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { NextIntlClientProvider } from "next-intl";
 import { logout } from "@/lib/auth/logout";
 import { TenantProvider } from "@/lib/context/tenant-context";
 import {
@@ -201,7 +202,9 @@ export function AdminLayoutClient({
 
           {/* Page Content */}
           <div className="flex-1 overflow-auto p-8">
-            <TenantProvider tenant={tenant}>{children}</TenantProvider>
+            <NextIntlClientProvider locale={lang} messages={messages}>
+              <TenantProvider tenant={tenant}>{children}</TenantProvider>
+            </NextIntlClientProvider>
           </div>
         </SidebarInset>
       </SidebarProvider>

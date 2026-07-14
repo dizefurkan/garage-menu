@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Users, Eye, Clock, TrendingUp } from 'lucide-react';
 
@@ -8,7 +9,6 @@ import { KPICard } from './KPICard';
 import { DateRangePicker } from './DateRangePicker';
 import { ChartsContainer } from './ChartsContainer';
 import { HeatmapTabs } from './HeatmapTabs';
-import { AnalyticsRefreshDebug } from '@/components/analytics/AnalyticsRefreshDebug';
 
 import type {
   AnalyticsSummary,
@@ -28,6 +28,7 @@ interface AnalyticsDashboardProps {
   initialGeographic: GeographicAnalytics[];
   initialReferrers: ReferrerAnalytics[];
   initialTimeSeries: TimeSeriesPoint[];
+  initialCategories?: any[];
 }
 
 /**
@@ -41,7 +42,9 @@ export default function AnalyticsDashboard({
   initialGeographic,
   initialReferrers,
   initialTimeSeries,
+  initialCategories = [],
 }: AnalyticsDashboardProps) {
+  const t = useTranslations('admin');
   const [dateRange, setDateRange] = useState<'day' | 'week' | 'month' | 'year'>('month');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -70,34 +73,33 @@ export default function AnalyticsDashboard({
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <KPICard
-          title="Total Views"
+          title={t('totalViews')}
           icon={<Eye className="w-4 h-4" />}
           value={initialSummary.totalViews.toLocaleString()}
-          description="Page visits in selected period"
+          description={t('pageViewsTrend')}
         />
 
         <KPICard
-          title="Unique Sessions"
+          title={t('uniqueSessions')}
           icon={<Users className="w-4 h-4" />}
           value={initialSummary.uniqueSessions.toLocaleString()}
-          description="Individual visitors"
+          description={t('sessionMetric')}
         />
 
         <KPICard
-          title="Avg Time on Page"
+          title={t('avgTimeOnPage')}
           icon={<Clock className="w-4 h-4" />}
           value={avgSessionDuration}
           unit="sec"
-          description="Average session duration"
+          description={t('timeMetric')}
         />
 
         <KPICard
-          title="Bounce Rate"
+          title={t('bounceRate')}
           icon={<TrendingUp className="w-4 h-4" />}
           value={bounceRate}
           unit="%"
-          description="Visitors who left without interaction"
-          trend={bounceRate > 50 ? 'down' : 'up'}
+          description={t('bounceMetric')}
         />
       </div>
 
@@ -114,11 +116,9 @@ export default function AnalyticsDashboard({
       <HeatmapTabs
         productHeatmap={initialProductHeatmap}
         categoryHeatmap={initialCategoryHeatmap}
+        categories={initialCategories}
         isLoading={isLoading}
       />
-
-      {/* Debug Section */}
-      <AnalyticsRefreshDebug />
     </div>
   );
 }

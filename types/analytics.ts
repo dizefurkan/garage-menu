@@ -76,6 +76,8 @@ export interface ProductHeatmapData {
   uniqueViewers: number;
   clickThroughRate: number;
   price?: number;
+  imageUrl?: string;
+  categoryId?: number;
 }
 
 export interface CategoryHeatmapData {

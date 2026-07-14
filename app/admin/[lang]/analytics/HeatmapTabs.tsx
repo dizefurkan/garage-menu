@@ -1,140 +1,245 @@
 'use client';
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ProductGridHeatmap } from '@/components/analytics/ProductGridHeatmap';
-import { ProductListHeatmap } from '@/components/analytics/ProductListHeatmap';
+import { useState, useMemo } from 'react';
+import { useTranslations } from 'next-intl';
+import { ColumnDef } from '@tanstack/react-table';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { DataTable } from '@/components/ui/data-table';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 import type { ProductHeatmapData, CategoryHeatmapData } from '@/types/analytics';
 
 interface HeatmapTabsProps {
   productHeatmap: ProductHeatmapData[];
   categoryHeatmap: CategoryHeatmapData[];
+  categories?: any[];
   isLoading?: boolean;
 }
 
 /**
- * Heatmap Tabs Component
- * Shows three different visualization styles for product heatmap
+ * Analytics Data Table Component
+ * Shows product analytics in a simple table format with category filtering
  */
-export function HeatmapTabs({ productHeatmap, categoryHeatmap, isLoading }: HeatmapTabsProps) {
-  return (
-    <div className="space-y-6">
-      {/* Product Heatmap */}
-      <Tabs defaultValue="grid" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="grid">Grid View</TabsTrigger>
-          <TabsTrigger value="list">List View</TabsTrigger>
-          <TabsTrigger value="categories">Categories</TabsTrigger>
-        </TabsList>
+export function HeatmapTabs({ productHeatmap, categoryHeatmap, categories = [], isLoading }: HeatmapTabsProps) {
+  const t = useTranslations('admin');
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>('all');
 
-        <TabsContent value="grid" className="mt-6">
-          <ProductGridHeatmap data={productHeatmap} isLoading={isLoading} />
-        </TabsContent>
+  const handleCategoryChange = (value: string | null) => {
+    if (value) {
+      setSelectedCategoryId(value);
+      // Pagination will reset automatically since filteredProducts will change
+    }
+  };
 
-        <TabsContent value="list" className="mt-6">
-          <ProductListHeatmap data={productHeatmap} isLoading={isLoading} />
-        </TabsContent>
+  const uniqueCategories = useMemo(() => {
+    const categoryMap = new Map<string, string>();
+    categoryMap.set('all', t('allCategories'));
 
-        <TabsContent value="categories" className="mt-6">
-          <CategoryHeatmap data={categoryHeatmap} isLoading={isLoading} />
-        </TabsContent>
-      </Tabs>
-    </div>
+    // Use the categories prop if available, otherwise fall back to categoryHeatmap
+    if (categories && categories.length > 0) {
+      categories.forEach((cat: any) => {
+        const categoryId = cat.id?.toString() || '';
+        if (categoryId) {
+          // Get translated name for the language
+          const translations = cat.category_translations || [];
+          const name = translations.length > 0 ? translations[0].name : 'Unknown';
+          categoryMap.set(categoryId, name);
+        }
+      });
+    }
+
+    return Array.from(categoryMap.entries());
+  }, [categories, t]);
+
+  const filteredProducts = useMemo(() => {
+    if (selectedCategoryId === 'all') {
+      return productHeatmap;
+    }
+    const categoryIdNum = parseInt(selectedCategoryId, 10);
+    return productHeatmap.filter(product => product.categoryId === categoryIdNum);
+  }, [productHeatmap, selectedCategoryId]);
+
+  const columns: ColumnDef<ProductHeatmapData>[] = useMemo(
+    () => [
+      {
+        accessorKey: 'productName',
+        header: t('product'),
+        enableSorting: true,
+        cell: ({ row }) => {
+          const product = row.original;
+          return (
+            <div className="flex items-center gap-3">
+              {product.imageUrl && (
+                <img
+                  src={product.imageUrl}
+                  alt={product.productName}
+                  className="w-8 h-8 rounded object-cover bg-muted"
+                />
+              )}
+              <span className="truncate">{product.productName}</span>
+            </div>
+          );
+        },
+      },
+      {
+        accessorKey: 'views',
+        header: t('views'),
+        enableSorting: true,
+        cell: ({ row }) => row.original.views.toLocaleString(),
+      },
+      {
+        accessorKey: 'clicks',
+        header: t('clicks'),
+        enableSorting: true,
+        cell: ({ row }) => row.original.clicks.toLocaleString(),
+      },
+      {
+        accessorKey: 'clickThroughRate',
+        header: t('ctr'),
+        enableSorting: true,
+        cell: ({ row }) => `${row.original.clickThroughRate.toFixed(1)}%`,
+      },
+      {
+        accessorKey: 'avgTimeSeconds',
+        header: t('avgTime'),
+        enableSorting: true,
+        cell: ({ row }) => `${row.original.avgTimeSeconds.toFixed(1)}s`,
+      },
+      {
+        accessorKey: 'uniqueViewers',
+        header: t('viewers'),
+        enableSorting: true,
+        cell: ({ row }) => row.original.uniqueViewers.toLocaleString(),
+      },
+    ],
+    [t]
   );
-}
 
-/**
- * Category Heatmap Component
- */
-function CategoryHeatmap({
-  data,
-  isLoading,
-}: {
-  data: CategoryHeatmapData[];
-  isLoading?: boolean;
-}) {
-  if (!data || data.length === 0) {
+  // Show empty state only if the entire productHeatmap is empty (not due to filtering)
+  if (!productHeatmap || productHeatmap.length === 0) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Category Performance</CardTitle>
-          <CardDescription>Categories ranked by interaction frequency</CardDescription>
+          <CardTitle>{t('productAnalytics')}</CardTitle>
+          <CardDescription>{t('detailedMetrics')}</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-12 text-slate-500">
-            {isLoading ? 'Loading category data...' : 'No data available'}
+          <div className="text-center py-12 text-muted-foreground">
+            {isLoading ? t('loadingAnalytics') : t('noData')}
           </div>
         </CardContent>
       </Card>
     );
   }
 
-  const maxInteractions = Math.max(...data.map((c) => c.totalInteractions), 1);
-
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Category Performance</CardTitle>
-        <CardDescription>Categories ranked by interaction frequency and expansion rate</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {data.map((category, index) => {
-            const intensity = category.totalInteractions / maxInteractions;
-            const intensityPercent = Math.round(intensity * 100);
+    <div className="space-y-6">
+      {/* Products Table */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <CardTitle>{t('productAnalytics')}</CardTitle>
+              <CardDescription>{t('detailedMetrics')}</CardDescription>
+            </div>
+            <Select value={selectedCategoryId} onValueChange={handleCategoryChange}>
+              <SelectTrigger className="w-fit bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {uniqueCategories.length > 0 &&
+                  uniqueCategories.map(([id, name]) => (
+                    <SelectItem key={id} value={id}>
+                      {name}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <DataTable<ProductHeatmapData, unknown>
+            columns={columns}
+            data={filteredProducts}
+            filterPlaceholder={t('searchProducts')}
+            filterColumnId="productName"
+            isLoading={isLoading}
+            initialPageIndex={0}
+          />
+        </CardContent>
+      </Card>
 
-            return (
-              <div key={category.categoryId} className="border rounded-lg p-4 hover:bg-slate-50">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <h4 className="font-semibold text-slate-900">
-                      #{index + 1} {category.categoryName}
+      {/* Categories Summary */}
+      {categoryHeatmap && categoryHeatmap.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>{t('categorySummary')}</CardTitle>
+            <CardDescription>{t('categoryInteractionMetrics')}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {categoryHeatmap.map((category) => {
+                const maxInteractions = Math.max(
+                  ...categoryHeatmap.map((c) => c.totalInteractions),
+                  1
+                );
+                const intensity = category.totalInteractions / maxInteractions;
+
+                return (
+                  <div
+                    key={category.categoryId}
+                    className="border border-border rounded-lg p-4 hover:bg-muted/50 transition-colors"
+                  >
+                    <h4 className="font-semibold text-foreground mb-2">
+                      {category.categoryName}
                     </h4>
-                    <p className="text-sm text-slate-600 mt-1">
-                      {category.totalInteractions} total interactions
-                    </p>
+                    <div className="mb-4">
+                      <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+                        <div
+                          className="h-full bg-gradient-to-r from-green-400 to-red-600 dark:from-green-600 dark:to-red-700 transition-all duration-300"
+                          style={{ width: `${intensity * 100}%` }}
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div>
+                        <p className="text-foreground/60">{t('views')}</p>
+                        <p className="font-semibold text-foreground">
+                          {category.views.toLocaleString()}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-foreground/60">{t('interactions')}</p>
+                        <p className="font-semibold text-foreground">
+                          {category.totalInteractions.toLocaleString()}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-foreground/60">{t('expansions')}</p>
+                        <p className="font-semibold text-foreground">
+                          {category.expansions.toLocaleString()}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-foreground/60">{t('rate')}</p>
+                        <p className="font-semibold text-foreground">
+                          {category.expansionRate.toFixed(1)}%
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-2xl font-bold text-slate-900">{intensityPercent}%</div>
-                    <p className="text-xs text-slate-500">intensity</p>
-                  </div>
-                </div>
-
-                {/* Intensity Bar */}
-                <div className="mb-4">
-                  <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-green-400 to-red-600 transition-all duration-300"
-                      style={{ width: `${intensity * 100}%` }}
-                    />
-                  </div>
-                </div>
-
-                {/* Metrics */}
-                <div className="grid grid-cols-4 gap-3 text-sm">
-                  <div className="bg-slate-50 rounded p-2">
-                    <p className="text-slate-600 text-xs mb-1">Expansions</p>
-                    <p className="font-semibold text-slate-900">{category.expansions}</p>
-                  </div>
-                  <div className="bg-slate-50 rounded p-2">
-                    <p className="text-slate-600 text-xs mb-1">Collapses</p>
-                    <p className="font-semibold text-slate-900">{category.collapses}</p>
-                  </div>
-                  <div className="bg-slate-50 rounded p-2">
-                    <p className="text-slate-600 text-xs mb-1">Rate</p>
-                    <p className="font-semibold text-slate-900">{category.expansionRate.toFixed(1)}%</p>
-                  </div>
-                  <div className="bg-slate-50 rounded p-2">
-                    <p className="text-slate-600 text-xs mb-1">Viewers</p>
-                    <p className="font-semibold text-slate-900">{category.uniqueViewers}</p>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </CardContent>
-    </Card>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
   );
 }

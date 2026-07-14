@@ -1,6 +1,6 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
+import { useTranslations } from 'next-intl';
 import {
   Select,
   SelectContent,
@@ -19,19 +19,23 @@ interface DateRangePickerProps {
  * Allows selecting analytics time period
  */
 export function DateRangePicker({ value, onChange }: DateRangePickerProps) {
+  const t = useTranslations('admin');
+
   const options: Array<{ value: 'day' | 'week' | 'month' | 'year'; label: string }> = [
-    { value: 'day', label: 'Last 24 Hours' },
-    { value: 'week', label: 'Last 7 Days' },
-    { value: 'month', label: 'Last 30 Days' },
-    { value: 'year', label: 'Last Year' },
+    { value: 'day', label: t('last24Hours') },
+    { value: 'week', label: t('last7Days') },
+    { value: 'month', label: t('last30Days') },
+    { value: 'year', label: t('lastYear') },
   ];
+
+  const selectedLabel = options.find(opt => opt.value === value)?.label || t('period');
 
   return (
     <div className="flex items-center gap-2">
-      <span className="text-sm font-medium text-slate-600">Period:</span>
+      <span className="text-sm font-medium text-foreground/60">{t('period')}:</span>
       <Select value={value} onValueChange={(v: any) => onChange(v)}>
         <SelectTrigger className="w-[180px]">
-          <SelectValue />
+          <SelectValue placeholder={selectedLabel}>{selectedLabel}</SelectValue>
         </SelectTrigger>
         <SelectContent>
           {options.map((opt) => (

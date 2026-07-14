@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useTranslations } from "next-intl";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -60,6 +61,7 @@ export function DataTable<TData, TValue>({
   totalCount = 0,
   isLoading = false,
 }: DataTableProps<TData, TValue>) {
+  const t = useTranslations('admin');
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -80,6 +82,14 @@ export function DataTable<TData, TValue>({
       pageIndex: initialPageIndex,
     }));
   }, [initialPageIndex]);
+
+  // Reset pagination when data changes (e.g., due to filtering)
+  React.useEffect(() => {
+    setPagination((prev) => ({
+      ...prev,
+      pageIndex: 0,
+    }));
+  }, [data.length]);
 
   const table = useReactTable({
     data,
@@ -136,7 +146,7 @@ export function DataTable<TData, TValue>({
 
         <DropdownMenu>
           <DropdownMenuTrigger className="inline-flex items-center justify-center rounded-md border border-input bg-background px-3 py-2 text-sm font-medium ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ml-auto">
-            Sütunlar <ChevronDown className="ml-2 h-4 w-4" />
+            {t('columnsButton')} <ChevronDown className="ml-2 h-4 w-4" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuGroup>
@@ -203,7 +213,7 @@ export function DataTable<TData, TValue>({
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  Sonuç bulunamadı.
+                  {t('noResults')}
                 </TableCell>
               </TableRow>
             )}
@@ -212,12 +222,28 @@ export function DataTable<TData, TValue>({
       </div>
 
       <div className="flex items-center justify-between space-x-2 py-4">
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">{t('rowsPerPage')}:</span>
+          <select
+            value={table.getState().pagination.pageSize}
+            onChange={(e) => {
+              table.setPageSize(Number(e.target.value));
+            }}
+            className="border border-input rounded px-2 py-1 text-sm"
+          >
+            {[5, 10, 20].map((pageSize) => (
+              <option key={pageSize} value={pageSize}>
+                {pageSize}
+              </option>
+            ))}
+          </select>
+        </div>
         <div className="text-sm text-muted-foreground">
           {(() => {
             if (isServerSidePagination) {
               return totalCount === 0
-                ? "Hiç ürün yok"
-                : `Toplam ${totalCount} ürün`;
+                ? t('noProducts')
+                : t('totalProducts', { count: totalCount });
             }
             const pageSize = table.getState().pagination.pageSize;
             const totalRows = table.getFilteredRowModel().rows.length;
@@ -227,9 +253,9 @@ export function DataTable<TData, TValue>({
             const calculatedTotalPages = Math.ceil(totalRows / pageSize) || 1;
 
             if (totalRows === 0) {
-              return "0 öğe";
+              return t('items', { count: 0 });
             }
-            return `${startRow}-${endRow} / ${totalRows} • Sayfa ${pageIndex + 1}/${calculatedTotalPages}`;
+            return `${startRow}-${endRow} / ${totalRows} • ${t('pageInfo', { current: pageIndex + 1, total: calculatedTotalPages })}`;
           })()}
         </div>
         {(() => {
@@ -256,7 +282,7 @@ export function DataTable<TData, TValue>({
                 }}
                 disabled={currentPageIndex === 0 || isLoading}
               >
-                Önceki
+                {t('previous')}
               </Button>
               <span className="text-sm text-muted-foreground">
                 {currentPageIndex + 1} / {displayTotalPages}
@@ -275,7 +301,7 @@ export function DataTable<TData, TValue>({
                   currentPageIndex >= displayTotalPages - 1 || isLoading
                 }
               >
-                Sonraki
+                {t('next')}
               </Button>
             </div>
           ) : null;
