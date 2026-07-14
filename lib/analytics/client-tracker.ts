@@ -1,9 +1,10 @@
+import { v4 as uuidv4 } from 'uuid';
+
 /**
  * Analytics Tracking Library
  * ===========================
  * Lightweight, privacy-first analytics client
- * - No external dependencies
- * - ~3KB gzipped
+ * - Generates proper UUID v4 session IDs
  * - Anonymous session tracking
  * - Zero performance impact
  *
@@ -171,12 +172,10 @@ export class PageTracker {
   }
 
   /**
-   * Generate unique anonymous session ID
+   * Generate unique anonymous session ID (UUID v4 format)
    */
   private generateSessionId(): string {
-    const timestamp = Date.now().toString(36);
-    const randomPart = Math.random().toString(36).slice(2, 11);
-    return `${timestamp}-${randomPart}`;
+    return uuidv4();
   }
 
   /**
