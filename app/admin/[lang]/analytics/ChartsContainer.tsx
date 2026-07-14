@@ -156,7 +156,9 @@ export function ChartsContainer({
             <ResponsiveContainer width="100%" height={300}>
               <BarChart
                 data={referrers.slice(0, 8).map((r) => ({
-                  name: r.referrerSource === 'direct' ? 'Direct' : r.referrerSource.replace(/https?:\/\/(www\.)?/, ''),
+                  name: !r.referrerSource || r.referrerSource === 'direct'
+                    ? 'Direct'
+                    : r.referrerSource.replace(/https?:\/\/(www\.)?/, ''),
                   views: r.viewCount,
                 }))}
               >
