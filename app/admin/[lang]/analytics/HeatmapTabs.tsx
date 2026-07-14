@@ -59,6 +59,11 @@ export function HeatmapTabs({ productHeatmap, categoryHeatmap, categories = [], 
     return Array.from(categoryMap.entries());
   }, [categories, t]);
 
+  const selectedCategoryLabel = useMemo(() => {
+    const found = uniqueCategories.find(([id]) => id === selectedCategoryId);
+    return found ? found[1] : t('filterByCategory');
+  }, [selectedCategoryId, uniqueCategories, t]);
+
   const filteredProducts = useMemo(() => {
     if (selectedCategoryId === 'all') {
       return productHeatmap;
@@ -248,7 +253,9 @@ export function HeatmapTabs({ productHeatmap, categoryHeatmap, categories = [], 
             </div>
             <Select value={selectedCategoryId} onValueChange={handleCategoryChange}>
               <SelectTrigger className="w-fit bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0">
-                <SelectValue />
+                <SelectValue placeholder={t('filterByCategory')}>
+                  {selectedCategoryLabel}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {uniqueCategories.length > 0 &&
