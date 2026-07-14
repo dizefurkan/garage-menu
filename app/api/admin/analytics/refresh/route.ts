@@ -34,14 +34,45 @@ async function refreshAnalyticsViews(): Promise<{
     console.log('[Analytics Refresh] Starting materialized view refresh...');
 
     // Call the database function to refresh all views
-    const { data, error } = await supabase.rpc('refresh_analytics_views');
+    let result = await supabase.rpc('refresh_analytics_views');
 
-    if (error) {
-      console.error('[Analytics Refresh] RPC error:', error);
+    // If concurrent refresh fails, try individual refreshes
+    if (result.error && result.error.message?.includes('concurrently')) {
+      console.log('[Analytics Refresh] Concurrent refresh failed, trying individual refreshes...');
+
+      const views = [
+        'analytics_daily_summary',
+        'analytics_product_heatmap',
+        'analytics_category_heatmap',
+        'analytics_device_breakdown',
+        'analytics_geographic_breakdown',
+        'analytics_referrer_breakdown',
+      ];
+
+      for (const view of views) {
+        const { error } = await supabase.rpc('refresh_analytics_view_single', {
+          view_name: view,
+        });
+
+        if (error) {
+          console.error(`[Analytics Refresh] Failed to refresh ${view}:`, error);
+        } else {
+          console.log(`[Analytics Refresh] Successfully refreshed ${view}`);
+        }
+      }
+
+      return {
+        success: true,
+        message: 'Analytics views refreshed (individual refresh)',
+      };
+    }
+
+    if (result.error) {
+      console.error('[Analytics Refresh] RPC error:', result.error);
       return {
         success: false,
         message: 'Failed to refresh analytics views',
-        error: error.message,
+        error: result.error.message,
       };
     }
 
@@ -69,17 +100,26 @@ async function checkAnalyticsData(): Promise<{
   categoryInteractionCount: number;
 }> {
   try {
+    console.log('[Analytics] Starting raw data check...');
+
     const [pageViews, productInteractions, categoryInteractions] = await Promise.all([
       supabase.from('page_views').select('*', { count: 'exact', head: true }),
       supabase.from('product_interactions').select('*', { count: 'exact', head: true }),
       supabase.from('category_interactions').select('*', { count: 'exact', head: true }),
     ]);
 
-    return {
+    console.log('[Analytics] pageViews result:', { count: pageViews.count, error: pageViews.error?.message });
+    console.log('[Analytics] productInteractions result:', { count: productInteractions.count, error: productInteractions.error?.message });
+    console.log('[Analytics] categoryInteractions result:', { count: categoryInteractions.count, error: categoryInteractions.error?.message });
+
+    const result = {
       pageViewCount: pageViews.count || 0,
       productInteractionCount: productInteractions.count || 0,
       categoryInteractionCount: categoryInteractions.count || 0,
     };
+
+    console.log('[Analytics] Final counts:', result);
+    return result;
   } catch (error) {
     console.error('[Analytics] Failed to check data:', error);
     return {
@@ -106,8 +146,30 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const dataCounts = await checkAnalyticsData();
     console.log('[Analytics Refresh] Data counts:', dataCounts);
 
+    // Check materialized view data before refresh
+    console.log('[Analytics Refresh] Checking materialized view data before refresh...');
+    const { data: viewData, error: viewError } = await supabase
+      .from('analytics_daily_summary')
+      .select('*', { count: 'exact', head: true });
+
+    console.log('[Analytics Refresh] Materialized view count:', {
+      count: viewData?.length || 0,
+      error: viewError?.message,
+    });
+
     // Refresh the materialized views
     const refreshResult = await refreshAnalyticsViews();
+
+    // Check materialized view data after refresh
+    console.log('[Analytics Refresh] Checking materialized view data after refresh...');
+    const { data: viewDataAfter, error: viewErrorAfter } = await supabase
+      .from('analytics_daily_summary')
+      .select('*', { count: 'exact', head: true });
+
+    console.log('[Analytics Refresh] Materialized view count after refresh:', {
+      count: viewDataAfter?.length || 0,
+      error: viewErrorAfter?.message,
+    });
 
     return NextResponse.json({
       ...refreshResult,

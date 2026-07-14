@@ -258,12 +258,14 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION public.refresh_analytics_views()
 RETURNS void AS $$
 BEGIN
-  REFRESH MATERIALIZED VIEW CONCURRENTLY public.analytics_daily_summary;
-  REFRESH MATERIALIZED VIEW CONCURRENTLY public.analytics_product_heatmap;
-  REFRESH MATERIALIZED VIEW CONCURRENTLY public.analytics_category_heatmap;
-  REFRESH MATERIALIZED VIEW CONCURRENTLY public.analytics_device_breakdown;
-  REFRESH MATERIALIZED VIEW CONCURRENTLY public.analytics_geographic_breakdown;
-  REFRESH MATERIALIZED VIEW CONCURRENTLY public.analytics_referrer_breakdown;
+  -- Refresh views without CONCURRENTLY to avoid locking issues
+  -- Note: This will lock reads temporarily but will succeed
+  REFRESH MATERIALIZED VIEW public.analytics_daily_summary;
+  REFRESH MATERIALIZED VIEW public.analytics_product_heatmap;
+  REFRESH MATERIALIZED VIEW public.analytics_category_heatmap;
+  REFRESH MATERIALIZED VIEW public.analytics_device_breakdown;
+  REFRESH MATERIALIZED VIEW public.analytics_geographic_breakdown;
+  REFRESH MATERIALIZED VIEW public.analytics_referrer_breakdown;
 END;
 $$ LANGUAGE plpgsql;
 
