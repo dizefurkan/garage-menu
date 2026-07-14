@@ -70,7 +70,7 @@ export function DataTable<TData, TValue>({
     React.useState<VisibilityState>({});
   const [pagination, setPagination] = React.useState({
     pageIndex: initialPageIndex,
-    pageSize: 20,
+    pageSize: 5,
   });
   const isExternalSync = React.useRef(false);
 
@@ -278,7 +278,11 @@ export function DataTable<TData, TValue>({
                 size="sm"
                 onClick={() => {
                   const prevPage = Math.max(0, currentPageIndex - 1);
-                  onPaginationChange?.(prevPage);
+                  if (isServerSidePagination) {
+                    onPaginationChange?.(prevPage);
+                  } else {
+                    table.setPageIndex(prevPage);
+                  }
                 }}
                 disabled={currentPageIndex === 0 || isLoading}
               >
@@ -295,7 +299,11 @@ export function DataTable<TData, TValue>({
                     displayTotalPages - 1,
                     currentPageIndex + 1
                   );
-                  onPaginationChange?.(nextPage);
+                  if (isServerSidePagination) {
+                    onPaginationChange?.(nextPage);
+                  } else {
+                    table.setPageIndex(nextPage);
+                  }
                 }}
                 disabled={
                   currentPageIndex >= displayTotalPages - 1 || isLoading

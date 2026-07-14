@@ -3,8 +3,10 @@
 import { useState, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { ColumnDef } from '@tanstack/react-table';
+import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { DataTable } from '@/components/ui/data-table';
+import { Button } from '@/components/ui/button';
 import {
   Select,
   SelectContent,
@@ -69,17 +71,33 @@ export function HeatmapTabs({ productHeatmap, categoryHeatmap, categories = [], 
     () => [
       {
         accessorKey: 'productName',
-        header: t('product'),
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 p-0 hover:bg-transparent"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          >
+            {t('product')}
+            <div className="ml-2 h-4 w-4">
+              {column.getIsSorted() === 'desc' && <ArrowDown className="h-4 w-4" />}
+              {column.getIsSorted() === 'asc' && <ArrowUp className="h-4 w-4" />}
+              {column.getIsSorted() === false && <ArrowUpDown className="h-4 w-4 opacity-50" />}
+            </div>
+          </Button>
+        ),
         enableSorting: true,
+        size: 300,
+        minSize: 250,
         cell: ({ row }) => {
           const product = row.original;
           return (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 min-w-[250px]">
               {product.imageUrl && (
                 <img
                   src={product.imageUrl}
                   alt={product.productName}
-                  className="w-8 h-8 rounded object-cover bg-muted"
+                  className="w-8 h-8 rounded object-cover bg-muted flex-shrink-0"
                 />
               )}
               <span className="truncate">{product.productName}</span>
@@ -89,33 +107,113 @@ export function HeatmapTabs({ productHeatmap, categoryHeatmap, categories = [], 
       },
       {
         accessorKey: 'views',
-        header: t('views'),
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 p-0 hover:bg-transparent"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          >
+            {t('views')}
+            <div className="ml-2 h-4 w-4">
+              {column.getIsSorted() === 'desc' && <ArrowDown className="h-4 w-4" />}
+              {column.getIsSorted() === 'asc' && <ArrowUp className="h-4 w-4" />}
+              {column.getIsSorted() === false && <ArrowUpDown className="h-4 w-4 opacity-50" />}
+            </div>
+          </Button>
+        ),
         enableSorting: true,
-        cell: ({ row }) => row.original.views.toLocaleString(),
+        size: 100,
+        minSize: 80,
+        cell: ({ row }) => <span className="min-w-[80px] block">{row.original.views.toLocaleString()}</span>,
       },
       {
         accessorKey: 'clicks',
-        header: t('clicks'),
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 p-0 hover:bg-transparent"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          >
+            {t('clicks')}
+            <div className="ml-2 h-4 w-4">
+              {column.getIsSorted() === 'desc' && <ArrowDown className="h-4 w-4" />}
+              {column.getIsSorted() === 'asc' && <ArrowUp className="h-4 w-4" />}
+              {column.getIsSorted() === false && <ArrowUpDown className="h-4 w-4 opacity-50" />}
+            </div>
+          </Button>
+        ),
         enableSorting: true,
-        cell: ({ row }) => row.original.clicks.toLocaleString(),
+        size: 100,
+        minSize: 80,
+        cell: ({ row }) => <span className="min-w-[80px] block">{row.original.clicks.toLocaleString()}</span>,
       },
       {
         accessorKey: 'clickThroughRate',
-        header: t('ctr'),
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 p-0 hover:bg-transparent"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          >
+            {t('ctr')}
+            <div className="ml-2 h-4 w-4">
+              {column.getIsSorted() === 'desc' && <ArrowDown className="h-4 w-4" />}
+              {column.getIsSorted() === 'asc' && <ArrowUp className="h-4 w-4" />}
+              {column.getIsSorted() === false && <ArrowUpDown className="h-4 w-4 opacity-50" />}
+            </div>
+          </Button>
+        ),
         enableSorting: true,
-        cell: ({ row }) => `${row.original.clickThroughRate.toFixed(1)}%`,
+        size: 100,
+        minSize: 80,
+        cell: ({ row }) => <span className="min-w-[80px] block">{row.original.clickThroughRate.toFixed(1)}%</span>,
       },
       {
         accessorKey: 'avgTimeSeconds',
-        header: t('avgTime'),
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 p-0 hover:bg-transparent"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          >
+            {t('avgTime')}
+            <div className="ml-2 h-4 w-4">
+              {column.getIsSorted() === 'desc' && <ArrowDown className="h-4 w-4" />}
+              {column.getIsSorted() === 'asc' && <ArrowUp className="h-4 w-4" />}
+              {column.getIsSorted() === false && <ArrowUpDown className="h-4 w-4 opacity-50" />}
+            </div>
+          </Button>
+        ),
         enableSorting: true,
-        cell: ({ row }) => `${row.original.avgTimeSeconds.toFixed(1)}s`,
+        size: 120,
+        minSize: 100,
+        cell: ({ row }) => <span className="min-w-[100px] block">{row.original.avgTimeSeconds.toFixed(1)}s</span>,
       },
       {
         accessorKey: 'uniqueViewers',
-        header: t('viewers'),
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 p-0 hover:bg-transparent"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          >
+            {t('viewers')}
+            <div className="ml-2 h-4 w-4">
+              {column.getIsSorted() === 'desc' && <ArrowDown className="h-4 w-4" />}
+              {column.getIsSorted() === 'asc' && <ArrowUp className="h-4 w-4" />}
+              {column.getIsSorted() === false && <ArrowUpDown className="h-4 w-4 opacity-50" />}
+            </div>
+          </Button>
+        ),
         enableSorting: true,
-        cell: ({ row }) => row.original.uniqueViewers.toLocaleString(),
+        size: 100,
+        minSize: 80,
+        cell: ({ row }) => <span className="min-w-[80px] block">{row.original.uniqueViewers.toLocaleString()}</span>,
       },
     ],
     [t]
