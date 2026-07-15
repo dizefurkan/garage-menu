@@ -317,7 +317,13 @@
     "noProducts": "Hiç ürün yok",
     "totalProducts": "Toplam {count} ürün",
     "items": "{count} öğe",
-    "pageInfo": "Sayfa {current}/{total}"
+    "pageInfo": "Sayfa {current}/{total}",
+    "category": "Kategori",
+    "createdAt": "Oluşturulma Tarihi",
+    "status": "Satış Durumu",
+    "products": "Ürünler",
+    "manageProducts": "Menü ürünlerinizi yönetin",
+    "addNew": "Yeni Ürün"
   }
 
 

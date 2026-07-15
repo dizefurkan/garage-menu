@@ -38,127 +38,131 @@ export type Product = {
   categoryName?: string;
 };
 
-export const columns: ColumnDef<Product>[] = [
-  {
-    accessorKey: "name",
-    header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      >
-        Ürün
-        <ArrowUpDown className="ml-2 h-4 w-4" />
-      </Button>
-    ),
-    cell: ({ row }) => {
-      const imageUrl = row.original.image_url;
-      const name = row.getValue("name") as string;
-      const product = row.original;
-      const router = useRouter();
-      return (
-        <div
-          className="flex items-center gap-3 cursor-pointer hover:opacity-75 transition-opacity"
-          onClick={() => router.push(`/admin/products/${product.id}`)}
+export function createColumns(t: (key: string) => string): ColumnDef<Product>[] {
+  return [
+    {
+      accessorKey: "name",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          {imageUrl ? (
-            <div className="relative w-10 h-10 rounded overflow-hidden bg-gray-100 flex-shrink-0">
-              <Image
-                src={imageUrl}
-                alt="Ürün"
-                fill
-                sizes="40px"
-                className="object-cover"
-              />
-            </div>
-          ) : (
-            <div className="w-10 h-10 bg-gray-200 rounded flex items-center justify-center text-xs text-gray-500 flex-shrink-0">
-              —
-            </div>
-          )}
-          <span className="truncate">{name}</span>
+          {t('productName')}
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
+      cell: ({ row }) => {
+        const imageUrl = row.original.image_url;
+        const name = row.getValue("name") as string;
+        const product = row.original;
+        const router = useRouter();
+        return (
+          <div
+            className="flex items-center gap-3 cursor-pointer hover:opacity-75 transition-opacity"
+            onClick={() => router.push(`/admin/products/${product.id}`)}
+          >
+            {imageUrl ? (
+              <div className="relative w-10 h-10 rounded overflow-hidden bg-gray-100 flex-shrink-0">
+                <Image
+                  src={imageUrl}
+                  alt={name}
+                  fill
+                  sizes="40px"
+                  className="object-cover"
+                />
+              </div>
+            ) : (
+              <div className="w-10 h-10 bg-gray-200 rounded flex items-center justify-center text-xs text-gray-500 flex-shrink-0">
+                —
+              </div>
+            )}
+            <span className="truncate">{name}</span>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "price",
+      header: ({ column }) => (
+        <div className="text-right">
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            {t('price')}
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
         </div>
-      );
+      ),
+      cell: ({ row }) => {
+        const price = parseFloat(row.getValue("price"));
+        const currency = row.original.currency;
+        const formatted = new Intl.NumberFormat("tr-TR", {
+          style: "currency",
+          currency: currency,
+        }).format(price);
+        return <div className="text-right font-medium">{formatted}</div>;
+      },
     },
-  },
-  {
-    accessorKey: "price",
-    header: ({ column }) => (
-      <div className="text-right">
+    {
+      accessorKey: "categoryName",
+      header: ({ column }) => (
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Fiyat
+          {t('category')}
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
-      </div>
-    ),
-    cell: ({ row }) => {
-      const price = parseFloat(row.getValue("price"));
-      const currency = row.original.currency;
-      const formatted = new Intl.NumberFormat("tr-TR", {
-        style: "currency",
-        currency: currency,
-      }).format(price);
-      return <div className="text-right font-medium">{formatted}</div>;
+      ),
+      cell: ({ row }) => {
+        const categoryName = row.getValue("categoryName") as string;
+        return <div className="font-medium">{categoryName}</div>;
+      },
     },
-  },
-  {
-    accessorKey: "categoryName",
-    header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      >
-        Kategori
-        <ArrowUpDown className="ml-2 h-4 w-4" />
-      </Button>
-    ),
-    cell: ({ row }) => {
-      const categoryName = row.getValue("categoryName") as string;
-      return <div className="font-medium">{categoryName}</div>;
+    {
+      accessorKey: "created_at",
+      header: ({ column }) => (
+        <div className="text-right">
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            {t('createdAt')}
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        </div>
+      ),
+      cell: ({ row }) => {
+        const date = new Date(row.getValue("created_at"));
+        return (
+          <div className="text-right">{date.toLocaleDateString("tr-TR")}</div>
+        );
+      },
     },
-  },
-  {
-    accessorKey: "created_at",
-    header: ({ column }) => (
-      <div className="text-right">
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Oluşturulma Tarihi
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      </div>
-    ),
-    cell: ({ row }) => {
-      const date = new Date(row.getValue("created_at"));
-      return (
-        <div className="text-right">{date.toLocaleDateString("tr-TR")}</div>
-      );
+    {
+      id: "status",
+      header: ({ column }) => (
+        <div className="text-right">
+          <span className="text-sm font-medium">{t('status')}</span>
+        </div>
+      ),
+      cell: ({ row }) => {
+        const product = row.original;
+        return <StatusCell product={product} />;
+      },
     },
-  },
-  {
-    id: "status",
-    header: ({ column }) => (
-      <div className="text-right">
-        <span className="text-sm font-medium">Satış Durumu</span>
-      </div>
-    ),
-    cell: ({ row }) => {
-      const product = row.original;
-      return <StatusCell product={product} />;
+    {
+      id: "actions",
+      cell: ({ row }) => {
+        const product = row.original;
+        return <ActionsCell product={product} />;
+      },
     },
-  },
-  {
-    id: "actions",
-    cell: ({ row }) => {
-      const product = row.original;
-      return <ActionsCell product={product} />;
-    },
-  },
-];
+  ];
+}
+
+export const columns: ColumnDef<Product>[] = createColumns((key) => key);
 
 function StatusCell({ product }: { product: Product }) {
   const router = useRouter();

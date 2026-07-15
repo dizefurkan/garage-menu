@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { DataTable } from "@/components/ui/data-table";
 import type { Product } from "@/lib/menu-db";
 import {
@@ -12,7 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Filter } from "lucide-react";
-import { columns } from "./columns";
+import { createColumns } from "./columns";
 
 interface ProductsFilterBarProps {
   tenantId: number;
@@ -25,6 +26,7 @@ export function ProductsFilterBar({
   tenantId,
   categories: initialCategories,
 }: ProductsFilterBarProps) {
+  const t = useTranslations('admin');
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -152,7 +154,7 @@ export function ProductsFilterBar({
         <SelectTrigger className="h-full w-48 border-0 bg-transparent p-0 focus-visible:border-transparent focus-visible:ring-0 focus-visible:ring-offset-0">
           <SelectValue>
             {selectedCategory === "all"
-              ? `Tüm Kategoriler (${totalAllProducts})`
+              ? `${t('allCategories')} (${totalAllProducts})`
               : (() => {
                   const cat = initialCategories.find(
                     (c: any) => c.id.toString() === selectedCategory
@@ -165,7 +167,7 @@ export function ProductsFilterBar({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">
-            Tüm Kategoriler ({totalAllProducts})
+            {t('allCategories')} ({totalAllProducts})
           </SelectItem>
           {initialCategories.map((category: any) => (
             <SelectItem key={category.id} value={category.id.toString()}>
@@ -178,14 +180,15 @@ export function ProductsFilterBar({
   );
 
   if (isLoading && products.length === 0) {
-    return <div className="text-center py-8">Yükleniyor...</div>;
+    return <div className="text-center py-8">{t('loadingAnalytics')}</div>;
   }
 
   return (
     <DataTable
-      columns={columns}
+      columns={createColumns(t)}
       data={mappedProducts}
       filterElement={filterElement}
+      filterPlaceholder={t('searchProducts')}
       initialPageIndex={currentPage - 1}
       onPaginationChange={handlePaginationChange}
       isLoading={isLoading}

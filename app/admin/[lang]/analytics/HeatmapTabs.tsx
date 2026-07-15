@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { ColumnDef } from '@tanstack/react-table';
 import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,6 +30,7 @@ interface HeatmapTabsProps {
  */
 export function HeatmapTabs({ productHeatmap, categoryHeatmap, categories = [], isLoading }: HeatmapTabsProps) {
   const t = useTranslations('admin');
+  const locale = useLocale();
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('all');
 
   const handleCategoryChange = (value: string | null) => {
@@ -48,16 +49,17 @@ export function HeatmapTabs({ productHeatmap, categoryHeatmap, categories = [], 
       categories.forEach((cat: any) => {
         const categoryId = cat.id?.toString() || '';
         if (categoryId) {
-          // Get translated name for the language
+          // Get translated name for the current language
           const translations = cat.category_translations || [];
-          const name = translations.length > 0 ? translations[0].name : 'Unknown';
+          const translation = translations.find((t: any) => t.language_code === locale) || translations[0];
+          const name = translation?.name || 'Unknown';
           categoryMap.set(categoryId, name);
         }
       });
     }
 
     return Array.from(categoryMap.entries());
-  }, [categories, t]);
+  }, [categories, locale, t]);
 
   const selectedCategoryLabel = useMemo(() => {
     const found = uniqueCategories.find(([id]) => id === selectedCategoryId);

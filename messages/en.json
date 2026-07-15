@@ -317,7 +317,13 @@
     "noProducts": "No products",
     "totalProducts": "Total {count} products",
     "items": "{count} items",
-    "pageInfo": "Page {current}/{total}"
+    "pageInfo": "Page {current}/{total}",
+    "category": "Category",
+    "createdAt": "Created Date",
+    "status": "Status",
+    "products": "Products",
+    "manageProducts": "Manage your menu products",
+    "addNew": "New Product"
   }
 
 

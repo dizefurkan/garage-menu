@@ -7,7 +7,7 @@ import { Plus } from "lucide-react";
 import { EmptyProductsState } from "@/components/sections/EmptyProductsState";
 import { ProductsFilterBar } from "./products-filter-bar";
 
-async function getCategories(tenantId: number) {
+async function getCategories(tenantId: number, lang: string) {
   if (!supabaseAdmin) {
     return [];
   }
@@ -39,14 +39,28 @@ async function getCategories(tenantId: number) {
 
   return (data || []).map((cat: any) => {
     const trans = cat.category_translations?.find(
-      (t: any) => t.language_code === "en"
-    );
+      (t: any) => t.language_code === lang
+    ) || cat.category_translations?.[0];
     return {
       id: cat.id,
-      name: trans?.name || cat.category_translations?.[0]?.name || "N/A",
+      name: trans?.name || "N/A",
       productCount: productCountByCategory[cat.id] || 0,
     };
   });
+}
+
+async function loadLocaleMessages(lang: string) {
+  try {
+    const messages = (await import(`@/messages/${lang}.json`)).default;
+    return messages.admin ?? {};
+  } catch {
+    const fallback = (await import('@/messages/en.json')).default;
+    return fallback.admin ?? {};
+  }
+}
+
+function createTranslator(messages: Record<string, string>) {
+  return (key: string) => messages[key] || key;
 }
 
 export default async function ProductsPage({
@@ -61,20 +75,22 @@ export default async function ProductsPage({
     redirect("/admin/dashboard");
   }
 
-  const categories = await getCategories(tenant.id);
+  const messages = await loadLocaleMessages(lang);
+  const t = createTranslator(messages);
+  const categories = await getCategories(tenant.id, lang);
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Ürünler</h1>
-          <p className="mt-2 text-gray-600">Menü ürünlerinizi yönetin</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t('products')}</h1>
+          <p className="mt-2 text-gray-600">{t('manageProducts')}</p>
         </div>
         {categories.length > 0 && (
           <Link href={`/admin/${lang}/products/new`}>
             <Button>
               <Plus className="mr-2 h-4 w-4" />
-              Yeni Ürün
+              {t('addNew')}
             </Button>
           </Link>
         )}
