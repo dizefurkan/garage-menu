@@ -323,7 +323,28 @@
     "status": "Satış Durumu",
     "products": "Ürünler",
     "manageProducts": "Menü ürünlerinizi yönetin",
-    "addNew": "Yeni Ürün"
+    "addNew": "Yeni Ürün",
+    "categories": "Kategoriler",
+    "manageCategories": "Menünüzü organize edin",
+    "categoriesAddNew": "Yeni Kategori",
+    "searchCategories": "Kategorilerde ara...",
+    "categoryName": "Kategori Adı",
+    "productCount": "Ürün Sayısı",
+    "itemLabel": "ürün",
+    "draft": "Taslak",
+    "published": "Yayınlı",
+    "openMenu": "Menüyü aç",
+    "actions": "İşlemler",
+    "copyCategoryId": "Kategori ID'sini Kopyala",
+    "edit": "Düzenle",
+    "delete": "Sil",
+    "deleteCategory": "Kategoriyi sil",
+    "deleteCategoryConfirmPrefix": "",
+    "deleteCategoryConfirmSuffix": "kategorisini silmek istediğinizden emin misiniz? Bu kategoriye ait ürünler etkilenebilir. Bu işlem geri alınamaz.",
+    "cancel": "İptal",
+    "deleting": "Siliniyor...",
+    "deleteFailed": "Silme başarısız",
+    "deleteError": "Kategori silinirken hata oluştu"
   }
 
 

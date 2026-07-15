@@ -4,11 +4,10 @@ import Link from "next/link";
 import { supabaseAdmin } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { DataTable } from "@/components/ui/data-table";
 import { EmptyCategoriesState } from "@/components/sections/EmptyCategoriesState";
-import { columns } from "./columns";
+import { CategoriesTable } from "./categories-table";
 
-async function getCategories(tenantId: number) {
+async function getCategories(tenantId: number, lang: string) {
   if (!supabaseAdmin) {
     return [];
   }
@@ -37,18 +36,33 @@ async function getCategories(tenantId: number) {
         .eq("tenant_id", tenantId)
         .not("is_draft", "eq", true); // Count only published products
 
+      const trans = category.category_translations?.find(
+        (t: any) => t.language_code === lang
+      ) || category.category_translations?.[0];
+
       return {
         ...category,
-        name:
-          category.category_translations?.find(
-            (t: any) => t.language_code === "en"
-          )?.name || "N/A",
+        name: trans?.name || "N/A",
         productCount: count || 0,
       };
     })
   );
 
   return categoriesWithCount;
+}
+
+async function loadLocaleMessages(lang: string) {
+  try {
+    const messages = (await import(`@/messages/${lang}.json`)).default;
+    return messages.admin ?? {};
+  } catch {
+    const fallback = (await import('@/messages/en.json')).default;
+    return fallback.admin ?? {};
+  }
+}
+
+function createTranslator(messages: Record<string, string>) {
+  return (key: string) => messages[key] || key;
 }
 
 export default async function CategoriesPage({
@@ -63,20 +77,22 @@ export default async function CategoriesPage({
     redirect("/admin/dashboard");
   }
 
-  const categories = await getCategories(tenant.id);
+  const messages = await loadLocaleMessages(lang);
+  const t = createTranslator(messages);
+  const categories = await getCategories(tenant.id, lang);
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Kategoriler</h1>
-          <p className="mt-2 text-gray-600">Menünüzü organize edin</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t('categories')}</h1>
+          <p className="mt-2 text-gray-600">{t('manageCategories')}</p>
         </div>
         {categories.length > 0 && (
           <Link href={`/admin/${lang}/categories/new`}>
             <Button>
               <Plus className="mr-2 h-4 w-4" />
-              Yeni Kategori
+              {t('categoriesAddNew')}
             </Button>
           </Link>
         )}
@@ -85,7 +101,7 @@ export default async function CategoriesPage({
       {categories.length === 0 ? (
         <EmptyCategoriesState lang={lang} />
       ) : (
-        <DataTable columns={columns} data={categories} />
+        <CategoriesTable categories={categories} />
       )}
     </div>
   );

@@ -323,7 +323,28 @@
     "status": "Status",
     "products": "Products",
     "manageProducts": "Manage your menu products",
-    "addNew": "New Product"
+    "addNew": "New Product",
+    "categories": "Categories",
+    "manageCategories": "Organize your menu",
+    "categoriesAddNew": "New Category",
+    "searchCategories": "Search categories...",
+    "categoryName": "Category Name",
+    "productCount": "Product Count",
+    "itemLabel": "item",
+    "draft": "Draft",
+    "published": "Published",
+    "openMenu": "Open menu",
+    "actions": "Actions",
+    "copyCategoryId": "Copy Category ID",
+    "edit": "Edit",
+    "delete": "Delete",
+    "deleteCategory": "Delete Category",
+    "deleteCategoryConfirmPrefix": "Are you sure you want to delete the",
+    "deleteCategoryConfirmSuffix": "category? Products in this category may be affected. This action cannot be undone.",
+    "cancel": "Cancel",
+    "deleting": "Deleting...",
+    "deleteFailed": "Delete failed",
+    "deleteError": "Error occurred while deleting category"
   }
 
 

@@ -32,81 +32,85 @@ export type Category = {
   productCount?: number;
 };
 
-export const columns: ColumnDef<Category>[] = [
-  {
-    accessorKey: "name",
-    header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      >
-        Kategori Adı
-        <ArrowUpDown className="ml-2 h-4 w-4" />
-      </Button>
-    ),
-    cell: ({ row }) => {
-      const category = row.original;
-      const name = row.getValue("name") as string;
-      const router = useRouter();
-
-      return (
-        <div
-          className="cursor-pointer truncate transition-opacity hover:opacity-75"
-          onClick={() => router.push(`/admin/categories/${category.id}`)}
+export function createColumns(t: (key: string) => string): ColumnDef<Category>[] {
+  return [
+    {
+      accessorKey: "name",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          {name}
-        </div>
-      );
-    },
-  },
-  {
-    accessorKey: "productCount",
-    header: "Ürün Sayısı",
-    cell: ({ row }) => {
-      const count = row.getValue("productCount") as number;
-      return (
-        <span className="inline-block rounded-full bg-blue-100 text-blue-800 px-3 py-1 text-xs font-medium">
-          {count} ürün
-        </span>
-      );
-    },
-  },
-  {
-    accessorKey: "is_draft",
-    header: "Durum",
-    cell: ({ row }) => {
-      const isDraft = row.getValue("is_draft");
-      return (
-        <span
-          className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${
-            isDraft
-              ? "bg-yellow-100 text-yellow-800"
-              : "bg-green-100 text-green-800"
-          }`}
-        >
-          {isDraft ? "Taslak" : "Yayınlı"}
-        </span>
-      );
-    },
-  },
-  {
-    accessorKey: "created_at",
-    header: "Oluşturulma Tarihi",
-    cell: ({ row }) => {
-      const date = new Date(row.getValue("created_at"));
-      return date.toLocaleDateString("tr-TR");
-    },
-  },
-  {
-    id: "actions",
-    cell: ({ row }) => {
-      const category = row.original;
-      return <ActionsCell category={category} />;
-    },
-  },
-];
+          {t('categoryName')}
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
+      cell: ({ row }) => {
+        const category = row.original;
+        const name = row.getValue("name") as string;
+        const router = useRouter();
 
-function ActionsCell({ category }: { category: Category }) {
+        return (
+          <div
+            className="cursor-pointer truncate transition-opacity hover:opacity-75"
+            onClick={() => router.push(`/admin/categories/${category.id}`)}
+          >
+            {name}
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "productCount",
+      header: t('productCount'),
+      cell: ({ row }) => {
+        const count = row.getValue("productCount") as number;
+        return (
+          <span className="inline-block rounded-full bg-blue-100 text-blue-800 px-3 py-1 text-xs font-medium">
+            {count} {t('itemLabel')}
+          </span>
+        );
+      },
+    },
+    {
+      accessorKey: "is_draft",
+      header: t('status'),
+      cell: ({ row }) => {
+        const isDraft = row.getValue("is_draft");
+        return (
+          <span
+            className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${
+              isDraft
+                ? "bg-yellow-100 text-yellow-800"
+                : "bg-green-100 text-green-800"
+            }`}
+          >
+            {isDraft ? t('draft') : t('published')}
+          </span>
+        );
+      },
+    },
+    {
+      accessorKey: "created_at",
+      header: t('createdAt'),
+      cell: ({ row }) => {
+        const date = new Date(row.getValue("created_at"));
+        return date.toLocaleDateString("tr-TR");
+      },
+    },
+    {
+      id: "actions",
+      cell: ({ row }) => {
+        const category = row.original;
+        return <ActionsCell category={category} t={t} />;
+      },
+    },
+  ];
+}
+
+export const columns: ColumnDef<Category>[] = createColumns((key) => key);
+
+function ActionsCell({ category, t }: { category: Category; t: (key: string) => string }) {
   const router = useRouter();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -124,7 +128,7 @@ function ActionsCell({ category }: { category: Category }) {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || "Silme başarısız");
+        throw new Error(error.error || t('deleteFailed'));
       }
 
       setShowDeleteDialog(false);
@@ -134,7 +138,7 @@ function ActionsCell({ category }: { category: Category }) {
       alert(
         error instanceof Error
           ? error.message
-          : "Kategori silinirken hata oluştu"
+          : t('deleteError')
       );
     } finally {
       setIsDeleting(false);
@@ -145,30 +149,30 @@ function ActionsCell({ category }: { category: Category }) {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-8 w-8 p-0">
-          <span className="sr-only">Menüyü aç</span>
+          <span className="sr-only">{t('openMenu')}</span>
           <MoreHorizontal className="h-4 w-4" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">
           <DropdownMenuGroup>
-            <DropdownMenuLabel>İşlemler</DropdownMenuLabel>
+            <DropdownMenuLabel>{t('actions')}</DropdownMenuLabel>
             <DropdownMenuItem
               onClick={() =>
                 navigator.clipboard.writeText(category.id.toString())
               }
             >
-              Kategori ID'sini Kopyala
+              {t('copyCategoryId')}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleEdit}>
               <Edit2 className="mr-2 h-4 w-4" />
-              Düzenle
+              {t('edit')}
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => setShowDeleteDialog(true)}
               className="text-red-600"
             >
               <Trash2 className="mr-2 h-4 w-4" />
-              Sil
+              {t('delete')}
             </DropdownMenuItem>
           </DropdownMenuGroup>
         </DropdownMenuContent>
@@ -177,20 +181,19 @@ function ActionsCell({ category }: { category: Category }) {
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Kategoriyi sil</AlertDialogTitle>
+            <AlertDialogTitle>{t('deleteCategory')}</AlertDialogTitle>
             <AlertDialogDescription>
-              "{category.name}" kategorisini silmek istediğinizden emin misiniz?
-              Bu kategoriye ait ürünler etkilenebilir. Bu işlem geri alınamaz.
+              {t('deleteCategoryConfirmPrefix')} "{category.name}" {t('deleteCategoryConfirmSuffix')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="flex justify-end gap-3">
-            <AlertDialogCancel disabled={isDeleting}>İptal</AlertDialogCancel>
+            <AlertDialogCancel disabled={isDeleting}>{t('cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               disabled={isDeleting}
               className="bg-red-600 hover:bg-red-700"
             >
-              {isDeleting ? "Siliniyor..." : "Sil"}
+              {isDeleting ? t('deleting') : t('delete')}
             </AlertDialogAction>
           </div>
         </AlertDialogContent>
