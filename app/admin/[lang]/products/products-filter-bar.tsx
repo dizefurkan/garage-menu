@@ -20,7 +20,8 @@ interface ProductsFilterBarProps {
   categories: Array<{ id: number; name: string; productCount?: number }>;
 }
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE_OPTIONS = [5, 10, 20];
+const DEFAULT_PAGE_SIZE = 10;
 
 export function ProductsFilterBar({
   tenantId,
@@ -33,11 +34,13 @@ export function ProductsFilterBar({
   // Get initial values from URL
   const initialPage = parseInt(searchParams.get("page") || "1");
   const initialCategory = searchParams.get("category") || "all";
+  const initialPageSize = parseInt(searchParams.get("pageSize") || DEFAULT_PAGE_SIZE.toString());
 
   const [products, setProducts] = useState<Product[]>([]);
   const [currentPage, setCurrentPage] = useState(initialPage);
   const [selectedCategory, setSelectedCategory] =
     useState<string>(initialCategory);
+  const [pageSize, setPageSize] = useState(initialPageSize);
   const [total, setTotal] = useState(0);
   const [totalAllProducts, setTotalAllProducts] = useState(0);
   const [pageCount, setPageCount] = useState(1);
@@ -45,12 +48,12 @@ export function ProductsFilterBar({
 
   // Load products when component mounts or filters change
   const loadProducts = useCallback(
-    async (page: number, categoryId?: number) => {
+    async (page: number, categoryId?: number, size: number = pageSize) => {
       setIsLoading(true);
       try {
         const params = new URLSearchParams({
           page: page.toString(),
-          pageSize: PAGE_SIZE.toString(),
+          pageSize: size.toString(),
         });
         if (categoryId) {
           params.append("categoryId", categoryId.toString());
@@ -72,7 +75,7 @@ export function ProductsFilterBar({
         setIsLoading(false);
       }
     },
-    []
+    [pageSize]
   );
 
   // Initial load - fetch total all products and load initial page
@@ -85,7 +88,7 @@ export function ProductsFilterBar({
       try {
         const params = new URLSearchParams({
           page: "1",
-          pageSize: PAGE_SIZE.toString(),
+          pageSize: pageSize.toString(),
         });
         const response = await fetch(`/api/admin/products?${params}`);
         if (response.ok) {
@@ -98,8 +101,8 @@ export function ProductsFilterBar({
     };
 
     fetchTotalAllProducts();
-    loadProducts(initialPage, categoryId);
-  }, [loadProducts, initialPage, initialCategory]);
+    loadProducts(initialPage, categoryId, pageSize);
+  }, [loadProducts, initialPage, initialCategory, pageSize]);
 
   // Map products to format for DataTable
   const mappedProducts = useMemo(() => {
@@ -117,13 +120,14 @@ export function ProductsFilterBar({
     // Update URL
     const params = new URLSearchParams();
     params.set("page", page.toString());
+    params.set("pageSize", pageSize.toString());
     if (selectedCategory !== "all") {
       params.set("category", selectedCategory);
     }
     router.push(`?${params.toString()}`);
 
     // Load products
-    loadProducts(page, categoryId);
+    loadProducts(page, categoryId, pageSize);
   };
 
   const handleCategoryChange = (val: string | null) => {
@@ -137,11 +141,32 @@ export function ProductsFilterBar({
       if (val !== "all") {
         params.set("category", val);
       }
+      params.set("pageSize", pageSize.toString());
       router.push(`?${params.toString()}`);
 
       // Load products
-      loadProducts(1, categoryId);
+      loadProducts(1, categoryId, pageSize);
     }
+  };
+
+  const handlePageSizeChange = (val: string | null) => {
+    if (!val) return;
+    const newSize = parseInt(val);
+    setPageSize(newSize);
+    setCurrentPage(1);
+
+    // Update URL
+    const params = new URLSearchParams();
+    params.set("page", "1");
+    params.set("pageSize", newSize.toString());
+    if (selectedCategory !== "all") {
+      params.set("category", selectedCategory);
+    }
+    router.push(`?${params.toString()}`);
+
+    // Load products with new page size
+    const categoryId = selectedCategory === "all" ? undefined : parseInt(selectedCategory);
+    loadProducts(1, categoryId, newSize);
   };
 
   const filterElement = (
@@ -172,6 +197,18 @@ export function ProductsFilterBar({
           {initialCategories.map((category: any) => (
             <SelectItem key={category.id} value={category.id.toString()}>
               {category.name} ({category.productCount || 0})
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Select value={pageSize.toString()} onValueChange={handlePageSizeChange}>
+        <SelectTrigger className="h-full w-fit border-0 bg-transparent p-0 focus-visible:border-transparent focus-visible:ring-0 focus-visible:ring-offset-0">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {PAGE_SIZE_OPTIONS.map((size) => (
+            <SelectItem key={size} value={size.toString()}>
+              {size} {t('itemLabel')}
             </SelectItem>
           ))}
         </SelectContent>
