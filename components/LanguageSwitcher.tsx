@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { Globe } from "lucide-react";
+import { getLanguageFlag } from "@/lib/language-flags";
 import {
   Select,
   SelectContent,
@@ -84,13 +85,13 @@ export function LanguageSwitcher({
         <SelectTrigger className="h-9 w-9 md:w-36 gap-2 md:gap-2 justify-center md:justify-start">
           <Globe className="h-4 w-4 text-muted-foreground" />
           <span className="hidden md:inline truncate text-sm">
-            {getLanguageLabel(normalizedLang)}
+            {getLanguageFlag(normalizedLang)} {getLanguageLabel(normalizedLang)}
           </span>
         </SelectTrigger>
         <SelectContent>
           {availableLanguages.map((language) => (
             <SelectItem key={language} value={language}>
-              {getLanguageLabel(language)}
+              {getLanguageFlag(language)} {getLanguageLabel(language)}
             </SelectItem>
           ))}
         </SelectContent>
@@ -113,7 +114,7 @@ export function LanguageSwitcher({
       <SelectContent>
         {availableLanguages.map((language) => (
           <SelectItem key={language} value={language}>
-            {getLanguageLabel(language)}
+            {getLanguageFlag(language)} {getLanguageLabel(language)}
           </SelectItem>
         ))}
       </SelectContent>

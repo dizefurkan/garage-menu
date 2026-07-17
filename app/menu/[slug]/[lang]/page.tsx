@@ -4,6 +4,8 @@ import { createClient } from "@supabase/supabase-js";
 import { getTenantCacheTags } from "@/lib/cache/revalidation";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { AnalyticsTracker } from "@/components/AnalyticsTracker";
+import { ProductCard } from "./product-card";
+import { getLanguageFlag } from "@/lib/language-flags";
 
 function getBaseUrl(): string {
   // On Vercel production, use the production domain
@@ -570,7 +572,7 @@ function MobileLanguageButton({
                         : "hover:bg-gray-100 text-gray-700"
                     }`}
                   >
-                    {getLanguageLabel(language)}
+                    {getLanguageFlag(language)} {getLanguageLabel(language)}
                   </a>
                 </li>
               );
@@ -618,101 +620,6 @@ function CategorySection({
         ))}
       </div>
     </section>
-  );
-}
-
-// "Allergens" in all supported menu languages (aria-label for the chip list)
-const ALLERGENS_LABELS: Record<string, string> = {
-  en: "Allergens",
-  tr: "Alerjenler",
-  de: "Allergene",
-  fr: "Allergènes",
-  es: "Alérgenos",
-  it: "Allergeni",
-  pt: "Alergénios",
-  ja: "アレルゲン",
-  zh: "过敏原",
-  ru: "Аллергены",
-  ar: "مسببات الحساسية",
-};
-
-// Product Card Component
-function ProductCard({
-  product,
-  categoryId,
-  primaryColor,
-  lang,
-}: {
-  product: any;
-  categoryId: string;
-  primaryColor: string;
-  lang: string;
-}) {
-  return (
-    <div
-      className="group rounded-2xl overflow-hidden bg-white border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 hover:scale-105"
-      data-product-id={product.id}
-      data-category-id={categoryId}
-    >
-      {/* Image */}
-      <div className="relative w-full aspect-video bg-gradient-to-br from-gray-100 to-gray-50 overflow-hidden">
-        {product.image ? (
-          <img
-            src={product.image}
-            alt={product.name}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-          />
-        ) : (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center">
-              <div className="text-3xl mb-2">🍽️</div>
-              <p className="text-xs text-gray-400">No image</p>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Content */}
-      <div className="p-4 space-y-3">
-        <h3 className="font-bold text-lg line-clamp-2 text-gray-900">
-          {product.name}
-        </h3>
-
-        {product.description && (
-          <p className="text-sm text-gray-600 line-clamp-2">
-            {product.description}
-          </p>
-        )}
-
-        {/* Allergens */}
-        {product.allergens?.length > 0 && (
-          <ul
-            className="flex flex-wrap gap-1.5"
-            aria-label={ALLERGENS_LABELS[lang] || ALLERGENS_LABELS.en}
-          >
-            {product.allergens.map((allergen: any) => (
-              <li
-                key={allergen.code}
-                className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-800"
-              >
-                <span aria-hidden="true">{allergen.emoji}</span>
-                {allergen.name}
-              </li>
-            ))}
-          </ul>
-        )}
-
-        {/* Price */}
-        <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-          <span className="text-lg font-bold" style={{ color: primaryColor }}>
-            {product.price}
-            {product.currency && (
-              <span className="text-sm ml-1">{product.currency}</span>
-            )}
-          </span>
-        </div>
-      </div>
-    </div>
   );
 }
 
