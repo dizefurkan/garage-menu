@@ -91,7 +91,7 @@ export async function GET(
     // Fetch product with translations
     const { data: product, error } = await (supabaseAdmin as any)
       .from("products")
-      .select("*, product_translations(*)")
+      .select("*, product_translations(*), product_allergens(allergen_id)")
       .eq("id", productId)
       .eq("tenant_id", tenant.id)
       .single();
@@ -137,7 +137,15 @@ export async function PUT(
       category_id,
       image_url,
       translations,
+      allergen_ids,
+      contains_no_allergens,
     } = await req.json();
+
+    // Allergen fields are optional: callers that don't send them (e.g. the
+    // availability toggle in the products table) must not wipe existing data.
+    const allergenIds: number[] | undefined = Array.isArray(allergen_ids)
+      ? allergen_ids
+      : undefined;
 
     // Verify product belongs to tenant
     const { data: product, error: fetchError } = await (supabaseAdmin as any)
@@ -158,16 +166,24 @@ export async function PUT(
     }
 
     // Update product
+    const updateData: Record<string, unknown> = {
+      price,
+      currency,
+      is_available,
+      category_id,
+      image_url: image_url || null,
+      updated_by: user.id,
+    };
+    if (contains_no_allergens !== undefined) {
+      // Flag is only meaningful when no allergens are selected
+      updateData.contains_no_allergens =
+        Boolean(contains_no_allergens) &&
+        (allergenIds === undefined || allergenIds.length === 0);
+    }
+
     const { error: updateError } = await (supabaseAdmin as any)
       .from("products")
-      .update({
-        price,
-        currency,
-        is_available,
-        category_id,
-        image_url: image_url || null,
-        updated_by: user.id,
-      })
+      .update(updateData)
       .eq("id", productId);
 
     if (updateError) {
@@ -196,6 +212,41 @@ export async function PUT(
           { error: transError.message },
           { status: 500 }
         );
+      }
+    }
+
+    // Replace allergen links (delete-then-insert; skipped when not sent)
+    if (allergenIds !== undefined) {
+      const { error: deleteAllergenError } = await (supabaseAdmin as any)
+        .from("product_allergens")
+        .delete()
+        .eq("product_id", productId);
+
+      if (deleteAllergenError) {
+        console.error("Product allergen delete error:", deleteAllergenError);
+        return NextResponse.json(
+          { error: deleteAllergenError.message },
+          { status: 500 }
+        );
+      }
+
+      if (allergenIds.length > 0) {
+        const { error: allergenError } = await (supabaseAdmin as any)
+          .from("product_allergens")
+          .insert(
+            allergenIds.map((allergenId) => ({
+              product_id: productId,
+              allergen_id: allergenId,
+            }))
+          );
+
+        if (allergenError) {
+          console.error("Product allergen insert error:", allergenError);
+          return NextResponse.json(
+            { error: allergenError.message },
+            { status: 500 }
+          );
+        }
       }
     }
 

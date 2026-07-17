@@ -21,6 +21,10 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTenant } from "@/lib/context/tenant-context";
 import { ImageUpload } from "@/components/ui/image-upload";
+import {
+  AllergenSelector,
+  type AllergenOption,
+} from "../allergen-selector";
 
 const productSchema = z.object({
   price: z.coerce.number().min(0).max(999999),
@@ -28,6 +32,8 @@ const productSchema = z.object({
   is_available: z.boolean().default(true),
   category_id: z.coerce.number(),
   image_url: z.string().optional().nullable(),
+  allergen_ids: z.array(z.number()).default([]),
+  contains_no_allergens: z.boolean().default(false),
   translations: z.record(
     z.string(),
     z.object({
@@ -48,9 +54,11 @@ export default function ProductFormPage() {
   const [categories, setCategories] = useState<
     Array<{ id: number; name: string }>
   >([]);
+  const [allergens, setAllergens] = useState<AllergenOption[]>([]);
 
   const productId = params?.id as string | undefined;
   const isEdit = !!productId;
+  const currentLang = (params?.lang as string) || "en";
 
   useEffect(() => {
     setIsEditMode(isEdit);
@@ -71,6 +79,22 @@ export default function ProductFormPage() {
     }
     loadCategories();
   }, []);
+
+  // Fetch allergens
+  useEffect(() => {
+    async function loadAllergens() {
+      try {
+        const response = await fetch(`/api/admin/allergens?lang=${currentLang}`);
+        if (response.ok) {
+          const data = await response.json();
+          setAllergens(data);
+        }
+      } catch (err) {
+        console.error("Failed to load allergens:", err);
+      }
+    }
+    loadAllergens();
+  }, [currentLang]);
 
   const languages = tenant.languages || ["en"];
 
@@ -96,6 +120,8 @@ export default function ProductFormPage() {
       is_available: true,
       currency: "TRY",
       translations: defaultTranslations,
+      allergen_ids: [],
+      contains_no_allergens: false,
     },
   });
 
@@ -261,6 +287,18 @@ export default function ProductFormPage() {
                 tenantId={tenant?.id?.toString()}
               />
             </div>
+
+            {/* Allergens */}
+            <AllergenSelector
+              allergens={allergens}
+              selectedIds={watch("allergen_ids") || []}
+              containsNoAllergens={watch("contains_no_allergens") || false}
+              onChange={(ids, noAllergens) => {
+                setValue("allergen_ids", ids);
+                setValue("contains_no_allergens", noAllergens);
+              }}
+              disabled={loading}
+            />
 
             <div className="flex gap-3">
               <Button type="submit" disabled={loading}>

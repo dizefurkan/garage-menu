@@ -21,7 +21,19 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ArrowUpDown, MoreHorizontal, Trash2, Edit2 } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  ArrowUpDown,
+  MoreHorizontal,
+  Trash2,
+  Edit2,
+  TriangleAlert,
+} from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -36,6 +48,8 @@ export type Product = {
   is_draft: boolean;
   created_at: string;
   categoryName?: string;
+  contains_no_allergens?: boolean;
+  allergen_count?: number;
 };
 
 export function createColumns(t: (key: string) => string): ColumnDef<Product>[] {
@@ -77,6 +91,22 @@ export function createColumns(t: (key: string) => string): ColumnDef<Product>[] 
               </div>
             )}
             <span className="truncate">{name}</span>
+            {(product.allergen_count ?? 0) === 0 &&
+              !product.contains_no_allergens && (
+                <TooltipProvider delayDuration={200}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <TriangleAlert
+                        className="h-4 w-4 flex-shrink-0 text-amber-500"
+                        aria-label={t("allergenInfoMissing")}
+                      />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {t("allergenInfoMissing")}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
           </div>
         );
       },

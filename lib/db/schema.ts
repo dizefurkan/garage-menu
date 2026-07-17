@@ -107,6 +107,7 @@ export type Product = {
   published_at?: string;
   display_order: number;
   is_available: boolean;
+  contains_no_allergens: boolean;
   created_by: string; // UUID
   updated_by: string; // UUID
 };
@@ -125,6 +126,37 @@ export type ProductTranslation = {
 /* Product with translations joined */
 export type ProductWithTranslations = Product & {
   product_translations: ProductTranslation[];
+};
+
+// ============================================================================
+// ALLERGENS (global EU-14 reference data, Reg. EU 1169/2011 Annex II)
+// ============================================================================
+
+export type Allergen = {
+  id: bigint;
+  created_at: string;
+  code: string; // 'gluten', 'crustaceans', ...
+  emoji: string;
+  display_order: number;
+};
+
+export type AllergenTranslation = {
+  id: bigint;
+  created_at: string;
+  allergen_id: bigint;
+  language_code: string;
+  name: string;
+};
+
+export type AllergenWithTranslations = Allergen & {
+  allergen_translations: AllergenTranslation[];
+};
+
+export type ProductAllergen = {
+  id: bigint;
+  created_at: string;
+  product_id: bigint;
+  allergen_id: bigint;
 };
 
 // ============================================================================

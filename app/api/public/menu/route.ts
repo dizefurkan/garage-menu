@@ -97,7 +97,7 @@ export async function GET(request: Request) {
     const { data: products, error: productsError } = await supabaseAdmin
       .from("products")
       .select(
-        "id, category_id, is_available, price, currency, image_url, product_translations(name, description, language_code)"
+        "id, category_id, is_available, price, currency, image_url, product_translations(name, description, language_code), product_allergens(allergens(code, emoji, display_order, allergen_translations(name, language_code)))"
       )
       .eq("tenant_id", tenant.id)
       .eq("is_available", true);
@@ -136,6 +136,22 @@ export async function GET(request: Request) {
         const translation = prod.product_translations?.find(
           (t: any) => t.language_code === lang
         );
+        const allergens = (prod.product_allergens || [])
+          .map((pa: any) => pa.allergens)
+          .filter(Boolean)
+          .sort((a: any, b: any) => a.display_order - b.display_order)
+          .map((allergen: any) => ({
+            code: allergen.code,
+            emoji: allergen.emoji,
+            name:
+              allergen.allergen_translations?.find(
+                (t: any) => t.language_code === lang
+              )?.name ||
+              allergen.allergen_translations?.find(
+                (t: any) => t.language_code === "en"
+              )?.name ||
+              allergen.code,
+          }));
         return {
           id: prod.id,
           category_id: prod.category_id,
@@ -144,6 +160,7 @@ export async function GET(request: Request) {
           image: prod.image_url || null,
           price: prod.price || 0,
           currency: prod.currency || "TRY",
+          allergens,
         };
       });
 

@@ -30,7 +30,9 @@ export async function GET(request: NextRequest) {
         is_draft,
         created_at,
         category_id,
+        contains_no_allergens,
         product_translations(name, language_code),
+        product_allergens(allergen_id),
         categories(id, category_translations(name, language_code))
       `,
         { count: "exact" }
@@ -74,6 +76,8 @@ export async function GET(request: NextRequest) {
         is_draft: product.is_draft,
         created_at: product.created_at,
         category_id: product.category_id,
+        contains_no_allergens: product.contains_no_allergens || false,
+        allergen_count: product.product_allergens?.length ?? 0,
         categories: {
           id: product.categories?.id || null,
           name: categoryNameTranslation?.name || null,
@@ -105,8 +109,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { price, currency, is_available, category_id, translations } =
-      await req.json();
+    const {
+      price,
+      currency,
+      is_available,
+      category_id,
+      translations,
+      allergen_ids = [],
+      contains_no_allergens = false,
+    } = await req.json();
+
+    const allergenIds: number[] = Array.isArray(allergen_ids)
+      ? allergen_ids
+      : [];
 
     if (!supabaseAdmin) {
       return NextResponse.json(
@@ -124,6 +139,7 @@ export async function POST(req: NextRequest) {
         price,
         currency,
         is_available,
+        contains_no_allergens: contains_no_allergens && allergenIds.length === 0,
         created_by: user.id,
         updated_by: user.id,
       })
@@ -158,6 +174,26 @@ export async function POST(req: NextRequest) {
         { error: translationError.message },
         { status: 500 }
       );
+    }
+
+    // Link selected allergens
+    if (allergenIds.length > 0) {
+      const { error: allergenError } = await (supabaseAdmin as any)
+        .from("product_allergens")
+        .insert(
+          allergenIds.map((allergenId) => ({
+            product_id: product.id,
+            allergen_id: allergenId,
+          }))
+        );
+
+      if (allergenError) {
+        console.error("Product allergen creation error:", allergenError);
+        return NextResponse.json(
+          { error: allergenError.message },
+          { status: 500 }
+        );
+      }
     }
 
     // Revalidate menu pages for this tenant

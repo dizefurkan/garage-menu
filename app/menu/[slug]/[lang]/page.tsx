@@ -372,6 +372,7 @@ export default async function MenuPage({ params }: Props) {
                   category={category}
                   products={categoryProducts}
                   primaryColor={primaryColor}
+                  lang={lang}
                 />
               );
             })}
@@ -587,11 +588,13 @@ function CategorySection({
   category,
   products,
   primaryColor,
+  lang,
 }: {
   id: string;
   category: any;
   products: any[];
   primaryColor: string;
+  lang: string;
 }) {
   return (
     <section id={`category-${id}`} className="scroll-mt-32">
@@ -610,6 +613,7 @@ function CategorySection({
             product={product}
             categoryId={id}
             primaryColor={primaryColor}
+            lang={lang}
           />
         ))}
       </div>
@@ -617,15 +621,32 @@ function CategorySection({
   );
 }
 
+// "Allergens" in all supported menu languages (aria-label for the chip list)
+const ALLERGENS_LABELS: Record<string, string> = {
+  en: "Allergens",
+  tr: "Alerjenler",
+  de: "Allergene",
+  fr: "Allergènes",
+  es: "Alérgenos",
+  it: "Allergeni",
+  pt: "Alergénios",
+  ja: "アレルゲン",
+  zh: "过敏原",
+  ru: "Аллергены",
+  ar: "مسببات الحساسية",
+};
+
 // Product Card Component
 function ProductCard({
   product,
   categoryId,
   primaryColor,
+  lang,
 }: {
   product: any;
   categoryId: string;
   primaryColor: string;
+  lang: string;
 }) {
   return (
     <div
@@ -661,6 +682,24 @@ function ProductCard({
           <p className="text-sm text-gray-600 line-clamp-2">
             {product.description}
           </p>
+        )}
+
+        {/* Allergens */}
+        {product.allergens?.length > 0 && (
+          <ul
+            className="flex flex-wrap gap-1.5"
+            aria-label={ALLERGENS_LABELS[lang] || ALLERGENS_LABELS.en}
+          >
+            {product.allergens.map((allergen: any) => (
+              <li
+                key={allergen.code}
+                className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-800"
+              >
+                <span aria-hidden="true">{allergen.emoji}</span>
+                {allergen.name}
+              </li>
+            ))}
+          </ul>
         )}
 
         {/* Price */}

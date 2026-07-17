@@ -22,6 +22,10 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTenant } from "@/lib/context/tenant-context";
 import { ImageUpload } from "@/components/ui/image-upload";
+import {
+  AllergenSelector,
+  type AllergenOption,
+} from "../allergen-selector";
 
 const productSchema = z.object({
   price: z.coerce.number().min(0).max(999999),
@@ -29,6 +33,8 @@ const productSchema = z.object({
   is_available: z.boolean().default(true),
   category_id: z.coerce.number(),
   image_url: z.string().optional().nullable(),
+  allergen_ids: z.array(z.number()).default([]),
+  contains_no_allergens: z.boolean().default(false),
   translations: z.record(
     z.string(),
     z.object({
@@ -45,12 +51,14 @@ export default function EditProductPage() {
   const params = useParams();
   const tenant = useTenant();
   const productId = params?.id as string | undefined;
+  const currentLang = (params?.lang as string) || "en";
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [categories, setCategories] = useState<
     Array<{ id: number; name: string }>
   >([]);
+  const [allergens, setAllergens] = useState<AllergenOption[]>([]);
   const [product, setProduct] = useState<any>(null);
 
   const {
@@ -108,12 +116,29 @@ export default function EditProductPage() {
         setValue("category_id", productData.category_id);
         setValue("image_url", productData.image_url || null);
         setValue("translations", translations);
+        setValue(
+          "allergen_ids",
+          productData.product_allergens?.map((pa: any) => pa.allergen_id) ?? []
+        );
+        setValue(
+          "contains_no_allergens",
+          productData.contains_no_allergens ?? false
+        );
 
         // Fetch categories
         const catRes = await fetch("/api/admin/categories");
         if (catRes.ok) {
           const catData = await catRes.json();
           setCategories(catData);
+        }
+
+        // Fetch allergens
+        const allergenRes = await fetch(
+          `/api/admin/allergens?lang=${currentLang}`
+        );
+        if (allergenRes.ok) {
+          const allergenData = await allergenRes.json();
+          setAllergens(allergenData);
         }
       } catch (err) {
         toast.error(
@@ -127,7 +152,7 @@ export default function EditProductPage() {
     if (productId) {
       loadData();
     }
-  }, [productId, setValue]);
+  }, [productId, setValue, currentLang]);
 
   async function onSubmit(data: ProductFormData) {
     setSaving(true);
@@ -334,6 +359,18 @@ export default function EditProductPage() {
                 tenantId={tenant?.id?.toString()}
               />
             </div>
+
+            {/* Allergens */}
+            <AllergenSelector
+              allergens={allergens}
+              selectedIds={watch("allergen_ids") || []}
+              containsNoAllergens={watch("contains_no_allergens") || false}
+              onChange={(ids, noAllergens) => {
+                setValue("allergen_ids", ids);
+                setValue("contains_no_allergens", noAllergens);
+              }}
+              disabled={saving}
+            />
 
             {/* Buttons */}
             <div className="flex gap-3 pt-4">
