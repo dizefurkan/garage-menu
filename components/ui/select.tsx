@@ -87,7 +87,11 @@ function SelectContent({
           {...props}
         >
           <SelectScrollUpButton />
-          <SelectPrimitive.List>{children}</SelectPrimitive.List>
+          {/* In upstream shadcn the inner p-1 inset comes from SelectGroup;
+              our call sites render items directly, so the List carries it */}
+          <SelectPrimitive.List className="scroll-my-1 p-1">
+            {children}
+          </SelectPrimitive.List>
           <SelectScrollDownButton />
         </SelectPrimitive.Popup>
       </SelectPrimitive.Positioner>
