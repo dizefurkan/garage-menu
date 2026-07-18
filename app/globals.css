@@ -163,3 +163,9 @@ body {
     @apply font-sans;
   }
 }
+
+/* model-viewer's built-in AR button defaults to bottom-right, where the
+   photo/3D toggle pill sits in the product modal - lift it above the pill */
+model-viewer::part(default-ar-button) {
+  bottom: 3.5rem;
+}
