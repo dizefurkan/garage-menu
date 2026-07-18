@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,6 +47,7 @@ const productSchema = z.object({
 type ProductFormData = z.infer<typeof productSchema>;
 
 export default function ProductFormPage() {
+  const t = useTranslations("admin");
   const router = useRouter();
   const params = useParams();
   const tenant = useTenant();
@@ -140,11 +142,11 @@ export default function ProductFormPage() {
         throw new Error(error.error || "Failed to save product");
       }
 
-      toast.success("Product created successfully!");
+      toast.success(t("productCreated"));
       setTimeout(() => router.push("/admin/products"), 1000);
     } catch (err) {
       toast.error(
-        err instanceof Error ? err.message : "Failed to save product"
+        err instanceof Error ? err.message : t("productSaveFailed")
       );
     } finally {
       setLoading(false);
@@ -154,7 +156,7 @@ export default function ProductFormPage() {
   return (
     <div className="max-w-4xl space-y-6">
       <h1 className="text-3xl font-bold">
-        {isEditMode ? "Ürünü Düzenle" : "Yeni Ürün"}
+        {isEditMode ? t("editProduct") : t("newProduct")}
       </h1>
 
       <Card>
@@ -174,24 +176,26 @@ export default function ProductFormPage() {
                 <TabsContent key={lang} value={lang} className="space-y-4">
                   <div className="flex flex-col">
                     <label className="mb-2 block text-sm font-medium">
-                      Ürün Adı ({lang.toUpperCase()})
+                      {t("productName")} ({lang.toUpperCase()})
                     </label>
                     <Input
-                      placeholder="örn. Çikolatalı Kruvasan"
+                      placeholder={t("productNamePlaceholder")}
                       {...register(`translations.${lang}.name`)}
                       className="h-10 w-full"
                     />
                     {errors.translations?.[lang]?.name && (
-                      <p className="mt-1 text-sm text-red-600">Zorunludur</p>
+                      <p className="mt-1 text-sm text-red-600">
+                        {t("required")}
+                      </p>
                     )}
                   </div>
 
                   <div className="flex flex-col">
                     <label className="mb-2 block text-sm font-medium">
-                      Açıklama ({lang.toUpperCase()})
+                      {t("description")} ({lang.toUpperCase()})
                     </label>
                     <Textarea
-                      placeholder="Ürünü açıklayın..."
+                      placeholder={t("descriptionPlaceholder")}
                       {...register(`translations.${lang}.description`)}
                       className="w-full"
                       rows={4}
@@ -204,7 +208,9 @@ export default function ProductFormPage() {
             {/* Price & Currency & Category */}
             <div className="grid gap-4 sm:grid-cols-3">
               <div className="flex flex-col">
-                <label className="mb-2 block text-sm font-medium">Fiyat</label>
+                <label className="mb-2 block text-sm font-medium">
+                  {t("price")}
+                </label>
                 <Input
                   type="number"
                   step="0.01"
@@ -216,7 +222,7 @@ export default function ProductFormPage() {
 
               <div className="flex flex-col">
                 <label className="mb-2 block text-sm font-medium">
-                  Para Birimi
+                  {t("currency")}
                 </label>
                 <Select
                   onValueChange={(value) =>
@@ -237,7 +243,7 @@ export default function ProductFormPage() {
 
               <div className="flex flex-col">
                 <label className="mb-2 block text-sm font-medium">
-                  Kategori
+                  {t("category")}
                 </label>
                 <Select
                   onValueChange={(value) =>
@@ -245,7 +251,7 @@ export default function ProductFormPage() {
                   }
                 >
                   <SelectTrigger className="!h-10 w-full">
-                    <SelectValue placeholder="Kategori seçin" />
+                    <SelectValue placeholder={t("selectCategory")} />
                   </SelectTrigger>
                   <SelectContent>
                     {categories.map((cat) => (
@@ -271,14 +277,14 @@ export default function ProductFormPage() {
                 htmlFor="is_available"
                 className="text-sm font-medium cursor-pointer"
               >
-                Satışa uygun
+                {t("availableForSale")}
               </label>
             </div>
 
             {/* Image Upload */}
             <div className="flex flex-col">
               <label className="mb-2 block text-sm font-medium">
-                Ürün Görseli
+                {t("productImage")}
               </label>
               <ImageUpload
                 value={watch("image_url")}
@@ -304,18 +310,18 @@ export default function ProductFormPage() {
               <Button type="submit" disabled={loading}>
                 {loading
                   ? isEditMode
-                    ? "Kaydediliyor..."
-                    : "Oluşturuluyor..."
+                    ? t("saving")
+                    : t("creating")
                   : isEditMode
-                    ? "Kaydet"
-                    : "Oluştur"}
+                    ? t("save")
+                    : t("create")}
               </Button>
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => router.back()}
               >
-                İptal
+                {t("cancel")}
               </Button>
             </div>
           </form>
