@@ -24,12 +24,6 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        <script
-          type="module"
-          src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1"
-        ></script>
-      </head>
       <body className={cn("font-sans", inter.variable)}>
         {children}
         <Toaster />
