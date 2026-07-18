@@ -27,6 +27,7 @@ import {
   AllergenSelector,
   type AllergenOption,
 } from "../allergen-selector";
+import { ModelUploadSection } from "../model-upload-section";
 
 const productSchema = z.object({
   price: z.coerce.number().min(0).max(999999),
@@ -34,6 +35,8 @@ const productSchema = z.object({
   is_available: z.boolean().default(true),
   category_id: z.coerce.number(),
   image_url: z.string().optional().nullable(),
+  model_glb_url: z.string().optional().nullable(),
+  model_usdz_url: z.string().optional().nullable(),
   allergen_ids: z.array(z.number()).default([]),
   contains_no_allergens: z.boolean().default(false),
   translations: z.record(
@@ -117,6 +120,8 @@ export default function EditProductPage() {
         setValue("is_available", productData.is_available || true);
         setValue("category_id", productData.category_id);
         setValue("image_url", productData.image_url || null);
+        setValue("model_glb_url", productData.model_glb_url || null);
+        setValue("model_usdz_url", productData.model_usdz_url || null);
         setValue("translations", translations);
         setValue(
           "allergen_ids",
@@ -213,7 +218,11 @@ export default function EditProductPage() {
     );
   }
 
-  const languages = tenant.languages || ["en"];
+  // Dashboard language first, remaining tenant languages after
+  const tenantLanguagesList = tenant.languages || ["en"];
+  const languages = tenantLanguagesList.includes(currentLang)
+    ? [currentLang, ...tenantLanguagesList.filter((l) => l !== currentLang)]
+    : tenantLanguagesList;
   const selectedCategoryId = watch("category_id");
   const selectedCategoryName = categories.find(
     (cat) => cat.id === selectedCategoryId
@@ -367,6 +376,15 @@ export default function EditProductPage() {
                 tenantId={tenant?.id?.toString()}
               />
             </div>
+
+            {/* 3D / AR Model */}
+            <ModelUploadSection
+              glbUrl={watch("model_glb_url")}
+              usdzUrl={watch("model_usdz_url")}
+              onGlbChange={(url) => setValue("model_glb_url", url)}
+              onUsdzChange={(url) => setValue("model_usdz_url", url)}
+              disabled={saving}
+            />
 
             {/* Allergens */}
             <AllergenSelector

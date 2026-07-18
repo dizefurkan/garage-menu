@@ -139,6 +139,8 @@ export async function PUT(
       translations,
       allergen_ids,
       contains_no_allergens,
+      model_glb_url,
+      model_usdz_url,
     } = await req.json();
 
     // Allergen fields are optional: callers that don't send them (e.g. the
@@ -179,6 +181,13 @@ export async function PUT(
       updateData.contains_no_allergens =
         Boolean(contains_no_allergens) &&
         (allergenIds === undefined || allergenIds.length === 0);
+    }
+    // Model fields: undefined = don't touch, "" or null = clear
+    if (model_glb_url !== undefined) {
+      updateData.model_glb_url = model_glb_url || null;
+    }
+    if (model_usdz_url !== undefined) {
+      updateData.model_usdz_url = model_usdz_url || null;
     }
 
     const { error: updateError } = await (supabaseAdmin as any)

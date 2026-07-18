@@ -108,6 +108,8 @@ export type Product = {
   display_order: number;
   is_available: boolean;
   contains_no_allergens: boolean;
+  model_glb_url?: string | null;
+  model_usdz_url?: string | null;
   created_by: string; // UUID
   updated_by: string; // UUID
 };
@@ -170,6 +172,8 @@ export type ProductsWithTranslationsView = {
   price: number;
   currency: string;
   image_url?: string;
+  model_glb_url?: string | null;
+  model_usdz_url?: string | null;
   is_draft: boolean;
   published_at?: string;
   display_order: number;

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { X } from "lucide-react";
+import { Box, X } from "lucide-react";
 
 // "Allergens" in all supported menu languages
 const ALLERGENS_LABELS: Record<string, string> = {
@@ -17,6 +17,34 @@ const ALLERGENS_LABELS: Record<string, string> = {
   zh: "过敏原",
   ru: "Аллергены",
   ar: "مسببات الحساسية",
+};
+
+const VIEW_3D_LABELS: Record<string, string> = {
+  en: "View in 3D",
+  tr: "3B Görüntüle",
+  de: "In 3D ansehen",
+  fr: "Voir en 3D",
+  es: "Ver en 3D",
+  it: "Vedi in 3D",
+  pt: "Ver em 3D",
+  ja: "3Dで見る",
+  zh: "查看3D",
+  ru: "Смотреть в 3D",
+  ar: "عرض ثلاثي الأبعاد",
+};
+
+const VIEW_PHOTO_LABELS: Record<string, string> = {
+  en: "Photo",
+  tr: "Fotoğraf",
+  de: "Foto",
+  fr: "Photo",
+  es: "Foto",
+  it: "Foto",
+  pt: "Foto",
+  ja: "写真",
+  zh: "照片",
+  ru: "Фото",
+  ar: "صورة",
 };
 
 const CLOSE_LABELS: Record<string, string> = {
@@ -116,6 +144,17 @@ export function ProductCard({
             </div>
           )}
 
+          {/* 3D availability badge */}
+          {product.model_glb && (
+            <div
+              className="absolute left-2 top-2 flex items-center gap-1 rounded-full bg-white/90 px-2 py-1 text-xs font-semibold text-gray-800 shadow-sm backdrop-blur-sm"
+              aria-hidden="true"
+            >
+              <Box className="h-3.5 w-3.5" />
+              3D
+            </div>
+          )}
+
           {/* Price pill overlaid on the image */}
           <div
             className="absolute bottom-2 right-2 rounded-full px-2.5 py-1 text-sm font-bold text-white shadow-sm"
@@ -179,6 +218,29 @@ function ProductDetailModal({
   // close animates out first, then unmounts.
   const [isVisible, setIsVisible] = useState(false);
 
+  const hasModel = Boolean(product.model_glb);
+  // USDZ without GLB can't render inline, but iOS Safari can still open it
+  // directly in AR Quick Look via a plain link
+  const isIOS =
+    typeof navigator !== "undefined" &&
+    /iPad|iPhone|iPod/.test(navigator.userAgent);
+  const usdzOnlyAR = !hasModel && Boolean(product.model_usdz) && isIOS;
+  const [show3D, setShow3D] = useState(hasModel && !product.image);
+  const [viewerReady, setViewerReady] = useState(false);
+
+  // model-viewer (~big chunk) is only fetched when a modal opens for a
+  // product that actually has a 3D model
+  useEffect(() => {
+    if (!hasModel) return;
+    let cancelled = false;
+    import("@google/model-viewer").then(() => {
+      if (!cancelled) setViewerReady(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [hasModel]);
+
   useEffect(() => {
     const raf = requestAnimationFrame(() => setIsVisible(true));
     return () => cancelAnimationFrame(raf);
@@ -231,18 +293,61 @@ function ProductDetailModal({
         </button>
 
         <div className="overflow-y-auto">
-          {/* Image */}
-          {product.image ? (
-            <img
-              src={product.image}
-              alt={product.name}
-              className="aspect-video w-full object-cover"
-            />
-          ) : (
-            <div className="flex aspect-video w-full items-center justify-center bg-gradient-to-br from-gray-100 to-gray-50">
-              <span className="text-5xl">🍽️</span>
-            </div>
-          )}
+          {/* Image / 3D viewer */}
+          <div className="relative">
+            {show3D && viewerReady ? (
+              <model-viewer
+                src={product.model_glb}
+                ios-src={product.model_usdz || undefined}
+                poster={product.image || undefined}
+                alt={product.name}
+                ar
+                ar-modes="webxr scene-viewer quick-look"
+                camera-controls
+                touch-action="pan-y"
+                shadow-intensity="1"
+                style={{
+                  width: "100%",
+                  aspectRatio: "16/9",
+                  backgroundColor: "#f3f4f6",
+                }}
+              />
+            ) : product.image ? (
+              <img
+                src={product.image}
+                alt={product.name}
+                className="aspect-video w-full object-cover"
+              />
+            ) : (
+              <div className="flex aspect-video w-full items-center justify-center bg-gradient-to-br from-gray-100 to-gray-50">
+                <span className="text-5xl">🍽️</span>
+              </div>
+            )}
+
+            {hasModel && (
+              <button
+                type="button"
+                onClick={() => setShow3D((v) => !v)}
+                className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-full bg-white/90 px-3 py-1.5 text-xs font-semibold text-gray-800 shadow-sm backdrop-blur-sm hover:bg-white"
+              >
+                <Box className="h-3.5 w-3.5" aria-hidden="true" />
+                {show3D
+                  ? VIEW_PHOTO_LABELS[lang] || VIEW_PHOTO_LABELS.en
+                  : VIEW_3D_LABELS[lang] || VIEW_3D_LABELS.en}
+              </button>
+            )}
+
+            {usdzOnlyAR && (
+              <a
+                rel="ar"
+                href={product.model_usdz}
+                className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-full bg-white/90 px-3 py-1.5 text-xs font-semibold text-gray-800 shadow-sm backdrop-blur-sm hover:bg-white"
+              >
+                <Box className="h-3.5 w-3.5" aria-hidden="true" />
+                AR
+              </a>
+            )}
+          </div>
 
           <div className="space-y-4 p-5">
             <div className="flex items-start justify-between gap-3">

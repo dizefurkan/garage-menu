@@ -97,7 +97,7 @@ export async function GET(request: Request) {
     const { data: products, error: productsError } = await supabaseAdmin
       .from("products")
       .select(
-        "id, category_id, is_available, price, currency, image_url, product_translations(name, description, language_code), product_allergens(allergens(code, emoji, display_order, allergen_translations(name, language_code)))"
+        "id, category_id, is_available, price, currency, image_url, model_glb_url, model_usdz_url, product_translations(name, description, language_code), product_allergens(allergens(code, emoji, display_order, allergen_translations(name, language_code)))"
       )
       .eq("tenant_id", tenant.id)
       .eq("is_available", true);
@@ -161,6 +161,8 @@ export async function GET(request: Request) {
           price: prod.price || 0,
           currency: prod.currency || "TRY",
           allergens,
+          model_glb: prod.model_glb_url || null,
+          model_usdz: prod.model_usdz_url || null,
         };
       });
 

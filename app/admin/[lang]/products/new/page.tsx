@@ -26,6 +26,7 @@ import {
   AllergenSelector,
   type AllergenOption,
 } from "../allergen-selector";
+import { ModelUploadSection } from "../model-upload-section";
 
 const productSchema = z.object({
   price: z.coerce.number().min(0).max(999999),
@@ -33,6 +34,8 @@ const productSchema = z.object({
   is_available: z.boolean().default(true),
   category_id: z.coerce.number(),
   image_url: z.string().optional().nullable(),
+  model_glb_url: z.string().optional().nullable(),
+  model_usdz_url: z.string().optional().nullable(),
   allergen_ids: z.array(z.number()).default([]),
   contains_no_allergens: z.boolean().default(false),
   translations: z.record(
@@ -98,7 +101,11 @@ export default function ProductFormPage() {
     loadAllergens();
   }, [currentLang]);
 
-  const languages = tenant.languages || ["en"];
+  // Dashboard language first, remaining tenant languages after
+  const tenantLanguagesList = tenant.languages || ["en"];
+  const languages = tenantLanguagesList.includes(currentLang)
+    ? [currentLang, ...tenantLanguagesList.filter((l) => l !== currentLang)]
+    : tenantLanguagesList;
 
   // Initialize translations for all tenant languages
   const defaultTranslations: Record<string, any> = {};
@@ -293,6 +300,15 @@ export default function ProductFormPage() {
                 tenantId={tenant?.id?.toString()}
               />
             </div>
+
+            {/* 3D / AR Model */}
+            <ModelUploadSection
+              glbUrl={watch("model_glb_url")}
+              usdzUrl={watch("model_usdz_url")}
+              onGlbChange={(url) => setValue("model_glb_url", url)}
+              onUsdzChange={(url) => setValue("model_usdz_url", url)}
+              disabled={loading}
+            />
 
             {/* Allergens */}
             <AllergenSelector

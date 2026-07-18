@@ -512,3 +512,30 @@ CREATE POLICY "authenticated_delete"
     bucket_id = 'product-images'
     AND (storage.foldername(name))[1] = (public.user_tenant_id())::TEXT
   );
+
+-- ============================================================================
+-- STORAGE POLICIES: product-models bucket (3D/AR models, GLB + USDZ)
+-- Bucket: public, 25MB limit. Same tenant-folder scoping as product-images.
+-- (Also applied by docs/migrations/005_add_product_models.sql)
+-- ============================================================================
+
+CREATE POLICY "models_service_role_insert" ON storage.objects FOR INSERT
+  WITH CHECK (auth.role() = 'service_role' AND bucket_id = 'product-models');
+
+CREATE POLICY "models_service_role_delete" ON storage.objects FOR DELETE
+  USING (auth.role() = 'service_role' AND bucket_id = 'product-models');
+
+CREATE POLICY "models_public_read" ON storage.objects FOR SELECT
+  USING (bucket_id = 'product-models');
+
+CREATE POLICY "models_authenticated_insert" ON storage.objects FOR INSERT
+  WITH CHECK (
+    bucket_id = 'product-models'
+    AND (storage.foldername(name))[1] = (public.user_tenant_id())::TEXT
+  );
+
+CREATE POLICY "models_authenticated_delete" ON storage.objects FOR DELETE
+  USING (
+    bucket_id = 'product-models'
+    AND (storage.foldername(name))[1] = (public.user_tenant_id())::TEXT
+  );
