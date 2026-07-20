@@ -27,6 +27,7 @@ import {
   type AllergenOption,
 } from "../allergen-selector";
 import { ModelUploadSection } from "../model-upload-section";
+import { uploadImageFile, uploadModelFile } from "@/lib/deferred-uploads";
 
 const productSchema = z.object({
   price: z.coerce.number().min(0).max(999999),
@@ -60,6 +61,12 @@ export default function ProductFormPage() {
     Array<{ id: number; name: string }>
   >([]);
   const [allergens, setAllergens] = useState<AllergenOption[]>([]);
+
+  // Files picked in the form; uploaded only when Create is clicked so an
+  // abandoned form leaves no orphaned files in storage
+  const [pendingImageFile, setPendingImageFile] = useState<File | null>(null);
+  const [pendingGlbFile, setPendingGlbFile] = useState<File | null>(null);
+  const [pendingUsdzFile, setPendingUsdzFile] = useState<File | null>(null);
 
   const productId = params?.id as string | undefined;
   const isEdit = !!productId;
@@ -138,10 +145,27 @@ export default function ProductFormPage() {
     setLoading(true);
 
     try {
+      // Upload files picked in the form now that the user is committing
+      const payload = { ...data };
+      const [imageUrl, glbUrl, usdzUrl] = await Promise.all([
+        pendingImageFile
+          ? uploadImageFile(pendingImageFile)
+          : Promise.resolve(null),
+        pendingGlbFile
+          ? uploadModelFile("glb", pendingGlbFile)
+          : Promise.resolve(null),
+        pendingUsdzFile
+          ? uploadModelFile("usdz", pendingUsdzFile)
+          : Promise.resolve(null),
+      ]);
+      if (imageUrl) payload.image_url = imageUrl;
+      if (glbUrl) payload.model_glb_url = glbUrl;
+      if (usdzUrl) payload.model_usdz_url = usdzUrl;
+
       const response = await fetch("/api/admin/products", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -296,8 +320,8 @@ export default function ProductFormPage() {
               <ImageUpload
                 value={watch("image_url")}
                 onChange={(url) => setValue("image_url", url)}
+                onFileSelect={setPendingImageFile}
                 disabled={loading}
-                tenantId={tenant?.id?.toString()}
               />
             </div>
 
@@ -305,8 +329,12 @@ export default function ProductFormPage() {
             <ModelUploadSection
               glbUrl={watch("model_glb_url")}
               usdzUrl={watch("model_usdz_url")}
-              onGlbChange={(url) => setValue("model_glb_url", url)}
-              onUsdzChange={(url) => setValue("model_usdz_url", url)}
+              pendingGlbFile={pendingGlbFile}
+              pendingUsdzFile={pendingUsdzFile}
+              onGlbFileSelect={setPendingGlbFile}
+              onUsdzFileSelect={setPendingUsdzFile}
+              onGlbClear={() => setValue("model_glb_url", null)}
+              onUsdzClear={() => setValue("model_usdz_url", null)}
               disabled={loading}
             />
 

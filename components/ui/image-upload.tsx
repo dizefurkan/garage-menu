@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Upload, X, Loader, RefreshCw, Trash2, Images } from "lucide-react";
 import Image from "next/image";
+import { uploadImageFile } from "@/lib/deferred-uploads";
 import {
   Dialog,
   DialogContent,
@@ -17,11 +18,17 @@ interface ImageUploadProps {
   value?: string | null;
   onChange: (url: string | null) => void;
   disabled?: boolean;
-  tenantId?: string;
+  /**
+   * Deferred mode: instead of uploading immediately on selection, the file
+   * is validated, previewed locally, and handed to the parent - the parent
+   * uploads it on form submit. Gallery picks still return URLs directly.
+   */
+  onFileSelect?: (file: File | null) => void;
 }
 
-// Vercel serverless function payload limit
-const MAX_FILE_SIZE = 4 * 1024 * 1024; // 4MB (safe margin for Vercel)
+// Images are resized/encoded in the browser and uploaded directly to
+// Supabase Storage, so this only guards against absurdly large source files
+const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15MB
 
 const formatFileSize = (bytes: number): string => {
   if (bytes === 0) return "0 Bytes";
@@ -35,11 +42,12 @@ export function ImageUpload({
   value,
   onChange,
   disabled,
-  tenantId,
+  onFileSelect,
 }: ImageUploadProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedFileSize, setSelectedFileSize] = useState<number | null>(null);
+  const [localPreview, setLocalPreview] = useState<string | null>(null);
   const [showGallery, setShowGallery] = useState(false);
   const [galleryImages, setGalleryImages] = useState<string[]>([]);
   const [galleryLoading, setGalleryLoading] = useState(false);
@@ -63,30 +71,22 @@ export function ImageUpload({
       return;
     }
 
+    // Deferred mode: validate + preview only; the parent uploads on submit
+    if (onFileSelect) {
+      setError(null);
+      if (localPreview) URL.revokeObjectURL(localPreview);
+      setLocalPreview(URL.createObjectURL(file));
+      onFileSelect(file);
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
     try {
-      // Create form data
-      const formData = new FormData();
-      formData.append("file", file);
-      if (tenantId) {
-        formData.append("tenantId", tenantId);
-      }
-
-      // Upload to API
-      const response = await fetch("/api/admin/upload-image", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "Görsel yüklemesi başarısız");
-      }
-
-      const data = await response.json();
-      onChange(data.url);
+      // Resized in the browser, uploaded directly to Supabase Storage
+      const url = await uploadImageFile(file);
+      onChange(url);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Hata oluştu");
@@ -120,9 +120,23 @@ export function ImageUpload({
   };
 
   const handleSelectFromGallery = (imageUrl: string) => {
+    // Gallery images are already uploaded; drop any pending local file
+    if (localPreview) URL.revokeObjectURL(localPreview);
+    setLocalPreview(null);
+    onFileSelect?.(null);
     onChange(imageUrl);
     setShowGallery(false);
   };
+
+  const handleRemove = () => {
+    if (localPreview) URL.revokeObjectURL(localPreview);
+    setLocalPreview(null);
+    onFileSelect?.(null);
+    onChange(null);
+  };
+
+  // Freshly picked (pending) file takes priority over the saved URL
+  const displayUrl = localPreview || value;
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
@@ -154,7 +168,7 @@ export function ImageUpload({
       </div>
 
       {/* Upload Area - Hide when preview exists */}
-      {!value && (
+      {!displayUrl && (
         <>
           <div
             onDrop={handleDrop}
@@ -224,15 +238,16 @@ export function ImageUpload({
       )}
 
       {/* Image Preview */}
-      {value && (
+      {displayUrl && (
         <div className="relative space-y-2">
           <div className="relative aspect-video overflow-hidden rounded-lg border border-gray-200 bg-gray-100">
             <Image
-              src={value}
+              src={displayUrl}
               alt="Ürün görseli"
               fill
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               className="object-cover"
+              unoptimized={displayUrl.startsWith("blob:")}
             />
           </div>
 
@@ -253,7 +268,7 @@ export function ImageUpload({
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => onChange(null)}
+              onClick={handleRemove}
               disabled={disabled || loading}
               className="flex-1 text-red-600 hover:text-red-700"
             >

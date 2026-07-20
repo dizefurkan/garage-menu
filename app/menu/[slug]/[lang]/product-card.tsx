@@ -309,6 +309,7 @@ function ProductDetailModal({
                 style={{
                   width: "100%",
                   aspectRatio: "16/9",
+                  minHeight: "20rem",
                   backgroundColor: "#f3f4f6",
                 }}
               />

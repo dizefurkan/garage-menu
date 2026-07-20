@@ -313,6 +313,9 @@ export default async function MenuPage({ params }: Props) {
       ? tenant.languages
       : [];
   const shouldShowLanguageSwitcher = configuredMenuLanguages.length >= 2;
+  // Category navigation only helps when there is something to jump between;
+  // the API already filters out empty categories
+  const shouldShowCategoryNav = (categories?.length || 0) >= 2;
 
   // Extract theme config with fallbacks
   const themeConfig = (tenant.theme_config as any) || {};
@@ -351,10 +354,14 @@ export default async function MenuPage({ params }: Props) {
       )}
 
       {/* Category Navigation */}
-      <CategoryNav categories={categories} products={products} />
+      {shouldShowCategoryNav && (
+        <CategoryNav categories={categories} products={products} />
+      )}
 
       {/* Mobile Floating Button */}
-      <MobileCategoryButton categories={categories} products={products} />
+      {shouldShowCategoryNav && (
+        <MobileCategoryButton categories={categories} products={products} />
+      )}
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">

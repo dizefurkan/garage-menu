@@ -3,10 +3,10 @@
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Box, Loader, Trash2, Upload } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { Box, Trash2, Upload } from "lucide-react";
+import type { ModelKind } from "@/lib/deferred-uploads";
 
-export type ModelKind = "glb" | "usdz";
+export type { ModelKind };
 
 interface ModelUploadLabels {
   label: string;
@@ -20,18 +20,22 @@ interface ModelUploadLabels {
 
 interface ModelUploadProps {
   kind: ModelKind;
+  /** Already-saved model URL (edit form) */
   value?: string | null;
-  onChange: (url: string | null) => void;
+  /** Locally picked file waiting for form submit */
+  pendingFile?: File | null;
+  /**
+   * Called with the picked (validated) file, or null when cleared.
+   * No upload happens here - the parent uploads on form submit.
+   */
+  onSelectFile: (file: File | null) => void;
+  /** Called when the user removes an already-saved model URL */
+  onClearValue: () => void;
   disabled?: boolean;
   labels: ModelUploadLabels;
 }
 
 const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB, matches bucket limit
-
-const CONTENT_TYPES: Record<ModelKind, string> = {
-  glb: "model/gltf-binary",
-  usdz: "model/vnd.usdz+zip",
-};
 
 const formatFileSize = (bytes: number): string => {
   if (bytes === 0) return "0 Bytes";
@@ -53,15 +57,16 @@ const fileNameFromUrl = (url: string): string => {
 export function ModelUpload({
   kind,
   value,
-  onChange,
+  pendingFile,
+  onSelectFile,
+  onClearValue,
   disabled,
   labels,
 }: ModelUploadProps) {
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileSelect = async (file: File) => {
+  const handleFileSelect = (file: File) => {
     setError(null);
 
     if (!file.name.toLowerCase().endsWith(`.${kind}`)) {
@@ -74,56 +79,23 @@ export function ModelUpload({
       return;
     }
 
-    setLoading(true);
-    try {
-      // 1. Get a signed upload URL (auth + tenant path handled server-side)
-      const urlRes = await fetch("/api/admin/upload-model-url", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ kind, size: file.size }),
-      });
-      if (!urlRes.ok) {
-        const data = await urlRes.json().catch(() => ({}));
-        throw new Error(data.error || labels.errorUploadFailed);
-      }
-      const { path, token, publicUrl } = await urlRes.json();
-
-      // 2. Upload directly to Supabase Storage (bypasses Vercel body limit)
-      const { error: uploadError } = await supabase.storage
-        .from("product-models")
-        .uploadToSignedUrl(path, token, file, {
-          contentType: CONTENT_TYPES[kind],
-        });
-      if (uploadError) {
-        console.error("Model upload error:", uploadError);
-        throw new Error(labels.errorUploadFailed);
-      }
-
-      onChange(publicUrl);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : labels.errorUploadFailed);
-    } finally {
-      setLoading(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
-    }
+    onSelectFile(file);
   };
 
-  const handleRemove = async () => {
-    if (!value) return;
-    setLoading(true);
+  const handleRemove = () => {
     setError(null);
-    try {
-      await fetch(`/api/admin/delete-model?path=${encodeURIComponent(value)}`, {
-        method: "DELETE",
-      });
-    } catch (err) {
-      // Object removal failure shouldn't block clearing the reference
-      console.error("Model delete error:", err);
-    } finally {
-      onChange(null);
-      setLoading(false);
+    if (pendingFile) {
+      onSelectFile(null);
+    } else if (value) {
+      onClearValue();
     }
   };
+
+  const displayName = pendingFile
+    ? `${pendingFile.name} (${formatFileSize(pendingFile.size)})`
+    : value
+      ? fileNameFromUrl(value)
+      : null;
 
   return (
     <div className="flex flex-col gap-2">
@@ -132,25 +104,19 @@ export function ModelUpload({
         <p className="text-xs text-muted-foreground">{labels.hint}</p>
       </div>
 
-      {value ? (
+      {displayName ? (
         <div className="flex items-center gap-2 rounded-md border border-input px-3 py-2">
           <Box className="h-4 w-4 shrink-0 text-muted-foreground" />
-          <span className="min-w-0 flex-1 truncate text-sm">
-            {fileNameFromUrl(value)}
-          </span>
+          <span className="min-w-0 flex-1 truncate text-sm">{displayName}</span>
           <Button
             type="button"
             variant="ghost"
             size="sm"
             onClick={handleRemove}
-            disabled={disabled || loading}
+            disabled={disabled}
             aria-label={labels.remove}
           >
-            {loading ? (
-              <Loader className="h-4 w-4 animate-spin" />
-            ) : (
-              <Trash2 className="h-4 w-4" />
-            )}
+            <Trash2 className="h-4 w-4" />
           </Button>
         </div>
       ) : (
@@ -158,20 +124,11 @@ export function ModelUpload({
           type="button"
           variant="outline"
           onClick={() => fileInputRef.current?.click()}
-          disabled={disabled || loading}
+          disabled={disabled}
           className="w-fit"
         >
-          {loading ? (
-            <>
-              <Loader className="mr-2 h-4 w-4 animate-spin" />
-              {labels.uploading}
-            </>
-          ) : (
-            <>
-              <Upload className="mr-2 h-4 w-4" />
-              {labels.label} (.{kind})
-            </>
-          )}
+          <Upload className="mr-2 h-4 w-4" />
+          {labels.label} (.{kind})
         </Button>
       )}
 
@@ -183,6 +140,7 @@ export function ModelUpload({
         onChange={(e) => {
           const file = e.target.files?.[0];
           if (file) handleFileSelect(file);
+          e.target.value = "";
         }}
       />
 

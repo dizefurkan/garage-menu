@@ -28,6 +28,11 @@ import {
   type AllergenOption,
 } from "../allergen-selector";
 import { ModelUploadSection } from "../model-upload-section";
+import {
+  deleteModelByUrl,
+  uploadImageFile,
+  uploadModelFile,
+} from "@/lib/deferred-uploads";
 
 const productSchema = z.object({
   price: z.coerce.number().min(0).max(999999),
@@ -65,6 +70,12 @@ export default function EditProductPage() {
   >([]);
   const [allergens, setAllergens] = useState<AllergenOption[]>([]);
   const [product, setProduct] = useState<any>(null);
+
+  // Files picked in the form; uploaded only when Save is clicked so an
+  // abandoned form leaves no orphaned files in storage
+  const [pendingImageFile, setPendingImageFile] = useState<File | null>(null);
+  const [pendingGlbFile, setPendingGlbFile] = useState<File | null>(null);
+  const [pendingUsdzFile, setPendingUsdzFile] = useState<File | null>(null);
 
   const {
     register,
@@ -165,15 +176,46 @@ export default function EditProductPage() {
     setSaving(true);
 
     try {
+      // Upload files picked in the form now that the user is committing
+      const payload = { ...data };
+      const [imageUrl, glbUrl, usdzUrl] = await Promise.all([
+        pendingImageFile
+          ? uploadImageFile(pendingImageFile)
+          : Promise.resolve(null),
+        pendingGlbFile
+          ? uploadModelFile("glb", pendingGlbFile)
+          : Promise.resolve(null),
+        pendingUsdzFile
+          ? uploadModelFile("usdz", pendingUsdzFile)
+          : Promise.resolve(null),
+      ]);
+      if (imageUrl) payload.image_url = imageUrl;
+      if (glbUrl) payload.model_glb_url = glbUrl;
+      if (usdzUrl) payload.model_usdz_url = usdzUrl;
+
       const response = await fetch(`/api/admin/products/${productId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || "Failed to update product");
+      }
+
+      // Save succeeded: clean up model files that were replaced or removed
+      if (
+        product?.model_glb_url &&
+        product.model_glb_url !== payload.model_glb_url
+      ) {
+        deleteModelByUrl(product.model_glb_url);
+      }
+      if (
+        product?.model_usdz_url &&
+        product.model_usdz_url !== payload.model_usdz_url
+      ) {
+        deleteModelByUrl(product.model_usdz_url);
       }
 
       toast.success(t("productUpdated"));
@@ -372,8 +414,8 @@ export default function EditProductPage() {
               <ImageUpload
                 value={watch("image_url")}
                 onChange={(url) => setValue("image_url", url)}
+                onFileSelect={setPendingImageFile}
                 disabled={saving}
-                tenantId={tenant?.id?.toString()}
               />
             </div>
 
@@ -381,8 +423,12 @@ export default function EditProductPage() {
             <ModelUploadSection
               glbUrl={watch("model_glb_url")}
               usdzUrl={watch("model_usdz_url")}
-              onGlbChange={(url) => setValue("model_glb_url", url)}
-              onUsdzChange={(url) => setValue("model_usdz_url", url)}
+              pendingGlbFile={pendingGlbFile}
+              pendingUsdzFile={pendingUsdzFile}
+              onGlbFileSelect={setPendingGlbFile}
+              onUsdzFileSelect={setPendingUsdzFile}
+              onGlbClear={() => setValue("model_glb_url", null)}
+              onUsdzClear={() => setValue("model_usdz_url", null)}
               disabled={saving}
             />
 
