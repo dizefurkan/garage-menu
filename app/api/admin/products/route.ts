@@ -117,6 +117,7 @@ export async function POST(req: NextRequest) {
       translations,
       allergen_ids = [],
       contains_no_allergens = false,
+      image_url,
       model_glb_url,
       model_usdz_url,
     } = await req.json();
@@ -142,6 +143,7 @@ export async function POST(req: NextRequest) {
         currency,
         is_available,
         contains_no_allergens: contains_no_allergens && allergenIds.length === 0,
+        image_url: image_url || null,
         model_glb_url: model_glb_url || null,
         model_usdz_url: model_usdz_url || null,
         created_by: user.id,
