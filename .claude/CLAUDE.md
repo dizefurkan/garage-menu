@@ -93,10 +93,12 @@ Her feature/sayfa eklediğinde:
 - Addon gating: `guardAddonAccess()` helper'ı kullanılır
 
 ### Database Migrations
-- `docs/migrations/NNN_*.sql` formatında
-- Idempotent (IF NOT EXISTS)
-- RLS policies + migration_log include
-- `005_add_product_models.sql` pattern'ı takip et
+- **Supabase CLI ile yönetilir** — detaylar için `supabase/README.md`
+- Yeni migration: `supabase migration new <name>` → `supabase/migrations/<timestamp>_<name>.sql`
+- Uygulama: `supabase db push` (Dashboard → Database → Migrations'da görünür)
+- Idempotent (IF NOT EXISTS), RLS policies dahil et
+- `docs/migrations/` eski arşivdir; yeni migration YAZMA oraya
+- Multi-tenant tablolarda `tenant_id` + RLS zorunlu (bkz. `20250115000000_enable_rls_security.sql`)
 
 ---
 
