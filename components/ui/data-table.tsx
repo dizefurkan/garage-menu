@@ -32,7 +32,20 @@ import {
   DropdownMenuGroup,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+} from "lucide-react";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -46,6 +59,11 @@ interface DataTableProps<TData, TValue> {
   totalPages?: number;
   totalCount?: number;
   isLoading?: boolean;
+  pageSize?: number;
+  onPageSizeChange?: (pageSize: number) => void;
+  pageSizeOptions?: number[];
+  showColumnToggle?: boolean;
+  useFixedLayout?: boolean;
 }
 
 export function DataTable<TData, TValue>({
@@ -60,6 +78,11 @@ export function DataTable<TData, TValue>({
   totalPages = 1,
   totalCount = 0,
   isLoading = false,
+  useFixedLayout = false,
+  pageSize: serverPageSize,
+  onPageSizeChange,
+  pageSizeOptions = [5, 10, 20],
+  showColumnToggle = true,
 }: DataTableProps<TData, TValue>) {
   const t = useTranslations('admin');
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -144,40 +167,49 @@ export function DataTable<TData, TValue>({
 
         {filterElement}
 
-        <DropdownMenu>
-          <DropdownMenuTrigger className="inline-flex items-center justify-center rounded-md border border-input bg-background px-3 py-2 text-sm font-medium ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ml-auto">
-            {t('columnsButton')} <ChevronDown className="ml-2 h-4 w-4" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuGroup>
-              {table
-                .getAllColumns()
-                .filter((column) => column.getCanHide())
-                .map((column) => (
-                  <DropdownMenuCheckboxItem
-                    key={column.id}
-                    className="capitalize"
-                    checked={column.getIsVisible()}
-                    onCheckedChange={(value) =>
-                      column.toggleVisibility(!!value)
-                    }
-                  >
-                    {column.id}
-                  </DropdownMenuCheckboxItem>
-                ))}
-            </DropdownMenuGroup>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {showColumnToggle && (
+          <DropdownMenu>
+            <DropdownMenuTrigger className="inline-flex items-center justify-center rounded-md border border-input bg-background px-3 py-2 text-sm font-medium ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ml-auto">
+              {t('columnsButton')} <ChevronDown className="ml-2 h-4 w-4" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuGroup>
+                {table
+                  .getAllColumns()
+                  .filter((column) => column.getCanHide())
+                  .map((column) => (
+                    <DropdownMenuCheckboxItem
+                      key={column.id}
+                      className="capitalize"
+                      checked={column.getIsVisible()}
+                      onCheckedChange={(value) =>
+                        column.toggleVisibility(!!value)
+                      }
+                    >
+                      {column.id}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+              </DropdownMenuGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
 
       <div className="rounded-md border">
-        <Table>
+        <Table className={useFixedLayout ? "table-fixed" : undefined}>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   return (
-                    <TableHead key={header.id}>
+                    <TableHead
+                      key={header.id}
+                      style={
+                        useFixedLayout
+                          ? { width: header.getSize() }
+                          : undefined
+                      }
+                    >
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -198,7 +230,14 @@ export function DataTable<TData, TValue>({
                   data-state={row.getIsSelected() && "selected"}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell
+                      key={cell.id}
+                      style={
+                        useFixedLayout
+                          ? { width: cell.column.getSize() }
+                          : undefined
+                      }
+                    >
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()
@@ -221,102 +260,146 @@ export function DataTable<TData, TValue>({
         </Table>
       </div>
 
-      <div className="flex items-center justify-between space-x-2 py-4">
-        {!isServerSidePagination && (
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">{t('rowsPerPage')}:</span>
-            <select
-              value={table.getState().pagination?.pageSize || 5}
-              onChange={(e) => {
-                table.setPageSize(Number(e.target.value));
-              }}
-              className="border border-input rounded px-2 py-1 text-sm"
-            >
-              {[5, 10, 20].map((pageSize) => (
-                <option key={pageSize} value={pageSize}>
-                  {pageSize}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-        <div className="text-sm text-muted-foreground">
-          {(() => {
-            if (isServerSidePagination) {
-              return totalCount === 0
-                ? t('noProducts')
-                : t('totalProducts', { count: totalCount });
-            }
-            const pageSize = table.getState().pagination.pageSize;
-            const totalRows = table.getFilteredRowModel().rows.length;
-            const pageIndex = table.getState().pagination.pageIndex;
-            const startRow = totalRows === 0 ? 0 : pageIndex * pageSize + 1;
-            const endRow = Math.min(startRow + pageSize - 1, totalRows);
-            const calculatedTotalPages = Math.ceil(totalRows / pageSize) || 1;
+      {(() => {
+        const displayTotalPages = isServerSidePagination
+          ? totalPages
+          : (() => {
+              const pageSize = table.getState().pagination.pageSize;
+              const totalRows = table.getFilteredRowModel().rows.length;
+              return Math.ceil(totalRows / pageSize) || 1;
+            })();
+        const hasMultiplePages = displayTotalPages > 1;
+        const currentPageIndex = isServerSidePagination
+          ? initialPageIndex
+          : pagination.pageIndex;
 
-            if (totalRows === 0) {
-              return t('items', { count: 0 });
-            }
-            return `${startRow}-${endRow} / ${totalRows} • ${t('pageInfo', { current: pageIndex + 1, total: calculatedTotalPages })}`;
-          })()}
-        </div>
-        {(() => {
-          const displayTotalPages = isServerSidePagination
-            ? totalPages
-            : (() => {
-                const pageSize = table.getState().pagination.pageSize;
-                const totalRows = table.getFilteredRowModel().rows.length;
-                return Math.ceil(totalRows / pageSize) || 1;
-              })();
-          const hasMultiplePages = displayTotalPages > 1;
-          const currentPageIndex = isServerSidePagination
-            ? initialPageIndex
-            : pagination.pageIndex;
+        const goToPage = (pageIndex: number) => {
+          const target = Math.max(0, Math.min(displayTotalPages - 1, pageIndex));
+          if (isServerSidePagination) {
+            onPaginationChange?.(target);
+          } else {
+            table.setPageIndex(target);
+          }
+        };
 
-          return hasMultiplePages ? (
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  const prevPage = Math.max(0, currentPageIndex - 1);
-                  if (isServerSidePagination) {
-                    onPaginationChange?.(prevPage);
-                  } else {
-                    table.setPageIndex(prevPage);
-                  }
-                }}
-                disabled={currentPageIndex === 0 || isLoading}
-              >
-                {t('previous')}
-              </Button>
-              <span className="text-sm text-muted-foreground">
-                {currentPageIndex + 1} / {displayTotalPages}
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  const nextPage = Math.min(
-                    displayTotalPages - 1,
-                    currentPageIndex + 1
-                  );
-                  if (isServerSidePagination) {
-                    onPaginationChange?.(nextPage);
-                  } else {
-                    table.setPageIndex(nextPage);
-                  }
-                }}
-                disabled={
-                  currentPageIndex >= displayTotalPages - 1 || isLoading
-                }
-              >
-                {t('next')}
-              </Button>
+        const summary = (() => {
+          if (isServerSidePagination) {
+            return totalCount === 0
+              ? t('noProducts')
+              : t('totalProducts', { count: totalCount });
+          }
+          const pageSize = table.getState().pagination.pageSize;
+          const totalRows = table.getFilteredRowModel().rows.length;
+          const pageIndex = table.getState().pagination.pageIndex;
+          const startRow = totalRows === 0 ? 0 : pageIndex * pageSize + 1;
+          const endRow = Math.min(startRow + pageSize - 1, totalRows);
+
+          if (totalRows === 0) {
+            return t('items', { count: 0 });
+          }
+          return `${startRow}-${endRow} / ${totalRows}`;
+        })();
+
+        return (
+          <div className="flex items-center justify-between px-2 py-4">
+            <div className="flex-1 text-sm text-muted-foreground">
+              {summary}
             </div>
-          ) : null;
-        })()}
-      </div>
+            <div className="flex items-center gap-6 lg:gap-8">
+              {(!isServerSidePagination || onPageSizeChange) && (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium">
+                    {t('rowsPerPage')}
+                  </span>
+                  <Select
+                    value={`${
+                      isServerSidePagination
+                        ? serverPageSize || pageSizeOptions[0]
+                        : table.getState().pagination?.pageSize || pageSizeOptions[0]
+                    }`}
+                    onValueChange={(value) => {
+                      if (!value) return;
+                      if (isServerSidePagination) {
+                        onPageSizeChange?.(Number(value));
+                      } else {
+                        table.setPageSize(Number(value));
+                      }
+                    }}
+                  >
+                    <SelectTrigger size="sm" className="w-16">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent side="top">
+                      {pageSizeOptions.map((size) => (
+                        <SelectItem key={size} value={`${size}`}>
+                          {size}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {hasMultiplePages && (
+                <>
+                  <div className="flex w-fit items-center justify-center text-sm font-medium">
+                    {t('pageInfo', {
+                      current: currentPageIndex + 1,
+                      total: displayTotalPages,
+                    })}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="hidden size-8 lg:flex"
+                      onClick={() => goToPage(0)}
+                      disabled={currentPageIndex === 0 || isLoading}
+                    >
+                      <span className="sr-only">{t('goToFirstPage')}</span>
+                      <ChevronsLeft />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="size-8"
+                      onClick={() => goToPage(currentPageIndex - 1)}
+                      disabled={currentPageIndex === 0 || isLoading}
+                    >
+                      <span className="sr-only">{t('goToPreviousPage')}</span>
+                      <ChevronLeft />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="size-8"
+                      onClick={() => goToPage(currentPageIndex + 1)}
+                      disabled={
+                        currentPageIndex >= displayTotalPages - 1 || isLoading
+                      }
+                    >
+                      <span className="sr-only">{t('goToNextPage')}</span>
+                      <ChevronRight />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="hidden size-8 lg:flex"
+                      onClick={() => goToPage(displayTotalPages - 1)}
+                      disabled={
+                        currentPageIndex >= displayTotalPages - 1 || isLoading
+                      }
+                    >
+                      <span className="sr-only">{t('goToLastPage')}</span>
+                      <ChevronsRight />
+                    </Button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

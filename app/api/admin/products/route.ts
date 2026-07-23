@@ -15,6 +15,7 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get("page") || "1");
     const pageSize = parseInt(searchParams.get("pageSize") || "20");
     const categoryId = searchParams.get("categoryId");
+    const lang = searchParams.get("lang") || "en";
 
     const offset = (page - 1) * pageSize;
 
@@ -54,17 +55,28 @@ export async function GET(request: NextRequest) {
     const totalCount = count || 0;
     const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
-    // Transform data to extract names from translations
+    // Transform data to extract names from translations. Prefer the
+    // currently selected admin language, then English, then whatever
+    // translation exists — so tenants without an English name (e.g.
+    // Turkish-only menus) still get a real name instead of "N/A".
     const transformedProducts = (data || []).map((product: any) => {
       const nameTranslation =
         product.product_translations?.find(
+          (t: any) => t.language_code === lang
+        ) ||
+        product.product_translations?.find(
           (t: any) => t.language_code === "en"
-        ) || product.product_translations?.[0];
+        ) ||
+        product.product_translations?.[0];
 
       const categoryNameTranslation =
         product.categories?.category_translations?.find(
+          (t: any) => t.language_code === lang
+        ) ||
+        product.categories?.category_translations?.find(
           (t: any) => t.language_code === "en"
-        ) || product.categories?.category_translations?.[0];
+        ) ||
+        product.categories?.category_translations?.[0];
 
       return {
         id: product.id,

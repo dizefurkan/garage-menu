@@ -32,7 +32,7 @@ export type Category = {
   productCount?: number;
 };
 
-export function createColumns(t: (key: string) => string): ColumnDef<Category>[] {
+export function createColumns(t: (key: string, params?: Record<string, string | number>) => string): ColumnDef<Category>[] {
   return [
     {
       accessorKey: "name",
@@ -110,7 +110,7 @@ export function createColumns(t: (key: string) => string): ColumnDef<Category>[]
 
 export const columns: ColumnDef<Category>[] = createColumns((key) => key);
 
-function ActionsCell({ category, t }: { category: Category; t: (key: string) => string }) {
+function ActionsCell({ category, t }: { category: Category; t: (key: string, params?: Record<string, string | number>) => string }) {
   const router = useRouter();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -128,6 +128,9 @@ function ActionsCell({ category, t }: { category: Category; t: (key: string) => 
 
       if (!response.ok) {
         const error = await response.json();
+        if (error.error === "CATEGORY_HAS_PRODUCTS") {
+          throw new Error(t('categoryHasProducts', { count: error.count }));
+        }
         throw new Error(error.error || t('deleteFailed'));
       }
 

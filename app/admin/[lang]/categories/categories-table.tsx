@@ -17,6 +17,7 @@ export function CategoriesTable({ categories }: CategoriesTableProps) {
       columns={createColumns(t)}
       data={categories}
       filterPlaceholder={t('searchCategories')}
+      showColumnToggle={false}
     />
   );
 }

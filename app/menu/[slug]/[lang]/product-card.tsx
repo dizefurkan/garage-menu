@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { Box, X } from "lucide-react";
+import { Box, X, ShoppingCart } from "lucide-react";
+import { useCart } from "./cart-context";
 
 // "Allergens" in all supported menu languages
 const ALLERGENS_LABELS: Record<string, string> = {
@@ -74,6 +75,7 @@ interface ProductCardProps {
   categoryId: string;
   primaryColor: string;
   lang: string;
+  tableId?: string;
 }
 
 export function ProductCard({
@@ -81,6 +83,7 @@ export function ProductCard({
   categoryId,
   primaryColor,
   lang,
+  tableId,
 }: ProductCardProps) {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const allergens: ProductAllergen[] = product.allergens || [];
@@ -189,6 +192,7 @@ export function ProductCard({
           allergens={allergens}
           primaryColor={primaryColor}
           lang={lang}
+          tableId={tableId}
           onClose={() => setIsDetailOpen(false)}
         />
       )}
@@ -206,14 +210,17 @@ function ProductDetailModal({
   allergens,
   primaryColor,
   lang,
+  tableId,
   onClose,
 }: {
   product: any;
   allergens: ProductAllergen[];
   primaryColor: string;
   lang: string;
+  tableId?: string;
   onClose: () => void;
 }) {
+  const { addToCart } = useCart();
   // Mounted closed, then flipped to visible so the enter transition plays;
   // close animates out first, then unmounts.
   const [isVisible, setIsVisible] = useState(false);
@@ -389,6 +396,20 @@ function ProductDetailModal({
                   ))}
                 </ul>
               </div>
+            )}
+
+            {tableId && (
+              <button
+                onClick={() => {
+                  addToCart(product.id, product.name, product.price, product.image);
+                  handleClose();
+                }}
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium text-white transition-all hover:opacity-90"
+                style={{ backgroundColor: primaryColor }}
+              >
+                <ShoppingCart className="size-4" />
+                Sepete Ekle
+              </button>
             )}
           </div>
         </div>

@@ -26,7 +26,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={cn("font-sans", inter.variable)}>
         {children}
-        <Toaster />
+        <Toaster closeButton />
       </body>
     </html>
   );

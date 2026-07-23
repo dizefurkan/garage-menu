@@ -5,6 +5,8 @@ import { getTenantCacheTags } from "@/lib/cache/revalidation";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { AnalyticsTracker } from "@/components/AnalyticsTracker";
 import { ProductCard } from "./product-card";
+import { CartSidebar } from "./cart-sidebar";
+import { CartProvider } from "./cart-context";
 import { getLanguageFlag } from "@/lib/language-flags";
 
 function getBaseUrl(): string {
@@ -30,6 +32,9 @@ interface Props {
   params: Promise<{
     slug: string;
     lang: string;
+  }>;
+  searchParams: Promise<{
+    tableId?: string;
   }>;
 }
 
@@ -255,8 +260,9 @@ async function getMenuData(slug: string, lang: string) {
   }
 }
 
-export default async function MenuPage({ params }: Props) {
+export default async function MenuPage({ params, searchParams }: Props) {
   const { slug, lang } = await params;
+  const { tableId } = await searchParams;
 
   console.log("[MenuPage] Rendering for:", { slug, lang });
 
@@ -323,15 +329,16 @@ export default async function MenuPage({ params }: Props) {
   const secondaryColor = themeConfig.secondary || "#FFFFFF";
 
   return (
-    <div
-      className="min-h-screen bg-white"
-      style={
-        {
-          "--primary-color": primaryColor,
-          "--secondary-color": secondaryColor,
-        } as React.CSSProperties
-      }
-    >
+    <CartProvider>
+      <div
+        className="min-h-screen bg-white"
+        style={
+          {
+            "--primary-color": primaryColor,
+            "--secondary-color": secondaryColor,
+          } as React.CSSProperties
+        }
+      >
       {/* Analytics Tracker */}
       <AnalyticsTracker tenantSlug={slug} />
 
@@ -382,6 +389,7 @@ export default async function MenuPage({ params }: Props) {
                   products={categoryProducts}
                   primaryColor={primaryColor}
                   lang={lang}
+                  tableId={tableId}
                 />
               );
             })}
@@ -395,7 +403,13 @@ export default async function MenuPage({ params }: Props) {
 
       {/* Footer */}
       <Footer tenant={tenant} />
-    </div>
+
+      {/* Cart Sidebar (Order Mode) */}
+      {tableId && (
+        <CartSidebar slug={slug} tableId={tableId} primaryColor={primaryColor} />
+      )}
+      </div>
+    </CartProvider>
   );
 }
 
@@ -598,12 +612,14 @@ function CategorySection({
   products,
   primaryColor,
   lang,
+  tableId,
 }: {
   id: string;
   category: any;
   products: any[];
   primaryColor: string;
   lang: string;
+  tableId?: string;
 }) {
   return (
     <section id={`category-${id}`} className="scroll-mt-32">
@@ -623,6 +639,7 @@ function CategorySection({
             categoryId={id}
             primaryColor={primaryColor}
             lang={lang}
+            tableId={tableId}
           />
         ))}
       </div>

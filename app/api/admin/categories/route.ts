@@ -34,12 +34,16 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // Transform to include English name
+    // Prefer English, but fall back to whatever translation exists so
+    // tenants without an English name (e.g. Turkish-only menus) still get
+    // a real category name instead of "N/A".
     const transformed = (data || []).map((cat: any) => ({
       id: cat.id,
       name:
         cat.category_translations?.find((t: any) => t.language_code === "en")
-          ?.name || "N/A",
+          ?.name ||
+        cat.category_translations?.[0]?.name ||
+        "N/A",
     }));
 
     return NextResponse.json(transformed);

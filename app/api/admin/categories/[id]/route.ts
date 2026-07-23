@@ -45,6 +45,27 @@ export async function DELETE(
       );
     }
 
+    // Block deletion if products still reference this category
+    const { count: productCount, error: countError } = await (supabaseAdmin as any)
+      .from("products")
+      .select("id", { count: "exact", head: true })
+      .eq("category_id", categoryId);
+
+    if (countError) {
+      console.error("Category product count error:", countError);
+      return NextResponse.json(
+        { error: "Internal server error" },
+        { status: 500 }
+      );
+    }
+
+    if (productCount && productCount > 0) {
+      return NextResponse.json(
+        { error: "CATEGORY_HAS_PRODUCTS", count: productCount },
+        { status: 409 }
+      );
+    }
+
     // Delete category (cascades to translations)
     const { error: deleteError } = await (supabaseAdmin as any)
       .from("categories")

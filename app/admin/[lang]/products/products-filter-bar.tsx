@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { DataTable } from "@/components/ui/data-table";
 import type { Product } from "@/lib/menu-db";
@@ -30,6 +30,8 @@ export function ProductsFilterBar({
   const t = useTranslations('admin');
   const router = useRouter();
   const searchParams = useSearchParams();
+  const params = useParams();
+  const currentLang = (params?.lang as string) || "en";
 
   // Get initial values from URL
   const initialPage = parseInt(searchParams.get("page") || "1");
@@ -51,15 +53,16 @@ export function ProductsFilterBar({
     async (page: number, categoryId?: number, size: number = pageSize) => {
       setIsLoading(true);
       try {
-        const params = new URLSearchParams({
+        const queryParams = new URLSearchParams({
           page: page.toString(),
           pageSize: size.toString(),
+          lang: currentLang,
         });
         if (categoryId) {
-          params.append("categoryId", categoryId.toString());
+          queryParams.append("categoryId", categoryId.toString());
         }
 
-        const response = await fetch(`/api/admin/products?${params}`);
+        const response = await fetch(`/api/admin/products?${queryParams}`);
         if (!response.ok) {
           throw new Error("Failed to fetch products");
         }
@@ -75,7 +78,7 @@ export function ProductsFilterBar({
         setIsLoading(false);
       }
     },
-    [pageSize]
+    [pageSize, currentLang]
   );
 
   // Initial load - fetch total all products and load initial page
@@ -86,11 +89,12 @@ export function ProductsFilterBar({
     // Fetch total count of all products
     const fetchTotalAllProducts = async () => {
       try {
-        const params = new URLSearchParams({
+        const queryParams = new URLSearchParams({
           page: "1",
           pageSize: pageSize.toString(),
+          lang: currentLang,
         });
-        const response = await fetch(`/api/admin/products?${params}`);
+        const response = await fetch(`/api/admin/products?${queryParams}`);
         if (response.ok) {
           const result = await response.json();
           setTotalAllProducts(result.totalCount);
@@ -149,9 +153,7 @@ export function ProductsFilterBar({
     }
   };
 
-  const handlePageSizeChange = (val: string | null) => {
-    if (!val) return;
-    const newSize = parseInt(val);
+  const handlePageSizeChange = (newSize: number) => {
     setPageSize(newSize);
     setCurrentPage(1);
 
@@ -201,18 +203,6 @@ export function ProductsFilterBar({
           ))}
         </SelectContent>
       </Select>
-      <Select value={pageSize.toString()} onValueChange={handlePageSizeChange}>
-        <SelectTrigger className="h-full w-fit border-0 bg-transparent p-0 focus-visible:border-transparent focus-visible:ring-0 focus-visible:ring-offset-0">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {PAGE_SIZE_OPTIONS.map((size) => (
-            <SelectItem key={size} value={size.toString()}>
-              {size} {t('itemLabel')}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
     </div>
   );
 
@@ -232,6 +222,10 @@ export function ProductsFilterBar({
       isServerSidePagination={true}
       totalPages={pageCount}
       totalCount={total}
+      pageSize={pageSize}
+      onPageSizeChange={handlePageSizeChange}
+      pageSizeOptions={PAGE_SIZE_OPTIONS}
+      showColumnToggle={false}
     />
   );
 }

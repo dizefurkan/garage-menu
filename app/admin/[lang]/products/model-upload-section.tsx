@@ -41,8 +41,6 @@ export function ModelUploadSection({
 
   return (
     <div className="flex flex-col gap-4">
-      <label className="block text-sm font-medium">{t("model3dTitle")}</label>
-
       <ModelUpload
         kind="glb"
         value={glbUrl}

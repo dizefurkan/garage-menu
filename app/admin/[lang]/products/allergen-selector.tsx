@@ -42,13 +42,6 @@ export function AllergenSelector({
 
   return (
     <div className="flex flex-col gap-3">
-      <div>
-        <label className="block text-sm font-medium">{t("allergens")}</label>
-        <p className="mt-1 text-xs text-muted-foreground">
-          {t("allergensHint")}
-        </p>
-      </div>
-
       <div className="flex items-center gap-2">
         <Switch
           id="contains_no_allergens"

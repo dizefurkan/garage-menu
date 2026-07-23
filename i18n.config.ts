@@ -23,6 +23,10 @@ export default getRequestConfig(async ({ requestLocale }) => {
     return {
       locale,
       messages,
+      // Fixed timeZone so server and client render dates identically
+      // (otherwise next-intl falls back to the environment's local
+      // timeZone on each side, which can differ and break hydration).
+      timeZone: "Europe/Istanbul",
     };
   } catch (error) {
     console.error(
@@ -34,6 +38,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
     return {
       locale: "en",
       messages: fallbackMessages,
+      timeZone: "Europe/Istanbul",
     };
   }
 });
