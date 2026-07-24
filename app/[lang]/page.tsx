@@ -96,7 +96,7 @@ export default async function LandingPage({ params }: Props) {
   ];
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-background text-foreground">
+    <div className="relative min-h-screen overflow-x-clip bg-background text-foreground">
       <GridBackground />
 
       {/* Navigation */}
@@ -202,6 +202,7 @@ export default async function LandingPage({ params }: Props) {
       <ScrollShowcase
         eyebrow={t.showcase_eyebrow}
         heading={t.howItWorks_title}
+        brand={t.brand}
         steps={showcaseSteps}
       />
 
