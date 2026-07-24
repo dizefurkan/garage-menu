@@ -6,30 +6,28 @@ import {
   Smartphone,
   Users,
   Globe,
-  BarChart3,
   Settings,
-  CheckCircle2,
+  Check,
+  Play,
 } from "lucide-react";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { Reveal } from "@/components/landing/Reveal";
+import { Squish } from "@/components/landing/Squish";
+import { Counter } from "@/components/landing/Counter";
+import { GridBackground } from "@/components/landing/GridBackground";
+import { HeroVisual } from "@/components/landing/HeroVisual";
+import { Marquee } from "@/components/landing/Marquee";
+import { ScrollShowcase } from "@/components/landing/ScrollShowcase";
 
 interface Props {
-  params: Promise<{
-    lang: string;
-  }>;
+  params: Promise<{ lang: string }>;
 }
 
 async function getMessages(lang: string) {
   try {
-    const messages = await import(`@/messages/${lang}.json`).then(
-      (module) => module.default
-    );
-    return messages;
+    return await import(`@/messages/${lang}.json`).then((m) => m.default);
   } catch {
-    // Fallback to English if language not found
-    const messages = await import("@/messages/en.json").then(
-      (module) => module.default
-    );
-    return messages;
+    return await import("@/messages/en.json").then((m) => m.default);
   }
 }
 
@@ -40,36 +38,12 @@ export default async function LandingPage({ params }: Props) {
   const year = new Date().getFullYear();
 
   const features = [
-    {
-      icon: QrCode,
-      title: t.feature_1_title,
-      description: t.feature_1_desc,
-    },
-    {
-      icon: Zap,
-      title: t.feature_2_title,
-      description: t.feature_2_desc,
-    },
-    {
-      icon: Smartphone,
-      title: t.feature_3_title,
-      description: t.feature_3_desc,
-    },
-    {
-      icon: Users,
-      title: t.feature_4_title,
-      description: t.feature_4_desc,
-    },
-    {
-      icon: Globe,
-      title: t.feature_5_title,
-      description: t.feature_5_desc,
-    },
-    {
-      icon: Settings,
-      title: t.feature_6_title,
-      description: t.feature_6_desc,
-    },
+    { icon: QrCode, title: t.feature_1_title, description: t.feature_1_desc },
+    { icon: Zap, title: t.feature_2_title, description: t.feature_2_desc },
+    { icon: Smartphone, title: t.feature_3_title, description: t.feature_3_desc },
+    { icon: Users, title: t.feature_4_title, description: t.feature_4_desc },
+    { icon: Globe, title: t.feature_5_title, description: t.feature_5_desc },
+    { icon: Settings, title: t.feature_6_title, description: t.feature_6_desc },
   ];
 
   const benefits = [
@@ -78,27 +52,11 @@ export default async function LandingPage({ params }: Props) {
     { number: "24/7", label: t.benefits_support },
   ];
 
-  const steps = [
-    {
-      number: "1",
-      title: t.step_1_title,
-      description: t.step_1_desc,
-    },
-    {
-      number: "2",
-      title: t.step_2_title,
-      description: t.step_2_desc,
-    },
-    {
-      number: "3",
-      title: t.step_3_title,
-      description: t.step_3_desc,
-    },
-    {
-      number: "4",
-      title: t.step_4_title,
-      description: t.step_4_desc,
-    },
+  const showcaseSteps = [
+    { title: t.step_1_title, description: t.step_1_desc },
+    { title: t.step_2_title, description: t.step_2_desc },
+    { title: t.step_3_title, description: t.step_3_desc },
+    { title: t.step_4_title, description: t.step_4_desc },
   ];
 
   const pricingPlans = [
@@ -106,356 +64,340 @@ export default async function LandingPage({ params }: Props) {
       name: t.plan_starter_name,
       price: t.plan_starter_price,
       description: t.plan_starter_desc,
-      features: [
-        "Up to 50 products",
-        "1 restaurant location",
-        "2 languages (EN, TR)",
-        "Basic customization",
-        "Mobile responsive",
-        "Email support",
-      ],
+      features: t.plan_starter_features as string[],
       cta: t.plan_cta_starter,
       highlighted: false,
+      custom: false,
     },
     {
       name: t.plan_professional_name,
       price: t.plan_professional_price,
       description: t.plan_professional_desc,
-      features: [
-        "Unlimited products",
-        "Up to 5 locations",
-        "Multi-language support",
-        "Advanced customization",
-        "Custom branding",
-        "Team management",
-        "Priority support",
-        "Monthly updates",
-      ],
+      features: t.plan_professional_features as string[],
       cta: t.plan_cta_professional,
       highlighted: true,
+      custom: false,
     },
     {
       name: t.plan_enterprise_name,
       price: t.plan_enterprise_price,
       description: t.plan_enterprise_desc,
-      features: [
-        "Unlimited everything",
-        "Unlimited locations",
-        "Custom domain support",
-        "Dedicated account manager",
-        "Custom features",
-        "API access",
-        "24/7 phone support",
-        "Training & onboarding",
-      ],
+      features: t.plan_enterprise_features as string[],
       cta: t.plan_cta_enterprise,
       highlighted: false,
+      custom: true,
     },
   ];
 
+  const footerColumns = [
+    { title: t.footer_product, links: [t.footer_features, t.footer_pricing, t.footer_faq] },
+    { title: t.footer_company, links: [t.footer_about, t.footer_blog, t.footer_contact] },
+    { title: t.footer_legal, links: [t.footer_privacy, t.footer_terms] },
+  ];
+
   return (
-    <div className="min-h-screen bg-white">
+    <div className="relative min-h-screen overflow-x-hidden bg-background text-foreground">
+      <GridBackground />
+
       {/* Navigation */}
-      <nav className="fixed w-full top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">DM</span>
+      <nav className="fixed inset-x-0 top-0 z-50 border-b border-border/60 bg-background/70 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3.5 sm:px-6 lg:px-8">
+          <Link href={`/${lang}`} className="flex items-center gap-2.5">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-foreground text-background">
+              <QrCode className="h-[1.125rem] w-[1.125rem]" />
             </div>
-            <div className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-              Digital Menu
-            </div>
-          </div>
-          <div className="flex gap-4 items-center">
+            <span className="text-base font-semibold tracking-tight">
+              {t.brand}
+            </span>
+          </Link>
+          <div className="flex items-center gap-2 sm:gap-3">
             <LanguageSwitcher currentLang={lang as "en" | "tr"} compact />
             <Link
               href="/auth/login"
-              className="hidden sm:block px-4 py-2 text-gray-700 hover:text-gray-900 font-medium transition-colors"
+              className="hidden rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground sm:block"
             >
-              Sign In
+              {t.nav_signin}
             </Link>
-            <Link
-              href="/auth/login"
-              className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:shadow-lg transition-all font-semibold text-sm"
-            >
-              Get Started
-            </Link>
+            <Squish>
+              <Link
+                href="/auth/login"
+                className="rounded-lg bg-foreground px-4 py-2 text-sm font-semibold text-background transition-colors hover:bg-foreground/90"
+              >
+                {t.nav_getstarted}
+              </Link>
+            </Squish>
           </div>
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <section className="pt-40 pb-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-        <div className="max-w-6xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 rounded-full mb-6">
-            <span className="text-blue-600 font-semibold text-sm">
-              🎉 Now with multi-language support
-            </span>
-          </div>
+      {/* Hero */}
+      <section className="px-4 pt-36 pb-16 sm:px-6 lg:px-8 lg:pt-44">
+        <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]">
+          <Reveal className="text-center lg:text-left" stagger>
+            <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3.5 py-1.5 text-sm text-muted-foreground shadow-sm">
+              <span className="h-1.5 w-1.5 rounded-full bg-foreground" />
+              {t.hero_badge}
+            </div>
 
-          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-gray-900 mb-8 leading-tight">
-            {t.heroTitle}
-            <span className="block bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-              {t.heroSubtitle}
-            </span>
-          </h1>
+            <h1 className="mt-6 text-4xl font-semibold leading-[1.05] tracking-tight sm:text-5xl lg:text-[3.75rem]">
+              {t.heroTitle}
+              <span className="mt-1.5 block text-muted-foreground">
+                {t.heroSubtitle}
+              </span>
+            </h1>
 
-          <p className="text-lg sm:text-xl text-gray-600 mb-10 max-w-3xl mx-auto leading-relaxed">
-            {t.heroDescription}
-          </p>
+            <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg lg:mx-0">
+              {t.heroDescription}
+            </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
-            <Link
-              href="/auth/login"
-              className="px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:shadow-xl transition-all font-semibold flex items-center gap-2 text-lg"
-            >
-              {t.cta_primary}
-              <ArrowRight size={22} />
-            </Link>
-            <button className="px-8 py-4 border-2 border-gray-300 text-gray-900 rounded-lg hover:border-gray-400 font-semibold transition-all text-lg">
-              {t.cta_secondary}
-            </button>
-          </div>
+            <div className="mt-9 flex flex-col items-center gap-3 sm:flex-row lg:justify-start">
+              <Squish className="w-full sm:w-auto">
+                <Link
+                  href="/auth/login"
+                  className="group inline-flex w-full items-center justify-center gap-2 rounded-xl bg-foreground px-6 py-3.5 text-base font-semibold text-background transition-colors hover:bg-foreground/90 sm:w-auto"
+                >
+                  {t.cta_primary}
+                  <ArrowRight className="h-[1.125rem] w-[1.125rem] transition-transform group-hover:translate-x-0.5" />
+                </Link>
+              </Squish>
+              <Squish className="w-full sm:w-auto">
+                <button className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-card px-6 py-3.5 text-base font-semibold text-foreground transition-colors hover:bg-muted sm:w-auto">
+                  <Play className="h-4 w-4 fill-current" />
+                  {t.cta_secondary}
+                </button>
+              </Squish>
+            </div>
 
-          <div className="grid grid-cols-3 gap-8 text-center">
-            {benefits.map((benefit, idx) => (
-              <div key={idx}>
-                <div className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                  {benefit.number}
+            <div className="mt-12 flex justify-center gap-8 lg:justify-start">
+              {benefits.map((benefit, idx) => (
+                <div key={idx} className="text-center lg:text-left">
+                  <Counter
+                    value={benefit.number}
+                    className="block text-2xl font-semibold tracking-tight sm:text-3xl"
+                  />
+                  <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
+                    {benefit.label}
+                  </p>
                 </div>
-                <p className="text-sm sm:text-base text-gray-600 mt-2">
-                  {benefit.label}
-                </p>
-              </div>
-            ))}
+              ))}
+            </div>
+          </Reveal>
+
+          <div className="hidden lg:block">
+            <HeroVisual
+              brand={t.brand}
+              langChip={t.hero_chip_langs}
+              ratingChip="4.9"
+            />
           </div>
+        </div>
+
+        {/* GSAP marquee */}
+        <div className="mx-auto mt-20 max-w-6xl">
+          <Marquee items={features.map((f) => f.title)} />
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="py-24 px-4 sm:px-6 lg:px-8 bg-white">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
+      {/* Apple-style scroll showcase */}
+      <ScrollShowcase
+        eyebrow={t.showcase_eyebrow}
+        heading={t.howItWorks_title}
+        steps={showcaseSteps}
+      />
+
+      {/* Features */}
+      <section className="px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
+        <div className="mx-auto max-w-6xl">
+          <Reveal className="mb-14 max-w-2xl">
+            <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
               {t.features_title}
             </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            <p className="mt-4 text-lg text-muted-foreground">
               {t.features_subtitle}
             </p>
-          </div>
+          </Reveal>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <Reveal className="grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-2 lg:grid-cols-3" stagger>
             {features.map((feature, idx) => {
               const Icon = feature.icon;
               return (
                 <div
                   key={idx}
-                  className="p-8 rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all group"
+                  className="group bg-card p-7 transition-colors hover:bg-muted/50"
                 >
-                  <div className="w-14 h-14 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg flex items-center justify-center mb-4 group-hover:from-blue-100 group-hover:to-indigo-100 transition-all">
-                    <Icon size={28} className="text-blue-600" />
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-foreground text-background transition-transform duration-300 group-hover:scale-110">
+                    <Icon className="h-5 w-5" strokeWidth={1.75} />
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  <h3 className="mt-5 text-lg font-semibold tracking-tight">
                     {feature.title}
                   </h3>
-                  <p className="text-gray-600">{feature.description}</p>
+                  <p className="mt-2 leading-relaxed text-muted-foreground">
+                    {feature.description}
+                  </p>
                 </div>
               );
             })}
-          </div>
+          </Reveal>
         </div>
       </section>
 
-      {/* How It Works Section */}
-      <section className="py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-slate-50 to-blue-50">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
-              {t.howItWorks_title}
-            </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              {t.howItWorks_subtitle}
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-4 gap-6">
-            {steps.map((step, idx) => (
-              <div key={idx} className="text-center">
-                <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <span className="text-white text-2xl font-bold">
-                    {step.number}
-                  </span>
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">
-                  {step.title}
-                </h3>
-                <p className="text-gray-600">{step.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Pricing Section */}
-      <section className="py-24 px-4 sm:px-6 lg:px-8 bg-white">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
+      {/* Pricing */}
+      <section className="px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
+        <div className="mx-auto max-w-6xl">
+          <Reveal className="mx-auto mb-14 max-w-2xl text-center">
+            <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
               {t.pricing_title}
             </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            <p className="mt-4 text-lg text-muted-foreground">
               {t.pricing_subtitle}
             </p>
-          </div>
+          </Reveal>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            {pricingPlans.map((plan, idx) => (
-              <div
-                key={idx}
-                className={`rounded-2xl p-8 transition-all ${
-                  plan.highlighted
-                    ? "border-2 border-blue-600 bg-gradient-to-br from-blue-50 to-indigo-50 shadow-xl scale-105"
-                    : "border border-gray-200 bg-white"
-                }`}
-              >
-                {plan.highlighted && (
-                  <div className="inline-block px-3 py-1 bg-blue-600 text-white text-xs font-semibold rounded-full mb-4">
-                    {t.plan_professional_badge}
-                  </div>
-                )}
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                  {plan.name}
-                </h3>
-                <p className="text-gray-600 mb-6">{plan.description}</p>
-
-                <div className="mb-8">
-                  <span className="text-5xl font-bold text-gray-900">
-                    {plan.price}
-                  </span>
-                  {plan.price !== "Custom" && (
-                    <span className="text-gray-600 ml-2">/month</span>
-                  )}
-                </div>
-
-                <button
-                  className={`w-full py-3 rounded-lg font-semibold mb-8 transition-all ${
-                    plan.highlighted
-                      ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:shadow-lg"
-                      : "border-2 border-gray-300 text-gray-900 hover:border-gray-400"
+          <Reveal className="grid items-start gap-6 lg:grid-cols-3" stagger>
+            {pricingPlans.map((plan, idx) => {
+              const dark = plan.highlighted;
+              return (
+                <div
+                  key={idx}
+                  className={`relative rounded-2xl border p-8 transition-all ${
+                    dark
+                      ? "border-foreground bg-foreground text-background shadow-xl lg:-translate-y-2"
+                      : "border-border bg-card"
                   }`}
                 >
-                  {plan.cta}
-                </button>
-
-                <div className="space-y-4">
-                  {plan.features.map((feature, featureIdx) => (
-                    <div key={featureIdx} className="flex items-center gap-3">
-                      <CheckCircle2
-                        size={20}
-                        className="text-green-500 flex-shrink-0"
-                      />
-                      <span className="text-gray-700">{feature}</span>
+                  {dark && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-background px-3 py-1 text-xs font-semibold text-foreground shadow-sm ring-1 ring-border">
+                      {t.plan_professional_badge}
                     </div>
-                  ))}
+                  )}
+                  <h3 className="text-lg font-semibold tracking-tight">
+                    {plan.name}
+                  </h3>
+                  <p
+                    className={`mt-1.5 text-sm ${
+                      dark ? "text-background/70" : "text-muted-foreground"
+                    }`}
+                  >
+                    {plan.description}
+                  </p>
+
+                  <div className="mt-6 flex items-baseline gap-1">
+                    <span className="text-4xl font-semibold tracking-tight">
+                      {plan.price}
+                    </span>
+                    {!plan.custom && (
+                      <span
+                        className={
+                          dark ? "text-background/60" : "text-muted-foreground"
+                        }
+                      >
+                        {t.per_month}
+                      </span>
+                    )}
+                  </div>
+
+                  <Squish className="mt-7 w-full">
+                    <Link
+                      href="/auth/login"
+                      className={`block w-full rounded-xl py-3 text-center font-semibold transition-colors ${
+                        dark
+                          ? "bg-background text-foreground hover:bg-background/90"
+                          : "bg-foreground text-background hover:bg-foreground/90"
+                      }`}
+                    >
+                      {plan.cta}
+                    </Link>
+                  </Squish>
+
+                  <div className="mt-8 space-y-3">
+                    {plan.features.map((feature, fi) => (
+                      <div key={fi} className="flex items-start gap-3">
+                        <Check
+                          className={`mt-0.5 h-[1.125rem] w-[1.125rem] shrink-0 ${
+                            dark ? "text-background" : "text-foreground"
+                          }`}
+                        />
+                        <span
+                          className={`text-sm ${
+                            dark ? "text-background/80" : "text-muted-foreground"
+                          }`}
+                        >
+                          {feature}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              );
+            })}
+          </Reveal>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-4xl sm:text-5xl font-bold mb-6">
-            {t.cta_section_title}
-          </h2>
-          <p className="text-xl mb-8 text-blue-100 max-w-2xl mx-auto">
-            {t.cta_section_desc}
-          </p>
-          <Link
-            href="/auth/login"
-            className="inline-block px-10 py-4 bg-white text-blue-600 rounded-lg hover:bg-blue-50 font-bold text-lg transition-all hover:shadow-xl"
-          >
-            {t.cta_section_button}
-          </Link>
-        </div>
+      {/* CTA */}
+      <section className="px-4 py-20 sm:px-6 lg:px-8">
+        <Reveal className="relative mx-auto max-w-5xl overflow-hidden rounded-3xl bg-foreground px-6 py-16 text-center text-background sm:px-12">
+          <div
+            aria-hidden
+            className="absolute inset-0 opacity-[0.08] [background-size:32px_32px] [background-image:linear-gradient(to_right,var(--background)_1px,transparent_1px),linear-gradient(to_bottom,var(--background)_1px,transparent_1px)]"
+          />
+          <div className="relative">
+            <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+              {t.cta_section_title}
+            </h2>
+            <p className="mx-auto mt-4 max-w-2xl text-lg text-background/70">
+              {t.cta_section_desc}
+            </p>
+            <Squish className="mt-8">
+              <Link
+                href="/auth/login"
+                className="inline-flex items-center gap-2 rounded-xl bg-background px-7 py-3.5 text-base font-semibold text-foreground transition-colors hover:bg-background/90"
+              >
+                {t.cta_section_button}
+                <ArrowRight className="h-[1.125rem] w-[1.125rem]" />
+              </Link>
+            </Squish>
+          </div>
+        </Reveal>
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-16 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid md:grid-cols-4 gap-12 mb-12">
+      <footer className="border-t border-border bg-card px-4 py-16 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-6xl">
+          <div className="grid gap-10 md:grid-cols-4">
             <div>
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">DM</span>
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-foreground text-background">
+                  <QrCode className="h-[1.125rem] w-[1.125rem]" />
                 </div>
-                <span className="font-bold text-lg">Digital Menu</span>
+                <span className="text-base font-semibold tracking-tight">
+                  {t.brand}
+                </span>
               </div>
-              <p className="text-gray-400">
-                Empowering restaurants with digital menus and contactless
-                ordering.
+              <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted-foreground">
+                {t.footer_tagline}
               </p>
             </div>
-            <div>
-              <h4 className="font-semibold mb-4">Product</h4>
-              <ul className="space-y-2 text-gray-400">
-                <li>
-                  <a href="#" className="hover:text-white transition-colors">
-                    Features
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-white transition-colors">
-                    Pricing
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-white transition-colors">
-                    FAQ
-                  </a>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4">Company</h4>
-              <ul className="space-y-2 text-gray-400">
-                <li>
-                  <a href="#" className="hover:text-white transition-colors">
-                    About
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-white transition-colors">
-                    Blog
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-white transition-colors">
-                    Contact
-                  </a>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4">Legal</h4>
-              <ul className="space-y-2 text-gray-400">
-                <li>
-                  <a href="#" className="hover:text-white transition-colors">
-                    Privacy
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-white transition-colors">
-                    Terms
-                  </a>
-                </li>
-              </ul>
-            </div>
+            {footerColumns.map((col, idx) => (
+              <div key={idx}>
+                <h4 className="text-sm font-semibold">{col.title}</h4>
+                <ul className="mt-4 space-y-3">
+                  {col.links.map((link, li) => (
+                    <li key={li}>
+                      <a
+                        href="#"
+                        className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                      >
+                        {link}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
 
-          <div className="border-t border-gray-800 pt-8 text-center text-gray-400">
+          <div className="mt-12 border-t border-border pt-8 text-center text-sm text-muted-foreground">
             <p>{t.footer_text.replace("{year}", year.toString())}</p>
           </div>
         </div>

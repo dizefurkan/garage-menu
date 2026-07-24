@@ -1,7 +1,6 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { Globe } from "lucide-react";
 import { getLanguageFlag } from "@/lib/language-flags";
 import {
   Select,
@@ -72,8 +71,15 @@ export function LanguageSwitcher({
     return `/${lang}`;
   };
 
+  const renderOption = (language: string) => (
+    <span className="flex items-center gap-2">
+      <span className="text-base leading-none">{getLanguageFlag(language)}</span>
+      <span className="text-sm">{getLanguageLabel(language)}</span>
+    </span>
+  );
+
   if (compact) {
-    // Compact version: icon-based dropdown
+    // Compact version: flag-only on mobile, flag + label on desktop
     return (
       <Select
         value={normalizedLang}
@@ -82,16 +88,23 @@ export function LanguageSwitcher({
           window.location.href = getLanguagePath(lang);
         }}
       >
-        <SelectTrigger className="h-9 w-9 md:w-36 gap-2 md:gap-2 justify-center md:justify-start">
-          <Globe className="h-4 w-4 text-muted-foreground" />
-          <span className="hidden md:inline truncate text-sm">
-            {getLanguageFlag(normalizedLang)} {getLanguageLabel(normalizedLang)}
+        <SelectTrigger
+          aria-label={getLanguageLabel(normalizedLang)}
+          className="h-9 w-auto justify-center gap-1.5 px-2.5 md:justify-between md:gap-2"
+        >
+          <span className="flex items-center gap-2">
+            <span className="text-base leading-none">
+              {getLanguageFlag(normalizedLang)}
+            </span>
+            <span className="hidden text-sm md:inline">
+              {getLanguageLabel(normalizedLang)}
+            </span>
           </span>
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent align="end">
           {availableLanguages.map((language) => (
             <SelectItem key={language} value={language}>
-              {getLanguageFlag(language)} {getLanguageLabel(language)}
+              {renderOption(language)}
             </SelectItem>
           ))}
         </SelectContent>
@@ -108,13 +121,15 @@ export function LanguageSwitcher({
         window.location.href = getLanguagePath(lang);
       }}
     >
-      <SelectTrigger className="w-40">
-        <SelectValue placeholder={getLanguageLabel(normalizedLang)} />
+      <SelectTrigger className="h-9 w-40">
+        <SelectValue placeholder={getLanguageLabel(normalizedLang)}>
+          {renderOption(normalizedLang)}
+        </SelectValue>
       </SelectTrigger>
       <SelectContent>
         {availableLanguages.map((language) => (
           <SelectItem key={language} value={language}>
-            {getLanguageFlag(language)} {getLanguageLabel(language)}
+            {renderOption(language)}
           </SelectItem>
         ))}
       </SelectContent>

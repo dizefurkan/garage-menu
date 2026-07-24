@@ -8,6 +8,7 @@ import { ProductCard } from "./product-card";
 import { CartSidebar } from "./cart-sidebar";
 import { CartProvider } from "./cart-context";
 import { getLanguageFlag } from "@/lib/language-flags";
+import { Globe } from "lucide-react";
 
 function getBaseUrl(): string {
   // On Vercel production, use the production domain
@@ -575,10 +576,10 @@ function MobileLanguageButton({
   return (
     <div className="md:hidden fixed bottom-6 left-6 z-40">
       <details className="group">
-        <summary className="list-none cursor-pointer bg-white/20 backdrop-blur-md text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow border border-white/30">
-          <span className="text-xl">🌐</span>
+        <summary className="list-none cursor-pointer bg-white text-gray-700 rounded-full w-12 h-12 flex items-center justify-center shadow-lg ring-1 ring-black/5 transition-all hover:shadow-xl hover:text-gray-900 active:scale-95 group-open:text-gray-900">
+          <Globe className="h-5 w-5" />
         </summary>
-        <div className="absolute bottom-16 left-0 bg-white rounded-2xl shadow-2xl p-3 min-w-40 border border-gray-100">
+        <div className="absolute bottom-14 left-0 bg-white rounded-2xl shadow-2xl p-2 min-w-40 border border-gray-100">
           <ul className="space-y-1">
             {menuLanguages.map((language) => {
               const isActive = language === currentLang;
@@ -587,13 +588,16 @@ function MobileLanguageButton({
                 <li key={language}>
                   <a
                     href={`/menu/${slug}/${language}`}
-                    className={`block px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
+                    className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
                       isActive
                         ? "bg-gray-100 text-black"
                         : "hover:bg-gray-100 text-gray-700"
                     }`}
                   >
-                    {getLanguageFlag(language)} {getLanguageLabel(language)}
+                    <span className="text-base leading-none">
+                      {getLanguageFlag(language)}
+                    </span>
+                    <span>{getLanguageLabel(language)}</span>
                   </a>
                 </li>
               );
