@@ -51,15 +51,6 @@ export function createColumns(
       ),
     },
     {
-      accessorKey: "key",
-      header: t("statusKeyColumn"),
-      cell: ({ row }) => (
-        <span className="text-sm text-muted-foreground">
-          {row.getValue("key")}
-        </span>
-      ),
-    },
-    {
       id: "toggle",
       header: t("enabledColumn"),
       cell: ({ row }) => (

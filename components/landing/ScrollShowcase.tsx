@@ -18,6 +18,7 @@ import {
   Share2,
   Check,
   ArrowRight,
+  ChevronDown,
 } from "lucide-react";
 
 export interface ShowcaseStep {
@@ -216,6 +217,8 @@ export function ScrollShowcase({
     offset: ["start start", "end end"],
   });
   const railScale = useTransform(scrollYProgress, [0, 1], [0, 1]);
+  // Scroll hint fades out as soon as the user starts scrolling through the section
+  const hintOpacity = useTransform(scrollYProgress, [0, 0.06], [1, 0]);
 
   useMotionValueEvent(scrollYProgress, "change", (v) => {
     const idx = Math.max(
@@ -310,6 +313,26 @@ export function ScrollShowcase({
             </span>
           </div>
         </div>
+
+        {/* Scroll hint — mouse + bouncing dot/chevron, fades out on scroll */}
+        <motion.div
+          style={{ opacity: hintOpacity }}
+          className="pointer-events-none absolute bottom-8 left-1/2 flex -translate-x-1/2 flex-col items-center gap-2"
+        >
+          <div className="flex h-9 w-5.5 items-start justify-center rounded-full border-2 border-muted-foreground/50 p-1">
+            <motion.span
+              animate={{ y: [0, 8, 0], opacity: [1, 0.3, 1] }}
+              transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+              className="h-1.5 w-1 rounded-full bg-muted-foreground"
+            />
+          </div>
+          <motion.span
+            animate={{ y: [0, 4, 0], opacity: [0.7, 0.2, 0.7] }}
+            transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+          </motion.span>
+        </motion.div>
       </div>
     </section>
   );
