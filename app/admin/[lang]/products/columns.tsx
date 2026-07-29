@@ -37,6 +37,12 @@ import {
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import {
+  CircleCheck,
+  CircleAlert,
+  EyeOff,
+  type LucideIcon,
+} from "lucide-react";
 import Image from "next/image";
 
 export type Product = {
@@ -54,7 +60,12 @@ export type Product = {
   allergen_count?: number;
 };
 
-export function createColumns(t: (key: string) => string): ColumnDef<Product>[] {
+export function createColumns(
+  t: (key: string) => string,
+  // The table holds its rows in client state, so router.refresh() does not
+  // bring a status change back — the list has to be told to refetch.
+  onProductChanged?: () => void
+): ColumnDef<Product>[] {
   return [
     {
       accessorKey: "name",
@@ -181,7 +192,9 @@ export function createColumns(t: (key: string) => string): ColumnDef<Product>[] 
       ),
       cell: ({ row }) => {
         const product = row.original;
-        return <StatusCell product={product} />;
+        return (
+          <StatusCell product={product} onChanged={onProductChanged} />
+        );
       },
     },
     {
@@ -198,7 +211,34 @@ type ProductStatus = "on_sale" | "out_of_stock" | "hidden";
 
 export const columns: ColumnDef<Product>[] = createColumns((key) => key);
 
-function StatusCell({ product }: { product: Product }) {
+const STATUS_META: Record<
+  ProductStatus,
+  { icon: LucideIcon; labelKey: string; className: string }
+> = {
+  on_sale: {
+    icon: CircleCheck,
+    labelKey: "availabilityOnSale",
+    className: "text-emerald-600",
+  },
+  out_of_stock: {
+    icon: CircleAlert,
+    labelKey: "availabilityOutOfStock",
+    className: "text-amber-600",
+  },
+  hidden: {
+    icon: EyeOff,
+    labelKey: "availabilityHidden",
+    className: "text-muted-foreground",
+  },
+};
+
+function StatusCell({
+  product,
+  onChanged,
+}: {
+  product: Product;
+  onChanged?: () => void;
+}) {
   const t = useTranslations("admin");
   const router = useRouter();
   const [isToggling, setIsToggling] = useState(false);
@@ -251,7 +291,10 @@ function StatusCell({ product }: { product: Product }) {
         throw new Error(error.error || "Güncelleme başarısız");
       }
 
+      // Refresh both layers: the server components above the table, and the
+      // client-fetched row list inside it.
       router.refresh();
+      onChanged?.();
     } catch (error) {
       console.error("Toggle error:", error);
       alert(
@@ -264,14 +307,23 @@ function StatusCell({ product }: { product: Product }) {
     }
   };
 
+  const meta = STATUS_META[status];
+  const Icon = meta.icon;
+
   return (
-    <div className="flex justify-end">
+    <div className="flex items-center justify-end gap-2">
+      <Icon
+        className={`size-4 shrink-0 ${meta.className} ${
+          isToggling ? "animate-pulse" : ""
+        }`}
+        aria-hidden
+      />
       <select
         value={status}
         onChange={(e) => handleStatusChange(e.target.value as ProductStatus)}
         disabled={isToggling}
         aria-label={t("availabilityTitle")}
-        className="h-8 rounded-md border border-input bg-background px-2 text-xs disabled:opacity-50"
+        className="h-8 rounded-md border border-input bg-background px-2 text-xs font-medium disabled:opacity-50"
       >
         <option value="on_sale">{t("availabilityOnSale")}</option>
         <option value="out_of_stock">{t("availabilityOutOfStock")}</option>

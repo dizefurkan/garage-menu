@@ -420,9 +420,37 @@ export default async function MenuPage({ params, searchParams }: Props) {
       {/* Mobile Floating Button */}
       {shouldShowCategoryNav && !showCategoryLanding && (
         <MobileCategoryButton
-          categories={visibleCategories}
+          // Always the full list: in the drilled-in view the whole point of
+          // the FAB is jumping to a *different* category.
+          categories={categories}
           products={products}
+          activeCategoryId={activeCategory?.id}
+          hrefFor={
+            useCategoryLayout
+              ? (id: string | number) =>
+                  `?category=${id}${
+                    orderingTableId ? `&tableId=${orderingTableId}` : ""
+                  }`
+              : undefined
+          }
         />
+      )}
+
+      {/* Desktop gets its back link inside CategoryNav, which is hidden on
+          mobile — without this there is no way out of a category on a phone. */}
+      {activeCategory && (
+        <div className="md:hidden sticky top-0 z-30 border-b border-gray-100 bg-white">
+          <div className="max-w-7xl mx-auto px-4">
+            <Link
+              href={`?${orderingTableId ? `tableId=${orderingTableId}` : ""}`}
+              scroll={false}
+              className="flex items-center gap-1.5 py-3 text-sm font-medium text-gray-700"
+            >
+              <ChevronLeft className="size-4" aria-hidden />
+              {backToCategoriesLabel}
+            </Link>
+          </div>
+        </div>
       )}
 
       {/* Main Content */}
@@ -593,9 +621,18 @@ function CategoryNav({
 function MobileCategoryButton({
   categories,
   products,
+  activeCategoryId,
+  hrefFor,
 }: {
   categories: any[];
   products: any[];
+  activeCategoryId?: string | number;
+  /**
+   * Supplied in the category-first layout, where only one category is on the
+   * page and jumping means navigating. Omitted in the flat layout, where an
+   * in-page anchor is the right behaviour.
+   */
+  hrefFor?: (id: string | number) => string;
 }) {
   if (!categories || categories.length === 0) return null;
 
@@ -613,14 +650,29 @@ function MobileCategoryButton({
           <ul className="space-y-2">
             {categories.map((cat: any) => {
               const count = getProductCount(cat.id);
+              const isActive = String(cat.id) === String(activeCategoryId);
+              const className = `block px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
+                isActive ? "bg-gray-100 text-gray-900" : "hover:bg-gray-100"
+              }`;
+
               return (
                 <li key={cat.id}>
-                  <a
-                    href={`#category-${cat.id}`}
-                    className="block px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors text-sm font-medium"
-                  >
-                    {cat.name} <span className="text-gray-500">({count})</span>
-                  </a>
+                  {hrefFor ? (
+                    <Link
+                      href={hrefFor(cat.id)}
+                      scroll={false}
+                      className={className}
+                      aria-current={isActive ? "page" : undefined}
+                    >
+                      {cat.name}{" "}
+                      <span className="text-gray-500">({count})</span>
+                    </Link>
+                  ) : (
+                    <a href={`#category-${cat.id}`} className={className}>
+                      {cat.name}{" "}
+                      <span className="text-gray-500">({count})</span>
+                    </a>
+                  )}
                 </li>
               );
             })}
