@@ -114,16 +114,27 @@ function SidebarNavigation({ lang, pathname, enabledAddons = [] }: {
           return (
             <Collapsible
               key={item.path}
+              asChild
               open={isOpen}
               onOpenChange={() => toggleOpen(item.path)}
               className="group/collapsible"
             >
-              <SidebarMenuItem className="flex-col items-stretch">
+              {/* Local SidebarMenuItem is themed `flex items-center` (registry
+                  is just `relative`), which would lay the trigger and the
+                  submenu out side by side — stack them instead, and re-center
+                  the fixed-width button in icon mode. */}
+              <SidebarMenuItem className="flex-col items-stretch group-data-[collapsible=icon]:items-center">
                 <CollapsibleTrigger asChild>
                   <SidebarMenuButton tooltip={t(item.key)}>
                     <Icon />
-                    <span>{t(item.key)}</span>
-                    <ChevronDown className="ml-auto size-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-180" />
+                    {/* SidebarMenuButton only auto-hides `span:last-child` in
+                        icon mode; the chevron makes the label a middle child,
+                        so both need the explicit collapse rule or the label
+                        overflows into the 40px icon slot and hides the icon. */}
+                    <span className="group-data-[collapsible=icon]:hidden">
+                      {t(item.key)}
+                    </span>
+                    <ChevronDown className="ml-auto size-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-180 group-data-[collapsible=icon]:hidden" />
                   </SidebarMenuButton>
                 </CollapsibleTrigger>
                 <CollapsibleContent>
@@ -155,7 +166,7 @@ function SidebarNavigation({ lang, pathname, enabledAddons = [] }: {
               tooltip={t(item.key)}
             >
               <Link href={`/admin/${lang}/${item.path}`}>
-                <Icon className="size-4" />
+                <Icon />
                 <span>{t(item.key)}</span>
               </Link>
             </SidebarMenuButton>

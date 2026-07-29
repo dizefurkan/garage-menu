@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations, useLocale } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Loader2, Copy, Check } from "lucide-react";
+import { QrOrderingCard } from "./qr-ordering-card";
 
 interface NetworkStatus {
   tenant_name: string;
@@ -15,7 +17,12 @@ interface NetworkStatus {
 }
 
 export default function OrdersSettingsPage() {
+  const t = useTranslations("orderSettings");
+  const locale = useLocale();
   const [networkStatus, setNetworkStatus] = useState<NetworkStatus | null>(null);
+  const [qrOrderingEnabled, setQrOrderingEnabled] = useState<boolean | null>(
+    null
+  );
   const [loading, setLoading] = useState(true);
   const [registering, setRegistering] = useState(false);
   const [generatingPin, setGeneratingPin] = useState(false);
@@ -23,18 +30,31 @@ export default function OrdersSettingsPage() {
   const [pinCopied, setPinCopied] = useState(false);
 
   useEffect(() => {
-    fetchNetworkStatus();
+    fetchSettings();
   }, []);
 
-  async function fetchNetworkStatus() {
+  async function fetchSettings() {
     try {
       setLoading(true);
-      const res = await fetch("/api/admin/network/verify-ip");
-      if (!res.ok) throw new Error("Failed to fetch network status");
-      const data = await res.json();
-      setNetworkStatus(data);
-    } catch (error) {
-      console.error("Error fetching network status:", error);
+      // Independent endpoints — a failure in one should not blank out the
+      // other, so they are settled separately rather than Promise.all'd.
+      const [networkRes, qrRes] = await Promise.allSettled([
+        fetch("/api/admin/network/verify-ip"),
+        fetch("/api/admin/settings/qr-ordering"),
+      ]);
+
+      if (networkRes.status === "fulfilled" && networkRes.value.ok) {
+        setNetworkStatus(await networkRes.value.json());
+      } else {
+        console.error("Error fetching network status:", networkRes);
+      }
+
+      if (qrRes.status === "fulfilled" && qrRes.value.ok) {
+        const data = await qrRes.value.json();
+        setQrOrderingEnabled(data.qr_ordering_enabled);
+      } else {
+        console.error("Error fetching QR ordering setting:", qrRes);
+      }
     } finally {
       setLoading(false);
     }
@@ -111,7 +131,7 @@ export default function OrdersSettingsPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold">Sipariş Ayarları</h1>
+      <h1 className="text-3xl font-bold">{t("title")}</h1>
 
       {loading ? (
         <div className="flex items-center justify-center p-8">
@@ -119,21 +139,28 @@ export default function OrdersSettingsPage() {
         </div>
       ) : !networkStatus ? (
         <div className="rounded-lg border bg-card p-8 text-center text-muted-foreground">
-          Ayarlar yüklenemedi
+          {t("loadError")}
         </div>
       ) : (
         <div className="space-y-6">
+          {/* QR Ordering master switch — the venue's own on/off, kept above
+              the verification settings because it gates all of them. */}
+          {qrOrderingEnabled !== null && (
+            <QrOrderingCard initialEnabled={qrOrderingEnabled} />
+          )}
+
           {/* WiFi IP Registration */}
           <div className="rounded-lg border bg-card p-6 space-y-4">
-            <h2 className="text-xl font-semibold">WiFi Ağ Kaydı</h2>
+            <h2 className="text-xl font-semibold">{t("wifi.title")}</h2>
             <p className="text-sm text-muted-foreground">
-              Kafenizin WiFi ağının IP adresini kaydederek, müşteriler aynı ağ üzerindeyse PIN
-              sorulmadan sipariş verebilirler.
+              {t("wifi.description")}
             </p>
 
             <div className="space-y-3">
               <div>
-                <p className="text-sm font-medium mb-2">Sizin Geçerli IP:</p>
+                <p className="text-sm font-medium mb-2">
+                  {t("wifi.currentIpLabel")}
+                </p>
                 <div className="flex items-center gap-2 bg-muted p-3 rounded">
                   <code className="flex-1">{networkStatus.current_ip}</code>
                   <Button
@@ -152,23 +179,25 @@ export default function OrdersSettingsPage() {
 
               {networkStatus.registered_network_ip && (
                 <div>
-                  <p className="text-sm font-medium mb-2">Kayıtlı IP Adresi:</p>
+                  <p className="text-sm font-medium mb-2">
+                    {t("wifi.registeredIpLabel")}
+                  </p>
                   <div className="bg-muted p-3 rounded">
                     <code>{networkStatus.registered_network_ip}</code>
                   </div>
                 </div>
               )}
 
-              <div className="flex items-center gap-2 p-3 rounded bg-blue-50 text-blue-700 text-sm">
+              <div className="flex items-center gap-2 p-3 rounded bg-muted text-sm text-muted-foreground">
                 {networkStatus.ip_matches ? (
                   <>
-                    <Check className="size-4" />
-                    <span>✓ Geçerli IP, kayıtlı IP ile eşleşiyor</span>
+                    <Check className="size-4 shrink-0" />
+                    <span>{t("wifi.statusMatches")}</span>
                   </>
                 ) : networkStatus.registered_network_ip ? (
-                  <span>Geçerli IP, kayıtlı IP ile eşleşmiyor (başka ağdasınız)</span>
+                  <span>{t("wifi.statusMismatch")}</span>
                 ) : (
-                  <span>Henüz IP kaydı yapılmamış</span>
+                  <span>{t("wifi.statusUnregistered")}</span>
                 )}
               </div>
 
@@ -179,19 +208,17 @@ export default function OrdersSettingsPage() {
               >
                 {registering && <Loader2 className="size-4 animate-spin" />}
                 {networkStatus.registered_network_ip
-                  ? "IP Adresini Güncelle"
-                  : "Geçerli IP'yi Kaydet"}
+                  ? t("wifi.updateButton")
+                  : t("wifi.registerButton")}
               </Button>
             </div>
           </div>
 
           {/* PIN Info */}
           <div className="rounded-lg border bg-card p-6 space-y-4">
-            <h2 className="text-xl font-semibold">Sipariş PIN Kodu</h2>
+            <h2 className="text-xl font-semibold">{t("pin.title")}</h2>
             <p className="text-sm text-muted-foreground">
-              WiFi ağında olmayan müşteriler siparişlerini doğrulamak için bu 4
-              haneli kodu girer. Kod, siz "Yeni Kod Üret" diyene kadar geçerli
-              kalır — günlük otomatik değişmez.
+              {t("pin.description")}
             </p>
 
             {networkStatus.has_pin_set && networkStatus.pin_code ? (
@@ -214,36 +241,43 @@ export default function OrdersSettingsPage() {
                 </div>
                 {networkStatus.pin_date && (
                   <p className="text-xs text-muted-foreground">
-                    Son üretim: {new Date(networkStatus.pin_date).toLocaleDateString("tr-TR")}
+                    {t("pin.lastGenerated", {
+                      // Was pinned to "tr-TR", so an English admin still got a
+                      // Turkish-formatted date. Follow the active locale.
+                      date: new Date(
+                        networkStatus.pin_date
+                      ).toLocaleDateString(locale),
+                    })}
                   </p>
                 )}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">PIN kodu henüz üretilmemiş</p>
+              <p className="text-sm text-muted-foreground">
+                {t("pin.notGenerated")}
+              </p>
             )}
 
             <Button onClick={generatePin} disabled={generatingPin} className="gap-2">
               {generatingPin && <Loader2 className="size-4 animate-spin" />}
-              {networkStatus.has_pin_set ? "Yeni Kod Üret" : "Kod Üret"}
+              {networkStatus.has_pin_set
+                ? t("pin.regenerateButton")
+                : t("pin.generateButton")}
             </Button>
           </div>
 
           {/* How It Works */}
           <div className="rounded-lg border bg-card p-6 space-y-4">
-            <h2 className="text-xl font-semibold">Nasıl Çalışır?</h2>
-            <div className="space-y-3 text-sm">
-              <p>
-                <strong>1. WiFi IP Kaydı:</strong> Kafenizin WiFi ağının IP adresini kaydettikten
-                sonra, müşteriler bu ağdan sipariş verirse otomatik olarak doğrulanır.
-              </p>
-              <p>
-                <strong>2. PIN Doğrulaması:</strong> WiFi ağında olmayan müşteriler (mobil veri
-                kullananlar gibi) günlük PIN kodunu girer.
-              </p>
-              <p>
-                <strong>3. Fallback:</strong> WiFi ağında olsa da PIN'e girebilir, isterlerse.
-              </p>
-            </div>
+            <h2 className="text-xl font-semibold">{t("howItWorks.title")}</h2>
+            <ol className="space-y-3 text-sm">
+              {(["step1", "step2", "step3"] as const).map((step, index) => (
+                <li key={step}>
+                  <strong>
+                    {index + 1}. {t(`howItWorks.${step}Label`)}:
+                  </strong>{" "}
+                  {t(`howItWorks.${step}`)}
+                </li>
+              ))}
+            </ol>
           </div>
         </div>
       )}

@@ -30,7 +30,11 @@ export async function generateMenuMetadata(
   const siteName = tenant.name;
   const description =
     tenant.description ||
-    `Check out the menu from ${tenant.name}. Available in ${tenant.languages.join(", ")}`;
+    // languages is nullable in the schema; the old hand-written types said
+    // otherwise, so this would have thrown on a tenant that never set them.
+    `Check out the menu from ${tenant.name}. Available in ${(
+      tenant.languages ?? []
+    ).join(", ")}`;
 
   return {
     title: {

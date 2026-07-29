@@ -164,7 +164,9 @@
     "member_many": "members",
     "totalProducts": "Total Products",
     "totalCategories": "Total Categories",
-    "activeMenus": "Active Menus"
+    "activeMenus": "Active Menus",
+    "qrOrderingOn": "QR Ordering: On",
+    "qrOrderingOff": "QR Ordering: Off"
   },
   "products": {
     "title": "Products",
@@ -250,7 +252,23 @@
     "tiktokPlaceholder": "@yourusername",
     "contactSaved": "Contact information saved successfully",
     "themeSaved": "Theme settings updated successfully",
-    "failedToUpdate": "Failed to update theme"
+    "failedToUpdate": "Failed to update theme",
+    "menuLayoutTitle": "Menu Layout",
+    "menuLayoutHint": "What guests see first when they scan the QR code.",
+    "menuLayoutProducts": "Product list",
+    "menuLayoutProductsHint": "Every category and its products listed on a single page.",
+    "menuLayoutCategories": "Category cards",
+    "menuLayoutCategoriesHint": "Categories open first as wide image cards; tapping one reveals its products.",
+    "menuLayoutNoImagesWarning": "No category has an image yet. With this layout categories fall back to plain tiles — you can upload images from the Categories page.",
+    "categorySortTitle": "Category order",
+    "productSortTitle": "Product order",
+    "sortManual": "Manual order",
+    "sortAlphabetical": "Alphabetical (A-Z)",
+    "sortPopularity": "Most ordered",
+    "sortPriceAsc": "Price: low to high",
+    "sortPriceDesc": "Price: high to low",
+    "sortNewest": "Newest first",
+    "sortPopularityNeedsOrders": "Without order data this mode falls back to manual order."
   },
   "errors": {
     "required": "This field is required",
@@ -479,6 +497,101 @@
     "requiredBadge": "Required",
     "optionalBadge": "Optional",
     "productImageSectionDescription": "The photo shown alongside the product on the menu.",
-    "model3dSectionDescription": "Model files that let customers view the product in 3D."
+    "model3dSectionDescription": "Model files that let customers view the product in 3D.",
+    "calories": "Calories",
+    "caloriesPlaceholder": "e.g. 450",
+    "caloriesHint": "Optional. Leave empty and no calorie info is shown on the menu.",
+    "categoryImageTitle": "Category Image",
+    "categoryImageHint": "Shown as a wide banner in the category-first menu layout. Upload a landscape (21:9) image for best results. Left empty, a plain tile is shown instead.",
+    "availabilityTitle": "Sales status",
+    "availabilityOnSale": "On sale",
+    "availabilityOutOfStock": "Sold out",
+    "availabilityHidden": "Closed for sale",
+    "availabilityOnSaleHint": "Visible on the menu and orderable.",
+    "availabilityOutOfStockHint": "Visible on the menu but not orderable; shows a “Sold out” label.",
+    "availabilityHiddenHint": "Not shown on the menu at all."
+  },
+  "orderSettings": {
+    "title": "Order Settings",
+    "loadError": "Settings could not be loaded",
+    "wifi": {
+      "title": "WiFi Network Registration",
+      "description": "Register your venue's WiFi IP address so guests on the same network can order without entering a PIN.",
+      "currentIpLabel": "Your current IP",
+      "registeredIpLabel": "Registered IP address",
+      "statusMatches": "Current IP matches the registered one",
+      "statusMismatch": "Current IP does not match the registered one (you're on a different network)",
+      "statusUnregistered": "No IP registered yet",
+      "updateButton": "Update IP Address",
+      "registerButton": "Register Current IP"
+    },
+    "pin": {
+      "title": "Order PIN Code",
+      "description": "Guests who are not on your WiFi enter this 4-digit code to verify their order. The code stays valid until you generate a new one — it does not rotate daily.",
+      "notGenerated": "No PIN code generated yet",
+      "lastGenerated": "Last generated: {date}",
+      "generateButton": "Generate Code",
+      "regenerateButton": "Generate New Code"
+    },
+    "howItWorks": {
+      "title": "How It Works",
+      "step1Label": "WiFi IP registration",
+      "step1": "Once your venue's WiFi IP is registered, guests ordering from that network are verified automatically.",
+      "step2Label": "PIN verification",
+      "step2": "Guests who aren't on your WiFi (on mobile data, for example) enter the PIN code.",
+      "step3Label": "Fallback",
+      "step3": "Even on your WiFi, a guest can verify with the PIN if they prefer."
+    },
+    "qrOrdering": {
+      "title": "QR Ordering",
+      "description": "Guests can scan the QR code and order straight from the table. Turn it off and the menu becomes a showcase: prices and items stay visible, ordering buttons disappear, and a waiter takes the order instead.",
+      "switchLabel": "Accept orders from QR",
+      "statusOn": "On",
+      "statusOff": "Off",
+      "statusOnHint": "Guests can order from their table.",
+      "statusOffHint": "Menu is in showcase mode. Ordering buttons are hidden.",
+      "saveError": "Could not save the setting"
+    }
+  },
+  "emptyStates": {
+    "products": {
+      "title": "No products yet",
+      "description": "Add the first item that will appear on your menu. You can edit the photo, price and description later.",
+      "action": "Add product"
+    },
+    "categories": {
+      "title": "No categories yet",
+      "description": "Create a category to group your products — it shows up as a heading on the menu.",
+      "action": "Add category"
+    },
+    "orders": {
+      "title": "No orders yet",
+      "description": "Orders from tables will show up here in real time as they arrive."
+    },
+    "accessDenied": {
+      "title": "You don't have access to this page",
+      "description": "Your account role can't view this section. Talk to your venue administrator if you need access."
+    }
+  },
+  "categoryForm": {
+    "newTitle": "New Category",
+    "editTitle": "Edit Category",
+    "nameLabel": "Category Name ({lang})",
+    "namePlaceholder": "e.g. Desserts",
+    "descriptionLabel": "Description ({lang})",
+    "descriptionPlaceholder": "Optional description...",
+    "loading": "Loading...",
+    "notFound": "Category not found",
+    "nameRequired": "At least one category name is required",
+    "created": "Category created",
+    "updated": "Category updated",
+    "createFailed": "Could not create category",
+    "updateFailed": "Could not update category",
+    "loadFailed": "Could not load category",
+    "save": "Save",
+    "saving": "Saving...",
+    "create": "Create",
+    "creating": "Creating...",
+    "cancel": "Cancel"
   }
 }

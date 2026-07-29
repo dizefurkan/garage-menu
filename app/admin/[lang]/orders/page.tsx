@@ -23,6 +23,7 @@ import {
 import { OrderCardList } from "./order-card-list";
 import { Button } from "@/components/ui/button";
 import { Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { EmptyOrdersState } from "@/components/sections/EmptyOrdersState";
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50];
 const DEFAULT_PAGE_SIZE = 20;
@@ -295,6 +296,11 @@ export default function OrdersPage() {
         <div className="flex items-center justify-center p-8">
           <Loader2 className="size-6 animate-spin" />
         </div>
+      ) : allCount === 0 ? (
+        // allCount is the unfiltered total, so this only fires when the venue
+        // genuinely has no orders — not when a status/table filter happens to
+        // match nothing. The table's own "no results" row covers that case.
+        <EmptyOrdersState />
       ) : (
         <>
           <div className="hidden md:block">

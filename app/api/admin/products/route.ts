@@ -26,6 +26,8 @@ export async function GET(request: NextRequest) {
         id,
         price,
         currency,
+        calories,
+        is_out_of_stock,
         image_url,
         is_available,
         is_draft,
@@ -85,6 +87,7 @@ export async function GET(request: NextRequest) {
         currency: product.currency,
         image_url: product.image_url,
         is_available: product.is_available,
+        is_out_of_stock: product.is_out_of_stock ?? false,
         is_draft: product.is_draft,
         created_at: product.created_at,
         category_id: product.category_id,
@@ -124,7 +127,9 @@ export async function POST(req: NextRequest) {
     const {
       price,
       currency,
+      calories,
       is_available,
+      is_out_of_stock = false,
       category_id,
       translations,
       allergen_ids = [],
@@ -153,7 +158,13 @@ export async function POST(req: NextRequest) {
         category_id,
         price,
         currency,
+        // Blank input means "not declared", which is NULL — not 0.
+        calories:
+          calories === undefined || calories === null || calories === ""
+            ? null
+            : Number(calories),
         is_available,
+        is_out_of_stock: Boolean(is_out_of_stock),
         contains_no_allergens: contains_no_allergens && allergenIds.length === 0,
         image_url: image_url || null,
         model_glb_url: model_glb_url || null,

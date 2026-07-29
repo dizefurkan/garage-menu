@@ -8,12 +8,22 @@ import type { Database } from "@/lib/database.types";
 
 type Tenant = Database["public"]["Tables"]["tenants"]["Row"];
 
+type MenuLayout = Tenant["menu_layout"];
+type CategorySort = Tenant["category_sort"];
+type ProductSort = Tenant["product_sort"];
+
 interface ThemeSettingsProps {
   tenant: Tenant;
   messages?: Record<string, string>;
+  /** Whether any category has a banner image — drives the fallback warning. */
+  hasCategoryImages?: boolean;
 }
 
-export function ThemeSettings({ tenant, messages = {} }: ThemeSettingsProps) {
+export function ThemeSettings({
+  tenant,
+  messages = {},
+  hasCategoryImages = true,
+}: ThemeSettingsProps) {
   const t = (key: string, defaultValue: string = "") => {
     return (messages[key] as string) || defaultValue;
   };
@@ -31,6 +41,18 @@ export function ThemeSettings({ tenant, messages = {} }: ThemeSettingsProps) {
   const [primary, setPrimary] = useState(themeConfig.primary);
   const [secondary, setSecondary] = useState(themeConfig.secondary);
   const [accent, setAccent] = useState(themeConfig.accent || "#808080");
+  // Stored in its own column rather than inside theme_config: that JSONB is
+  // validated as hex colours + font, and a structural layout flag does not
+  // belong there. It is still a theme choice from the user's point of view.
+  const [menuLayout, setMenuLayout] = useState<MenuLayout>(
+    tenant.menu_layout ?? "products"
+  );
+  const [categorySort, setCategorySort] = useState<CategorySort>(
+    tenant.category_sort ?? "manual"
+  );
+  const [productSort, setProductSort] = useState<ProductSort>(
+    tenant.product_sort ?? "manual"
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -52,6 +74,9 @@ export function ThemeSettings({ tenant, messages = {} }: ThemeSettingsProps) {
             secondary,
             accent: accent || undefined,
           },
+          menu_layout: menuLayout,
+          category_sort: categorySort,
+          product_sort: productSort,
         }),
       });
 
@@ -141,6 +166,151 @@ export function ThemeSettings({ tenant, messages = {} }: ThemeSettingsProps) {
             <span className="text-xs text-gray-500">Used for highlights</span>
           </div>
         </div>
+      </div>
+
+      {/* Menu layout — a layout choice deserves to be *seen*, not picked from
+          a dropdown, so each option carries a small wireframe of the result. */}
+      <div className="space-y-3">
+        <div>
+          <label className="block text-sm font-medium">
+            {t("menuLayoutTitle", "Menu Layout")}
+          </label>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {t("menuLayoutHint", "")}
+          </p>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          {(
+            [
+              {
+                value: "products" as const,
+                label: t("menuLayoutProducts", "Product list"),
+                hint: t("menuLayoutProductsHint", ""),
+              },
+              {
+                value: "categories" as const,
+                label: t("menuLayoutCategories", "Category cards"),
+                hint: t("menuLayoutCategoriesHint", ""),
+              },
+            ]
+          ).map((option) => {
+            const selected = menuLayout === option.value;
+            return (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => setMenuLayout(option.value)}
+                aria-pressed={selected}
+                className={`rounded-lg border p-4 text-left transition-colors ${
+                  selected
+                    ? "border-foreground bg-accent"
+                    : "border-border hover:bg-accent/50"
+                }`}
+              >
+                <div
+                  className="mb-3 space-y-1.5 rounded border border-border bg-background p-2"
+                  aria-hidden
+                >
+                  {option.value === "products" ? (
+                    <>
+                      <div className="h-1.5 w-10 rounded-full bg-foreground/50" />
+                      <div className="flex gap-1.5">
+                        <div className="h-6 flex-1 rounded bg-foreground/10" />
+                        <div className="h-6 flex-1 rounded bg-foreground/10" />
+                      </div>
+                      <div className="h-1.5 w-8 rounded-full bg-foreground/50" />
+                      <div className="flex gap-1.5">
+                        <div className="h-6 flex-1 rounded bg-foreground/10" />
+                        <div className="h-6 flex-1 rounded bg-foreground/10" />
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="h-5 w-full rounded bg-foreground/20" />
+                      <div className="h-5 w-full rounded bg-foreground/15" />
+                      <div className="h-5 w-full rounded bg-foreground/10" />
+                    </>
+                  )}
+                </div>
+
+                <p className="text-sm font-medium">{option.label}</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {option.hint}
+                </p>
+              </button>
+            );
+          })}
+        </div>
+
+        {menuLayout === "categories" && !hasCategoryImages && (
+          <p className="rounded-md border border-border bg-muted p-3 text-xs text-muted-foreground">
+            {t("menuLayoutNoImagesWarning", "")}
+          </p>
+        )}
+      </div>
+
+      {/* Ordering. Lives next to the layout because both answer the same
+          question — how the public menu presents itself. */}
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label
+            htmlFor="category-sort"
+            className="mb-2 block text-sm font-medium"
+          >
+            {t("categorySortTitle", "Category order")}
+          </label>
+          <select
+            id="category-sort"
+            value={categorySort}
+            onChange={(e) => setCategorySort(e.target.value as CategorySort)}
+            className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+          >
+            <option value="manual">{t("sortManual", "Manual order")}</option>
+            <option value="alphabetical">
+              {t("sortAlphabetical", "Alphabetical (A-Z)")}
+            </option>
+            <option value="popularity">
+              {t("sortPopularity", "Most ordered")}
+            </option>
+          </select>
+        </div>
+
+        <div>
+          <label
+            htmlFor="product-sort"
+            className="mb-2 block text-sm font-medium"
+          >
+            {t("productSortTitle", "Product order")}
+          </label>
+          <select
+            id="product-sort"
+            value={productSort}
+            onChange={(e) => setProductSort(e.target.value as ProductSort)}
+            className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+          >
+            <option value="manual">{t("sortManual", "Manual order")}</option>
+            <option value="alphabetical">
+              {t("sortAlphabetical", "Alphabetical (A-Z)")}
+            </option>
+            <option value="popularity">
+              {t("sortPopularity", "Most ordered")}
+            </option>
+            <option value="price_asc">
+              {t("sortPriceAsc", "Price: low to high")}
+            </option>
+            <option value="price_desc">
+              {t("sortPriceDesc", "Price: high to low")}
+            </option>
+            <option value="newest">{t("sortNewest", "Newest first")}</option>
+          </select>
+        </div>
+
+        {(categorySort === "popularity" || productSort === "popularity") && (
+          <p className="text-xs text-muted-foreground sm:col-span-2">
+            {t("sortPopularityNeedsOrders", "")}
+          </p>
+        )}
       </div>
 
       {/* Theme Preview */}

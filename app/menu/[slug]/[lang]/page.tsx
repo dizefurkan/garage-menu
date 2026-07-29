@@ -7,8 +7,10 @@ import { AnalyticsTracker } from "@/components/AnalyticsTracker";
 import { ProductCard } from "./product-card";
 import { CartSidebar } from "./cart-sidebar";
 import { CartProvider } from "./cart-context";
+import { CategoryLanding } from "./category-landing";
 import { getLanguageFlag } from "@/lib/language-flags";
-import { Globe } from "lucide-react";
+import { Globe, ChevronLeft } from "lucide-react";
+import Link from "next/link";
 
 function getBaseUrl(): string {
   // On Vercel production, use the production domain
@@ -29,6 +31,19 @@ function getBaseUrl(): string {
   return "http://localhost:3000";
 }
 
+// The public menu is outside NextIntlClientProvider, so its few strings use
+// the same per-language map pattern as the allergen and close labels.
+const BACK_TO_CATEGORIES_LABELS: Record<string, string> = {
+  tr: "Kategoriler",
+  en: "Categories",
+  de: "Kategorien",
+  fr: "Catégories",
+  es: "Categorías",
+  ru: "Категории",
+  ar: "الفئات",
+  zh: "分类",
+};
+
 interface Props {
   params: Promise<{
     slug: string;
@@ -36,6 +51,8 @@ interface Props {
   }>;
   searchParams: Promise<{
     tableId?: string;
+    /** Set when drilling into one category from the category-first layout. */
+    category?: string;
   }>;
 }
 
@@ -263,7 +280,7 @@ async function getMenuData(slug: string, lang: string) {
 
 export default async function MenuPage({ params, searchParams }: Props) {
   const { slug, lang } = await params;
-  const { tableId } = await searchParams;
+  const { tableId, category: selectedCategoryId } = await searchParams;
 
   console.log("[MenuPage] Rendering for:", { slug, lang });
 
@@ -324,6 +341,31 @@ export default async function MenuPage({ params, searchParams }: Props) {
   // the API already filters out empty categories
   const shouldShowCategoryNav = (categories?.length || 0) >= 2;
 
+  // The venue can switch QR ordering off and keep the menu as a read-only
+  // showcase. Every ordering affordance downstream is gated on the presence of
+  // tableId, so dropping it here disables the cart and the per-product add
+  // buttons in one place. The /api/order endpoint rejects independently.
+  const orderingTableId =
+    tenant.qr_ordering_enabled === false ? undefined : tableId;
+
+  // Category-first layout: the landing screen lists categories, and picking
+  // one drills into the existing product view via ?category=<id>. Falls back
+  // to the flat layout when the venue has a single category — a one-item
+  // landing screen is just an extra tap.
+  const useCategoryLayout =
+    tenant.menu_layout === "categories" && (categories?.length || 0) > 1;
+  const activeCategory = selectedCategoryId
+    ? categories?.find((c: any) => String(c.id) === String(selectedCategoryId))
+    : null;
+  const showCategoryLanding = useCategoryLayout && !activeCategory;
+
+  // In the drilled-in view only the chosen category renders; otherwise the
+  // full list, exactly as before.
+  const visibleCategories = activeCategory ? [activeCategory] : categories;
+
+  const backToCategoriesLabel =
+    BACK_TO_CATEGORIES_LABELS[lang] || BACK_TO_CATEGORIES_LABELS.en;
+
   // Extract theme config with fallbacks
   const themeConfig = (tenant.theme_config as any) || {};
   const primaryColor = themeConfig.primary || "#000000";
@@ -362,21 +404,40 @@ export default async function MenuPage({ params, searchParams }: Props) {
       )}
 
       {/* Category Navigation */}
-      {shouldShowCategoryNav && (
-        <CategoryNav categories={categories} products={products} />
+      {shouldShowCategoryNav && !showCategoryLanding && (
+        <CategoryNav
+          categories={visibleCategories}
+          products={products}
+          backHref={
+            activeCategory
+              ? `?${orderingTableId ? `tableId=${orderingTableId}` : ""}`
+              : undefined
+          }
+          backLabel={backToCategoriesLabel}
+        />
       )}
 
       {/* Mobile Floating Button */}
-      {shouldShowCategoryNav && (
-        <MobileCategoryButton categories={categories} products={products} />
+      {shouldShowCategoryNav && !showCategoryLanding && (
+        <MobileCategoryButton
+          categories={visibleCategories}
+          products={products}
+        />
       )}
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Categories with Products */}
-        {categories && categories.length > 0 ? (
+        {showCategoryLanding ? (
+          <CategoryLanding
+            categories={categories}
+            lang={lang}
+            tableId={orderingTableId}
+            primaryColor={primaryColor}
+          />
+        ) : visibleCategories && visibleCategories.length > 0 ? (
           <div className="space-y-12">
-            {categories.map((category: any) => {
+            {visibleCategories.map((category: any) => {
               const categoryProducts = products.filter(
                 (p: any) => p.category_id === category.id
               );
@@ -390,7 +451,7 @@ export default async function MenuPage({ params, searchParams }: Props) {
                   products={categoryProducts}
                   primaryColor={primaryColor}
                   lang={lang}
-                  tableId={tableId}
+                  tableId={orderingTableId}
                 />
               );
             })}
@@ -406,8 +467,12 @@ export default async function MenuPage({ params, searchParams }: Props) {
       <Footer tenant={tenant} />
 
       {/* Cart Sidebar (Order Mode) */}
-      {tableId && (
-        <CartSidebar slug={slug} tableId={tableId} primaryColor={primaryColor} />
+      {orderingTableId && (
+        <CartSidebar
+          slug={slug}
+          tableId={orderingTableId}
+          primaryColor={primaryColor}
+        />
       )}
       </div>
     </CartProvider>
@@ -472,9 +537,14 @@ function Header({
 function CategoryNav({
   categories,
   products,
+  backHref,
+  backLabel,
 }: {
   categories: any[];
   products: any[];
+  /** Present only in the drilled-in category view. */
+  backHref?: string;
+  backLabel?: string;
 }) {
   if (!categories || categories.length === 0) return null;
 
@@ -485,7 +555,18 @@ function CategoryNav({
   return (
     <nav className="hidden md:block sticky top-0 z-30 bg-white border-b border-gray-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex gap-2 overflow-x-auto py-4 scrollbar-hide">
+        <div className="flex items-center gap-2 overflow-x-auto py-4 scrollbar-hide">
+          {backHref && (
+            <Link
+              href={backHref}
+              scroll={false}
+              className="flex shrink-0 items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100"
+            >
+              <ChevronLeft className="size-4" aria-hidden />
+              {backLabel}
+            </Link>
+          )}
+          {backHref && <span className="h-5 w-px shrink-0 bg-gray-200" />}
           {categories.map((cat: any) => {
             const count = getProductCount(cat.id);
             return (

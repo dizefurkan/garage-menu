@@ -36,6 +36,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 
 export type Product = {
@@ -45,6 +46,7 @@ export type Product = {
   currency: string;
   image_url: string | null;
   is_available: boolean;
+  is_out_of_stock?: boolean;
   is_draft: boolean;
   created_at: string;
   categoryName?: string;
@@ -192,14 +194,24 @@ export function createColumns(t: (key: string) => string): ColumnDef<Product>[] 
   ];
 }
 
+type ProductStatus = "on_sale" | "out_of_stock" | "hidden";
+
 export const columns: ColumnDef<Product>[] = createColumns((key) => key);
 
 function StatusCell({ product }: { product: Product }) {
+  const t = useTranslations("admin");
   const router = useRouter();
   const [isToggling, setIsToggling] = useState(false);
-  const isAvailable = product.is_available;
 
-  const handleToggleAvailability = async (checked: boolean) => {
+  // Two booleans, one control. "hidden" wins over "out of stock" because an
+  // unrendered product has nothing to label.
+  const status: ProductStatus = !product.is_available
+    ? "hidden"
+    : product.is_out_of_stock
+      ? "out_of_stock"
+      : "on_sale";
+
+  const handleStatusChange = async (next: ProductStatus) => {
     setIsToggling(true);
     try {
       // Fetch current product data to get translations
@@ -228,7 +240,8 @@ function StatusCell({ product }: { product: Product }) {
           currency: currentProduct.currency,
           category_id: currentProduct.category_id,
           image_url: currentProduct.image_url,
-          is_available: checked,
+          is_available: next !== "hidden",
+          is_out_of_stock: next === "out_of_stock",
           translations,
         }),
       });
@@ -253,11 +266,17 @@ function StatusCell({ product }: { product: Product }) {
 
   return (
     <div className="flex justify-end">
-      <Switch
-        checked={isAvailable}
-        onCheckedChange={handleToggleAvailability}
+      <select
+        value={status}
+        onChange={(e) => handleStatusChange(e.target.value as ProductStatus)}
         disabled={isToggling}
-      />
+        aria-label={t("availabilityTitle")}
+        className="h-8 rounded-md border border-input bg-background px-2 text-xs disabled:opacity-50"
+      >
+        <option value="on_sale">{t("availabilityOnSale")}</option>
+        <option value="out_of_stock">{t("availabilityOutOfStock")}</option>
+        <option value="hidden">{t("availabilityHidden")}</option>
+      </select>
     </div>
   );
 }

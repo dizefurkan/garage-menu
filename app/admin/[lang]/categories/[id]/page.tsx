@@ -9,9 +9,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { ImageUpload } from "@/components/ui/image-upload";
+import { uploadImageFile } from "@/lib/deferred-uploads";
 import { useTenant } from "@/lib/context/tenant-context";
+import { getLanguageName } from "@/lib/language-flags";
 
 export default function EditCategoryPage() {
+  const t = useTranslations("admin");
+  const tf = useTranslations("categoryForm");
   const router = useRouter();
   const params = useParams();
   const tenant = useTenant();
@@ -23,6 +29,8 @@ export default function EditCategoryPage() {
   const [formData, setFormData] = useState<
     Record<string, { name: string; description: string }>
   >({});
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [pendingImageFile, setPendingImageFile] = useState<File | null>(null);
 
   // Fetch category and initialize form
   useEffect(() => {
@@ -31,11 +39,12 @@ export default function EditCategoryPage() {
       try {
         const response = await fetch(`/api/admin/categories/${categoryId}`);
         if (!response.ok) {
-          throw new Error("Kategori bulunamadı");
+          throw new Error(tf("notFound"));
         }
 
         const data = await response.json();
         setCategory(data);
+        setImageUrl(data.image_url ?? null);
 
         // Initialize form with translations for ALL tenant languages
         const languages = tenant.languages || ["en"];
@@ -56,7 +65,7 @@ export default function EditCategoryPage() {
         setFormData(initialData);
       } catch (err) {
         toast.error(
-          err instanceof Error ? err.message : "Failed to load category"
+          err instanceof Error ? err.message : tf("loadFailed")
         );
       } finally {
         setLoading(false);
@@ -77,28 +86,37 @@ export default function EditCategoryPage() {
     // Validate that at least one language has a name
     const hasAnyName = Object.values(formData).some((lang) => lang.name.trim());
     if (!hasAnyName) {
-      toast.error("At least one category name is required");
+      toast.error(tf("nameRequired"));
       setSaving(false);
       return;
     }
 
     try {
+      // Upload the picked file only now that the user is committing, the
+      // same deferred pattern the product form uses.
+      const uploadedUrl = pendingImageFile
+        ? await uploadImageFile(pendingImageFile)
+        : null;
+
       const response = await fetch(`/api/admin/categories/${categoryId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ translations: formData }),
+        body: JSON.stringify({
+          translations: formData,
+          image_url: uploadedUrl ?? imageUrl,
+        }),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to update category");
+        throw new Error(errorData.error || tf("updateFailed"));
       }
 
-      toast.success("Category updated successfully!");
+      toast.success(tf("updated"));
       setTimeout(() => router.push("/admin/categories"), 1000);
     } catch (err) {
       toast.error(
-        err instanceof Error ? err.message : "Failed to update category"
+        err instanceof Error ? err.message : tf("updateFailed")
       );
     } finally {
       setSaving(false);
@@ -108,10 +126,10 @@ export default function EditCategoryPage() {
   if (loading) {
     return (
       <div className="max-w-2xl space-y-6">
-        <h1 className="text-3xl font-bold">Kategoriyi Düzenle</h1>
+        <h1 className="text-3xl font-bold">{tf("editTitle")}</h1>
         <Card>
           <CardContent className="pt-6">
-            <p className="text-center text-gray-600">Yükleniyor...</p>
+            <p className="text-center text-gray-600">{tf("loading")}</p>
           </CardContent>
         </Card>
       </div>
@@ -125,11 +143,11 @@ export default function EditCategoryPage() {
           <Button variant="ghost" size="sm" onClick={() => router.back()}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <h1 className="text-3xl font-bold">Edit Category</h1>
+          <h1 className="text-3xl font-bold">{tf("editTitle")}</h1>
         </div>
         <Card>
           <CardContent className="pt-6">
-            <p className="text-center text-gray-600">Category not found</p>
+            <p className="text-center text-gray-600">{tf("notFound")}</p>
           </CardContent>
         </Card>
       </div>
@@ -142,7 +160,7 @@ export default function EditCategoryPage() {
         <Button variant="ghost" size="sm" onClick={() => router.back()}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <h1 className="text-3xl font-bold">Edit Category</h1>
+        <h1 className="text-3xl font-bold">{tf("editTitle")}</h1>
       </div>
 
       <Card>
@@ -152,7 +170,7 @@ export default function EditCategoryPage() {
               <TabsList>
                 {languages.map((lang) => (
                   <TabsTrigger key={lang} value={lang}>
-                    {lang === "en" ? "English" : "Türkçe"}
+                    {getLanguageName(lang)}
                   </TabsTrigger>
                 ))}
               </TabsList>
@@ -161,11 +179,11 @@ export default function EditCategoryPage() {
                 <TabsContent key={lang} value={lang} className="space-y-4">
                   <div className="flex flex-col">
                     <label className="mb-2 block text-sm font-medium">
-                      Kategori Adı ({lang.toUpperCase()})
+                      {tf("nameLabel", { lang: lang.toUpperCase() })}
                     </label>
                     <Input
                       type="text"
-                      placeholder="örn. Pasta ve Tatlılar"
+                      placeholder={tf("namePlaceholder")}
                       value={formData[lang]?.name || ""}
                       onChange={(e) =>
                         setFormData((prev) => ({
@@ -181,10 +199,10 @@ export default function EditCategoryPage() {
 
                   <div className="flex flex-col">
                     <label className="mb-2 block text-sm font-medium">
-                      Açıklama ({lang.toUpperCase()})
+                      {tf("descriptionLabel", { lang: lang.toUpperCase() })}
                     </label>
                     <Textarea
-                      placeholder="Kategoriyi açıklayın..."
+                      placeholder={tf("descriptionPlaceholder")}
                       value={formData[lang]?.description || ""}
                       onChange={(e) =>
                         setFormData((prev) => ({
@@ -202,6 +220,22 @@ export default function EditCategoryPage() {
               ))}
             </Tabs>
 
+            <div className="space-y-2">
+              <label className="block text-sm font-medium">
+                {t("categoryImageTitle")}
+              </label>
+              <ImageUpload
+                value={imageUrl ?? undefined}
+                onChange={(url) => setImageUrl(url || null)}
+                onFileSelect={setPendingImageFile}
+                disabled={saving}
+              />
+              <p className="text-xs text-muted-foreground">
+                {t("categoryImageHint")}
+              </p>
+            </div>
+
+
             <div className="flex gap-3 pt-4">
               <Button
                 type="button"
@@ -212,7 +246,7 @@ export default function EditCategoryPage() {
                 İptal
               </Button>
               <Button type="submit" disabled={saving}>
-                {saving ? "Kaydediliyor..." : "Kaydet"}
+                {tf(saving ? "saving" : "save")}
               </Button>
             </div>
           </form>

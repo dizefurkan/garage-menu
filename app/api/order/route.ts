@@ -45,7 +45,12 @@ export async function POST(request: NextRequest) {
     // Fetch tenant
     const { data: tenant, error: tenantError } = await (supabaseAdmin as any)
       .from("tenants")
-      .select("id, slug, verified_network_ip, order_pin_code, order_pin_date")
+      // Explicit column list, not `*` — anything the checks below read has to
+      // be named here or it silently arrives as undefined and the check
+      // quietly passes. qr_ordering_enabled gates order acceptance.
+      .select(
+        "id, slug, verified_network_ip, order_pin_code, order_pin_date, qr_ordering_enabled"
+      )
       .eq("slug", tenant_slug)
       .single();
 
@@ -75,6 +80,16 @@ export async function POST(request: NextRequest) {
     if (addon.expires_at && new Date(addon.expires_at) < new Date()) {
       return NextResponse.json(
         { error: "Orders feature has expired" },
+        { status: 403 }
+      );
+    }
+
+    // Licensed, but the venue can still have ordering switched off — the menu
+    // is then a read-only showcase. Hiding the cart in the UI is not enough;
+    // this endpoint is public, so it has to reject on its own.
+    if (tenant.qr_ordering_enabled === false) {
+      return NextResponse.json(
+        { error: "Ordering is currently closed for this restaurant" },
         { status: 403 }
       );
     }
@@ -158,7 +173,10 @@ export async function POST(request: NextRequest) {
     for (const item of items) {
       const { data: product, error: productError } = await (supabaseAdmin as any)
         .from("products")
-        .select("price, tenant_id")
+        // Availability is read here, not just trusted from the menu payload:
+        // the cart may have been filled before the kitchen marked the item
+        // sold out, and this endpoint is public either way.
+        .select("price, tenant_id, is_available, is_out_of_stock")
         .eq("id", item.product_id)
         .single();
 
@@ -166,6 +184,17 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(
           { error: `Product ${item.product_id} not found or inaccessible` },
           { status: 404 }
+        );
+      }
+
+      if (product.is_available === false || product.is_out_of_stock === true) {
+        return NextResponse.json(
+          {
+            error: `Product ${item.product_id} is not available`,
+            product_id: item.product_id,
+            reason: "out_of_stock",
+          },
+          { status: 409 }
         );
       }
 

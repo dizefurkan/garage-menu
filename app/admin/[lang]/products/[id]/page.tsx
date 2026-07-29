@@ -47,9 +47,15 @@ import {
   uploadImageFile,
   uploadModelFile,
 } from "@/lib/deferred-uploads";
+import { getLanguageName } from "@/lib/language-flags";
 
 const productSchema = z.object({
   price: z.coerce.number().min(0).max(999999),
+  // Empty string -> undefined -> stored as NULL ("not declared").
+  calories: z.preprocess(
+    (v) => (v === "" || v === null ? undefined : v),
+    z.coerce.number().int().min(0).max(100000).optional()
+  ),
   currency: z.string().default("TRY"),
   is_available: z.boolean().default(true),
   category_id: z.coerce.number(),
@@ -141,6 +147,7 @@ export default function EditProductPage() {
 
         // Set form values
         setValue("price", productData.price);
+        setValue("calories", productData.calories ?? undefined);
         setValue("currency", productData.currency);
         setValue("is_available", productData.is_available || true);
         setValue("category_id", productData.category_id);
@@ -329,7 +336,7 @@ export default function EditProductPage() {
               <TabsList>
                 {languages.map((lang) => (
                   <TabsTrigger key={lang} value={lang}>
-                    {lang === "en" ? "English" : "Türkçe"}
+                    {getLanguageName(lang)}
                   </TabsTrigger>
                 ))}
               </TabsList>
@@ -429,6 +436,26 @@ export default function EditProductPage() {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+
+            {/* Calories — optional. Empty stays NULL so the menu shows no
+                calorie info at all rather than a misleading "0 kcal". */}
+            <div className="flex flex-col sm:max-w-[12rem]">
+              <label className="mb-2 block text-sm font-medium">
+                {t("calories")}
+              </label>
+              <Input
+                type="number"
+                min="0"
+                step="1"
+                inputMode="numeric"
+                placeholder={t("caloriesPlaceholder")}
+                {...register("calories")}
+                className="h-10 w-full"
+              />
+              <p className="mt-1.5 text-xs text-muted-foreground">
+                {t("caloriesHint")}
+              </p>
             </div>
           </CardContent>
         </Card>

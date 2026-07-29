@@ -23,10 +23,13 @@ export async function GET(req: NextRequest) {
       .select(
         `
         id,
+        image_url,
+        display_order,
         category_translations(name, language_code)
       `
       )
       .eq("tenant_id", tenant.id)
+      .order("display_order")
       .order("id");
 
     if (error) {
@@ -64,7 +67,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { translations } = await req.json();
+    const { translations, image_url } = await req.json();
 
     if (!supabaseAdmin) {
       return NextResponse.json(
@@ -80,6 +83,7 @@ export async function POST(req: NextRequest) {
       .from("categories")
       .insert({
         tenant_id: tenant.id,
+        image_url: image_url || null,
         created_by: user.id,
         updated_by: user.id,
       })
