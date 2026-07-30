@@ -7,7 +7,15 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
@@ -16,7 +24,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
+import {
+  ArrowLeft,
+  Box,
+  Image as ImageIcon,
+  Info,
+  TriangleAlert,
+} from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -61,8 +76,7 @@ export default function ProductFormPage() {
   const router = useRouter();
   const params = useParams();
   const tenant = useTenant();
-  const [loading, setLoading] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [categories, setCategories] = useState<
     Array<{ id: number; name: string }>
   >([]);
@@ -74,13 +88,7 @@ export default function ProductFormPage() {
   const [pendingGlbFile, setPendingGlbFile] = useState<File | null>(null);
   const [pendingUsdzFile, setPendingUsdzFile] = useState<File | null>(null);
 
-  const productId = params?.id as string | undefined;
-  const isEdit = !!productId;
   const currentLang = (params?.lang as string) || "en";
-
-  useEffect(() => {
-    setIsEditMode(isEdit);
-  }, [isEdit]);
 
   // Fetch categories
   useEffect(() => {
@@ -148,7 +156,7 @@ export default function ProductFormPage() {
   });
 
   async function onSubmit(data: ProductFormData) {
-    setLoading(true);
+    setSaving(true);
 
     try {
       // Upload files picked in the form now that the user is committing
@@ -186,19 +194,50 @@ export default function ProductFormPage() {
         err instanceof Error ? err.message : t("productSaveFailed")
       );
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   }
 
   return (
     <div className="max-w-4xl space-y-6">
-      <h1 className="text-3xl font-bold">
-        {isEditMode ? t("editProduct") : t("newProduct")}
-      </h1>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" onClick={() => router.back()}>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <h1 className="text-3xl font-bold">{t("newProduct")}</h1>
+        </div>
+        <div className="flex items-center gap-3 rounded-lg border border-gray-200 px-4 py-2">
+          <div>
+            <p className="text-sm font-medium">
+              {watch("is_available")
+                ? `🟢 ${t("availableForSale")}`
+                : `🔴 ${t("notAvailableForSale")}`}
+            </p>
+          </div>
+          <Switch
+            checked={watch("is_available")}
+            onCheckedChange={(checked) => {
+              setValue("is_available", checked);
+            }}
+          />
+        </div>
+      </div>
 
-      <Card>
-        <CardContent className="pt-6">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        {/* Section 1: Basic Info (required) */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Info className="size-5 text-muted-foreground" />
+              <CardTitle>{t("basicInfoSection")}</CardTitle>
+            </div>
+            <CardDescription>{t("basicInfoSectionDescription")}</CardDescription>
+            <CardAction>
+              <Badge variant="secondary">{t("requiredBadge")}</Badge>
+            </CardAction>
+          </CardHeader>
+          <CardContent className="space-y-6">
             {/* Multi-language Tabs */}
             <Tabs defaultValue={languages[0] || "en"}>
               <TabsList>
@@ -320,38 +359,44 @@ export default function ProductFormPage() {
                 {t("caloriesHint")}
               </p>
             </div>
+          </CardContent>
+        </Card>
 
-            {/* Availability */}
+        {/* Section 2: Product image (feature) */}
+        <Card>
+          <CardHeader>
             <div className="flex items-center gap-2">
-              <Checkbox
-                id="is_available"
-                checked={watch("is_available")}
-                onCheckedChange={(checked) =>
-                  setValue("is_available", Boolean(checked))
-                }
-              />
-              <label
-                htmlFor="is_available"
-                className="text-sm font-medium cursor-pointer"
-              >
-                {t("availableForSale")}
-              </label>
+              <ImageIcon className="size-5 text-muted-foreground" />
+              <CardTitle>{t("productImage")}</CardTitle>
             </div>
+            <CardDescription>{t("productImageSectionDescription")}</CardDescription>
+            <CardAction>
+              <Badge variant="outline">{t("optionalBadge")}</Badge>
+            </CardAction>
+          </CardHeader>
+          <CardContent>
+            <ImageUpload
+              value={watch("image_url")}
+              onChange={(url) => setValue("image_url", url)}
+              onFileSelect={setPendingImageFile}
+              disabled={saving}
+            />
+          </CardContent>
+        </Card>
 
-            {/* Image Upload */}
-            <div className="flex flex-col">
-              <label className="mb-2 block text-sm font-medium">
-                {t("productImage")}
-              </label>
-              <ImageUpload
-                value={watch("image_url")}
-                onChange={(url) => setValue("image_url", url)}
-                onFileSelect={setPendingImageFile}
-                disabled={loading}
-              />
+        {/* Section 3: 3D / AR model (feature) */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Box className="size-5 text-muted-foreground" />
+              <CardTitle>{t("model3dTitle")}</CardTitle>
             </div>
-
-            {/* 3D / AR Model */}
+            <CardDescription>{t("model3dSectionDescription")}</CardDescription>
+            <CardAction>
+              <Badge variant="outline">{t("optionalBadge")}</Badge>
+            </CardAction>
+          </CardHeader>
+          <CardContent>
             <ModelUploadSection
               glbUrl={watch("model_glb_url")}
               usdzUrl={watch("model_usdz_url")}
@@ -361,10 +406,24 @@ export default function ProductFormPage() {
               onUsdzFileSelect={setPendingUsdzFile}
               onGlbClear={() => setValue("model_glb_url", null)}
               onUsdzClear={() => setValue("model_usdz_url", null)}
-              disabled={loading}
+              disabled={saving}
             />
+          </CardContent>
+        </Card>
 
-            {/* Allergens */}
+        {/* Section 4: Allergens (feature) */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <TriangleAlert className="size-5 text-muted-foreground" />
+              <CardTitle>{t("allergens")}</CardTitle>
+            </div>
+            <CardDescription>{t("allergensHint")}</CardDescription>
+            <CardAction>
+              <Badge variant="outline">{t("optionalBadge")}</Badge>
+            </CardAction>
+          </CardHeader>
+          <CardContent>
             <AllergenSelector
               allergens={allergens}
               selectedIds={watch("allergen_ids") || []}
@@ -373,30 +432,26 @@ export default function ProductFormPage() {
                 setValue("allergen_ids", ids);
                 setValue("contains_no_allergens", noAllergens);
               }}
-              disabled={loading}
+              disabled={saving}
             />
+          </CardContent>
+        </Card>
 
-            <div className="flex gap-3">
-              <Button type="submit" disabled={loading}>
-                {loading
-                  ? isEditMode
-                    ? t("saving")
-                    : t("creating")
-                  : isEditMode
-                    ? t("save")
-                    : t("create")}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => router.back()}
-              >
-                {t("cancel")}
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+        {/* Buttons */}
+        <div className="sticky bottom-0 flex justify-end gap-3 border-t bg-background/95 py-4 backdrop-blur supports-backdrop-filter:bg-background/60">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => router.back()}
+            disabled={saving}
+          >
+            {t("cancel")}
+          </Button>
+          <Button type="submit" disabled={saving}>
+            {saving ? t("creating") : t("create")}
+          </Button>
+        </div>
+      </form>
     </div>
   );
 }
