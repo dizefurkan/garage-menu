@@ -2,7 +2,6 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,13 +35,12 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
 import {
-  CircleCheck,
-  CircleAlert,
-  EyeOff,
-  type LucideIcon,
-} from "lucide-react";
+  ProductStatusSelect,
+  fromProductStatus,
+  toProductStatus,
+  type ProductStatus,
+} from "./product-status-select";
 import Image from "next/image";
 
 export type Product = {
@@ -207,30 +205,7 @@ export function createColumns(
   ];
 }
 
-type ProductStatus = "on_sale" | "out_of_stock" | "hidden";
-
 export const columns: ColumnDef<Product>[] = createColumns((key) => key);
-
-const STATUS_META: Record<
-  ProductStatus,
-  { icon: LucideIcon; labelKey: string; className: string }
-> = {
-  on_sale: {
-    icon: CircleCheck,
-    labelKey: "availabilityOnSale",
-    className: "text-emerald-600",
-  },
-  out_of_stock: {
-    icon: CircleAlert,
-    labelKey: "availabilityOutOfStock",
-    className: "text-amber-600",
-  },
-  hidden: {
-    icon: EyeOff,
-    labelKey: "availabilityHidden",
-    className: "text-muted-foreground",
-  },
-};
 
 function StatusCell({
   product,
@@ -239,17 +214,10 @@ function StatusCell({
   product: Product;
   onChanged?: () => void;
 }) {
-  const t = useTranslations("admin");
   const router = useRouter();
   const [isToggling, setIsToggling] = useState(false);
 
-  // Two booleans, one control. "hidden" wins over "out of stock" because an
-  // unrendered product has nothing to label.
-  const status: ProductStatus = !product.is_available
-    ? "hidden"
-    : product.is_out_of_stock
-      ? "out_of_stock"
-      : "on_sale";
+  const status = toProductStatus(product);
 
   const handleStatusChange = async (next: ProductStatus) => {
     setIsToggling(true);
@@ -280,8 +248,7 @@ function StatusCell({
           currency: currentProduct.currency,
           category_id: currentProduct.category_id,
           image_url: currentProduct.image_url,
-          is_available: next !== "hidden",
-          is_out_of_stock: next === "out_of_stock",
+          ...fromProductStatus(next),
           translations,
         }),
       });
@@ -307,29 +274,15 @@ function StatusCell({
     }
   };
 
-  const meta = STATUS_META[status];
-  const Icon = meta.icon;
-
   return (
-    <div className="flex items-center justify-end gap-2">
-      <Icon
-        className={`size-4 shrink-0 ${meta.className} ${
-          isToggling ? "animate-pulse" : ""
-        }`}
-        aria-hidden
-      />
-      <select
-        value={status}
-        onChange={(e) => handleStatusChange(e.target.value as ProductStatus)}
-        disabled={isToggling}
-        aria-label={t("availabilityTitle")}
-        className="h-8 rounded-md border border-input bg-background px-2 text-xs font-medium disabled:opacity-50"
-      >
-        <option value="on_sale">{t("availabilityOnSale")}</option>
-        <option value="out_of_stock">{t("availabilityOutOfStock")}</option>
-        <option value="hidden">{t("availabilityHidden")}</option>
-      </select>
-    </div>
+    <ProductStatusSelect
+      value={status}
+      onChange={handleStatusChange}
+      disabled={isToggling}
+      busy={isToggling}
+      size="sm"
+      className="flex items-center justify-end gap-2"
+    />
   );
 }
 

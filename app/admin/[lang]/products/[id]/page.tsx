@@ -24,7 +24,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import {
   ArrowLeft,
   Box,
@@ -32,6 +31,11 @@ import {
   Info,
   TriangleAlert,
 } from "lucide-react";
+import {
+  ProductStatusSelect,
+  fromProductStatus,
+  toProductStatus,
+} from "../product-status-select";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -58,6 +62,7 @@ const productSchema = z.object({
   ),
   currency: z.string().default("TRY"),
   is_available: z.boolean().default(true),
+  is_out_of_stock: z.boolean().default(false),
   category_id: z.coerce.number(),
   image_url: z.string().optional().nullable(),
   model_glb_url: z.string().optional().nullable(),
@@ -107,6 +112,7 @@ export default function EditProductPage() {
     resolver: zodResolver(productSchema) as any,
     defaultValues: {
       is_available: true,
+      is_out_of_stock: false,
       currency: "TRY",
     },
   });
@@ -149,7 +155,10 @@ export default function EditProductPage() {
         setValue("price", productData.price);
         setValue("calories", productData.calories ?? undefined);
         setValue("currency", productData.currency);
-        setValue("is_available", productData.is_available || true);
+        // `?? true`, not `|| true`: a hidden product has is_available=false and
+        // `||` would silently flip it back to on-sale on the next save.
+        setValue("is_available", productData.is_available ?? true);
+        setValue("is_out_of_stock", productData.is_out_of_stock ?? false);
         setValue("category_id", productData.category_id);
         setValue("image_url", productData.image_url || null);
         setValue("model_glb_url", productData.model_glb_url || null);
@@ -300,19 +309,21 @@ export default function EditProductPage() {
           </Button>
           <h1 className="text-3xl font-bold">{t("editProduct")}</h1>
         </div>
-        <div className="flex items-center gap-3 rounded-lg border border-gray-200 px-4 py-2">
-          <div>
-            <p className="text-sm font-medium">
-              {watch("is_available")
-                ? `🟢 ${t("availableForSale")}`
-                : `🔴 ${t("notAvailableForSale")}`}
-            </p>
-          </div>
-          <Switch
-            checked={watch("is_available")}
-            onCheckedChange={(checked) => {
-              setValue("is_available", checked);
+        <div className="flex items-center gap-3 rounded-lg border px-4 py-2">
+          <span className="text-sm font-medium text-muted-foreground">
+            {t("availabilityTitle")}
+          </span>
+          <ProductStatusSelect
+            value={toProductStatus({
+              is_available: watch("is_available"),
+              is_out_of_stock: watch("is_out_of_stock"),
+            })}
+            onChange={(next) => {
+              const flags = fromProductStatus(next);
+              setValue("is_available", flags.is_available);
+              setValue("is_out_of_stock", flags.is_out_of_stock);
             }}
+            disabled={saving}
           />
         </div>
       </div>
