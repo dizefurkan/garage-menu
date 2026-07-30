@@ -553,23 +553,43 @@ Kullanıcının panel üzerinde gezip verdiği geri bildirimlerden çıktı. Sı
 - Madde 5 (QR sipariş aç/kapat), madde 9 (EmptyState + 403), madde 4 (kategori
   görselleri + kategori-önce menü + sıralama modları), madde 2'nin taban kalori
   kısmı.
-- Üç durumlu ürün durumu: satışta / tükendi / satışa kapalı.
+- Üç durumlu ürün durumu: satışta / tükendi / satışa kapalı — listede
+  (`0f7df8a`) ve formlarda (`9584380`).
+- Kuyruk maddesi 1 (yeni ürün formu section düzeni) ve 2 (settings alt
+  route'ları + çalışan işletme bilgileri formu).
 - Hatalar: `order_items.tenant_id` + belirsiz FK (PGRST201), iki allowlist
   hatası (vitrin modu ve sipariş reddi çalışmıyordu), cache invalidation,
   `getLanguageName`, tip dosyası regen.
 
 ### Sırada bekleyen
 
-1. **IMP — `/admin/[lang]/products/new` section düzeni.** Düzenleme sayfası
-   (`products/[id]/page.tsx`) `Card` + `CardHeader` ile bölümlere ayrılmış
-   (Temel bilgiler / Görsel / 3B model). Yeni ürün sayfası düz form; aynı
-   yapıya getirilecek.
+> **Sıralama ilkesi (2026-07-30): basitten zora.**
 
-2. **IMP — `/admin/[lang]/settings` bölümlere ayrılsın.** Sayfa çok uzadı.
-   ✅ **Karar (2026-07-30): ayrı alt route'lar** (`settings/theme`,
-   `settings/languages`, `settings/contact` …). Ana `/settings` sayfası
-   başlık + açıklama listesi olur, tıklayınca alt sayfaya gider. Gerekçe: URL
-   paylaşılabilir ve tarayıcı geri tuşu doğal çalışır.
+1. ~~**IMP — `/admin/[lang]/products/new` section düzeni.**~~ ✅ Yapıldı
+   (`982e70c`). Düzenleme sayfasındaki dört Card bölümü (Temel bilgiler /
+   Görsel / 3B model / Alerjenler) yeni ürün sayfasına da uygulandı; ölü
+   `isEditMode` dalları temizlendi.
+
+1b. ~~**IMP — Üç durumlu satış statüsü formlara da gelsin.**~~ ✅ Yapıldı
+   (`9584380`). Sırada yoktu, madde 1 sırasında çıktı: statü (satışta /
+   tükendi / satışa kapalı) sadece ürün listesindeydi, formlarda tek
+   `is_available` switch'i vardı. Ortak `product-status-select.tsx`'e
+   çıkarıldı, üç yer de onu kullanıyor.
+   **Yan bulgu — hata:** düzenleme sayfası `is_available || true` ile
+   yüklüyordu; satışa kapalı ürün formda "satışta" görünüyor ve kaydedince
+   sessizce menüye geri açılıyordu. `?? true` ile düzeltildi.
+
+2. ~~**IMP — `/admin/[lang]/settings` bölümlere ayrılsın.**~~ ✅ Yapıldı
+   (`246f4bc`). Alt route'lar: `settings/general`, `settings/languages`,
+   `settings/translations`, `settings/appearance`, `settings/contact`. Ana
+   sayfa link listesi. Ortak kabuk `settings-shell.tsx` (owner guard +
+   mesajlar + başlık) — yeni alt sayfa guard'sız çıkamaz.
+   **Yan bulgular:** (a) Temel Bilgiler formu ölüydü — server component
+   içinde handler'sız `<form>`, API ucu yok; `/api/admin/settings/general`
+   yazıldı ve form çalışır hale geldi. (b) Danger Zone kaldırıldı (hardcoded
+   İngilizce + butonu hiçbir şey yapmıyordu). (c) `slugDescription` mesajı
+   ekrana literal `{slug}` basıyordu. (d) Çeviriler sayfasının başlığı ve
+   geri linki hardcoded İngilizceydi.
 
 3. **FEAT — Ürün tablosunda checkbox + toplu işlem.** `components/ui/data-table.tsx`
    TanStack Table kullanıyor; satır seçimi onun `rowSelection` state'i ile
