@@ -1,7 +1,10 @@
 # Backlog — Tartışılacak Özellikler
 
-> Durum: Kapsam kararları verildi (2026-07-27), **uygulama başlamadı.**
-> Oluşturma: 2026-07-26
+> Oluşturma: 2026-07-26 · Son güncelleme: 2026-07-30
+>
+> **Durum:** Madde 5, 9, 4 ve madde 2'nin taban kısmı **yapıldı ve `main`'e
+> merge edildi** (commit `34dea0d`). 6 migration canlı Supabase'e uygulandı.
+> Kalan işler için aşağıdaki "Sıradaki İş Kuyruğu" bölümüne bakınız.
 
 ## Özet
 
@@ -538,6 +541,58 @@ Bunlar `.claude/CLAUDE.md`'den ve mevcut mimariden geliyor, her madde için geç
 - **Multi-tenant.** Yeni her tabloda `tenant_id` + RLS policy (referans: `supabase/migrations/20250115000000_enable_rls_security.sql`).
 - **Migration.** Supabase CLI ile: `supabase migration new <ad>` → `supabase db push`. `docs/migrations/` eski arşiv, oraya yazılmaz.
 - **UI.** shadcn/ui bileşenleri. ⚠️ `components/ui/sidebar.tsx` registry'den saptırılmış — sidebar'a dokunan iş çıkarsa önce registry ile diff al.
+
+---
+
+## Sıradaki İş Kuyruğu (2026-07-30)
+
+Kullanıcının panel üzerinde gezip verdiği geri bildirimlerden çıktı. Sıra:
+**hata > iyileştirme > özellik.**
+
+### Yapıldı ✅
+- Madde 5 (QR sipariş aç/kapat), madde 9 (EmptyState + 403), madde 4 (kategori
+  görselleri + kategori-önce menü + sıralama modları), madde 2'nin taban kalori
+  kısmı.
+- Üç durumlu ürün durumu: satışta / tükendi / satışa kapalı.
+- Hatalar: `order_items.tenant_id` + belirsiz FK (PGRST201), iki allowlist
+  hatası (vitrin modu ve sipariş reddi çalışmıyordu), cache invalidation,
+  `getLanguageName`, tip dosyası regen.
+
+### Sırada bekleyen
+
+1. **IMP — `/admin/[lang]/products/new` section düzeni.** Düzenleme sayfası
+   (`products/[id]/page.tsx`) `Card` + `CardHeader` ile bölümlere ayrılmış
+   (Temel bilgiler / Görsel / 3B model). Yeni ürün sayfası düz form; aynı
+   yapıya getirilecek.
+
+2. **IMP — `/admin/[lang]/settings` bölümlere ayrılsın.** Sayfa çok uzadı.
+   ✅ **Karar (2026-07-30): ayrı alt route'lar** (`settings/theme`,
+   `settings/languages`, `settings/contact` …). Ana `/settings` sayfası
+   başlık + açıklama listesi olur, tıklayınca alt sayfaya gider. Gerekçe: URL
+   paylaşılabilir ve tarayıcı geri tuşu doğal çalışır.
+
+3. **FEAT — Ürün tablosunda checkbox + toplu işlem.** `components/ui/data-table.tsx`
+   TanStack Table kullanıyor; satır seçimi onun `rowSelection` state'i ile
+   yapılır. Seçim yapılınca üstte bir toplu işlem çubuğu belirir.
+
+4. **FEAT — Toplu yüzdesel fiyat değişikliği.** Seçili ürünlere, ya da filtreye
+   uyan tüm ürünlere ("şunlar hariç" desteğiyle) yüzdesel zam/indirim.
+   Yeni bir API ucu gerekecek; `tenant_id` kontrolü ve yuvarlama kuralı
+   (kuruş) düşünülmeli. Önizleme göstermeden uygulamamalı — geri alınamaz.
+
+5. **Madde 10 — Ürün varyant/opsiyon sistemi UI'ı.** Aşağıdaki maddeye bakınız.
+   Madde 2'nin kalan kısmı (`product_option_values.calories` +
+   `product_option_groups.calorie_mode`) bununla aynı migration'da gelmeli.
+
+6. **Madde 1 Faz 1** (manuel ürün önerileri) → **Madde 6** (waiter rolü +
+   `waiter_calls`) → **Madde 7** (bölüm bazlı masa görünümü) →
+   **Madde 1 Faz 2** (otomatik öneri motoru).
+
+### Ayrıca sıradaki temizlikler
+- `lib/db/schema.ts` **üçüncü** elle yazılmış şema kaynağı; `Tenant.id`'yi
+  `bigint` diyor (PostgREST BIGINT'i `number` döndürür). `lib/db/queries.ts`
+  hâlâ kullanıyor. Emekliye ayrılmalı.
+- `ROADMAP.md` bayat: Phase 2-4'teki yapılmış işler hâlâ `[ ]` işaretli.
 
 ---
 
