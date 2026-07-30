@@ -133,7 +133,9 @@ export async function PUT(
     const {
       price,
       currency,
+      calories,
       is_available,
+      is_out_of_stock,
       category_id,
       image_url,
       translations,
@@ -176,6 +178,16 @@ export async function PUT(
       image_url: image_url || null,
       updated_by: user.id,
     };
+    // Same reasoning as the allergen fields: partial callers (the availability
+    // toggle in the products table) never send calories, and must not blank a
+    // value they did not touch.
+    if (is_out_of_stock !== undefined) {
+      updateData.is_out_of_stock = Boolean(is_out_of_stock);
+    }
+    if (calories !== undefined) {
+      updateData.calories =
+        calories === null || calories === "" ? null : Number(calories);
+    }
     if (contains_no_allergens !== undefined) {
       // Flag is only meaningful when no allergens are selected
       updateData.contains_no_allergens =

@@ -212,7 +212,11 @@ export function ProductsFilterBar({
 
   return (
     <DataTable
-      columns={createColumns(t)}
+      columns={createColumns(t, () =>
+        loadProducts(currentPage, selectedCategory && selectedCategory !== "all"
+          ? Number(selectedCategory)
+          : undefined, pageSize)
+      )}
       data={mappedProducts}
       filterElement={filterElement}
       filterPlaceholder={t('searchProducts')}

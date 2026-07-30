@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LanguageSettingsWrapper } from "./language-settings-wrapper";
 import { ThemeSettings } from "./theme-settings";
 import { ContactSettings } from "./contact-settings";
+import { supabaseAdmin } from "@/lib/supabase";
 
 interface Props {
   params: Promise<{
@@ -33,6 +34,15 @@ export default async function SettingsPage({ params }: Props) {
       defaultValue
     );
   };
+
+  // The category-first layout leans on banner images. Knowing whether any
+  // exist lets the theme picker warn before the venue picks a layout that
+  // would render as blank tiles.
+  const { count: categoriesWithImages } = await (supabaseAdmin as any)
+    .from("categories")
+    .select("id", { count: "exact", head: true })
+    .eq("tenant_id", tenant.id)
+    .not("image_url", "is", null);
 
   return (
     <div className="max-w-2xl space-y-6">
@@ -142,6 +152,7 @@ export default async function SettingsPage({ params }: Props) {
           <ThemeSettings
             tenant={tenant}
             messages={settingsMessages as Record<string, string>}
+            hasCategoryImages={(categoriesWithImages ?? 0) > 0}
           />
         </CardContent>
       </Card>

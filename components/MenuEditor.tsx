@@ -8,7 +8,8 @@ type Product = Database["public"]["Tables"]["products"]["Row"] & {
   product_translations: Array<{
     language_code: string;
     name: string;
-    description: string;
+    // Nullable in the database; the old hand-written types claimed otherwise.
+    description: string | null;
   }>;
 };
 

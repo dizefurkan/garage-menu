@@ -8,7 +8,13 @@ import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 import { supabase } from "./supabase";
 import type { Database } from "@/lib/database.types";
-import type { TenantUser, Tenant } from "@/lib/db/schema";
+import type { TenantUser } from "@/lib/db/schema";
+
+// Sourced from the generated schema rather than lib/db/schema.ts: that file
+// hand-declares Tenant with `id: bigint`, which PostgREST never returns — it
+// sends BIGINT as a JS number.
+
+type Tenant = Database["public"]["Tables"]["tenants"]["Row"];
 
 async function createServerSupabase() {
   const cookieStore = await cookies();

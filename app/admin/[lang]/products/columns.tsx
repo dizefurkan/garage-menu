@@ -36,6 +36,13 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
+import {
+  CircleCheck,
+  CircleAlert,
+  EyeOff,
+  type LucideIcon,
+} from "lucide-react";
 import Image from "next/image";
 
 export type Product = {
@@ -45,6 +52,7 @@ export type Product = {
   currency: string;
   image_url: string | null;
   is_available: boolean;
+  is_out_of_stock?: boolean;
   is_draft: boolean;
   created_at: string;
   categoryName?: string;
@@ -52,7 +60,12 @@ export type Product = {
   allergen_count?: number;
 };
 
-export function createColumns(t: (key: string) => string): ColumnDef<Product>[] {
+export function createColumns(
+  t: (key: string) => string,
+  // The table holds its rows in client state, so router.refresh() does not
+  // bring a status change back — the list has to be told to refetch.
+  onProductChanged?: () => void
+): ColumnDef<Product>[] {
   return [
     {
       accessorKey: "name",
@@ -179,7 +192,9 @@ export function createColumns(t: (key: string) => string): ColumnDef<Product>[] 
       ),
       cell: ({ row }) => {
         const product = row.original;
-        return <StatusCell product={product} />;
+        return (
+          <StatusCell product={product} onChanged={onProductChanged} />
+        );
       },
     },
     {
@@ -192,14 +207,51 @@ export function createColumns(t: (key: string) => string): ColumnDef<Product>[] 
   ];
 }
 
+type ProductStatus = "on_sale" | "out_of_stock" | "hidden";
+
 export const columns: ColumnDef<Product>[] = createColumns((key) => key);
 
-function StatusCell({ product }: { product: Product }) {
+const STATUS_META: Record<
+  ProductStatus,
+  { icon: LucideIcon; labelKey: string; className: string }
+> = {
+  on_sale: {
+    icon: CircleCheck,
+    labelKey: "availabilityOnSale",
+    className: "text-emerald-600",
+  },
+  out_of_stock: {
+    icon: CircleAlert,
+    labelKey: "availabilityOutOfStock",
+    className: "text-amber-600",
+  },
+  hidden: {
+    icon: EyeOff,
+    labelKey: "availabilityHidden",
+    className: "text-muted-foreground",
+  },
+};
+
+function StatusCell({
+  product,
+  onChanged,
+}: {
+  product: Product;
+  onChanged?: () => void;
+}) {
+  const t = useTranslations("admin");
   const router = useRouter();
   const [isToggling, setIsToggling] = useState(false);
-  const isAvailable = product.is_available;
 
-  const handleToggleAvailability = async (checked: boolean) => {
+  // Two booleans, one control. "hidden" wins over "out of stock" because an
+  // unrendered product has nothing to label.
+  const status: ProductStatus = !product.is_available
+    ? "hidden"
+    : product.is_out_of_stock
+      ? "out_of_stock"
+      : "on_sale";
+
+  const handleStatusChange = async (next: ProductStatus) => {
     setIsToggling(true);
     try {
       // Fetch current product data to get translations
@@ -228,7 +280,8 @@ function StatusCell({ product }: { product: Product }) {
           currency: currentProduct.currency,
           category_id: currentProduct.category_id,
           image_url: currentProduct.image_url,
-          is_available: checked,
+          is_available: next !== "hidden",
+          is_out_of_stock: next === "out_of_stock",
           translations,
         }),
       });
@@ -238,7 +291,10 @@ function StatusCell({ product }: { product: Product }) {
         throw new Error(error.error || "Güncelleme başarısız");
       }
 
+      // Refresh both layers: the server components above the table, and the
+      // client-fetched row list inside it.
       router.refresh();
+      onChanged?.();
     } catch (error) {
       console.error("Toggle error:", error);
       alert(
@@ -251,13 +307,28 @@ function StatusCell({ product }: { product: Product }) {
     }
   };
 
+  const meta = STATUS_META[status];
+  const Icon = meta.icon;
+
   return (
-    <div className="flex justify-end">
-      <Switch
-        checked={isAvailable}
-        onCheckedChange={handleToggleAvailability}
-        disabled={isToggling}
+    <div className="flex items-center justify-end gap-2">
+      <Icon
+        className={`size-4 shrink-0 ${meta.className} ${
+          isToggling ? "animate-pulse" : ""
+        }`}
+        aria-hidden
       />
+      <select
+        value={status}
+        onChange={(e) => handleStatusChange(e.target.value as ProductStatus)}
+        disabled={isToggling}
+        aria-label={t("availabilityTitle")}
+        className="h-8 rounded-md border border-input bg-background px-2 text-xs font-medium disabled:opacity-50"
+      >
+        <option value="on_sale">{t("availabilityOnSale")}</option>
+        <option value="out_of_stock">{t("availabilityOutOfStock")}</option>
+        <option value="hidden">{t("availabilityHidden")}</option>
+      </select>
     </div>
   );
 }

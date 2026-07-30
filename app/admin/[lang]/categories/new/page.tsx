@@ -9,12 +9,20 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTenant } from "@/lib/context/tenant-context";
+import { useTranslations } from "next-intl";
+import { ImageUpload } from "@/components/ui/image-upload";
+import { uploadImageFile } from "@/lib/deferred-uploads";
+import { getLanguageName } from "@/lib/language-flags";
 
 export default function CategoryFormPage() {
   const router = useRouter();
   const params = useParams();
   const tenant = useTenant();
+  const t = useTranslations("admin");
+  const tf = useTranslations("categoryForm");
   const [loading, setLoading] = useState(false);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [pendingImageFile, setPendingImageFile] = useState<File | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [formData, setFormData] = useState<
     Record<string, { name: string; description: string }>
@@ -46,28 +54,37 @@ export default function CategoryFormPage() {
     // Validate that at least one language has a name
     const hasAnyName = Object.values(formData).some((lang) => lang.name.trim());
     if (!hasAnyName) {
-      toast.error("At least one category name is required");
+      toast.error(tf("nameRequired"));
       setLoading(false);
       return;
     }
 
     try {
+      // Deferred upload: the file only leaves the browser once the user
+      // actually commits the form.
+      const uploadedUrl = pendingImageFile
+        ? await uploadImageFile(pendingImageFile)
+        : null;
+
       const response = await fetch("/api/admin/categories", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ translations: formData }),
+        body: JSON.stringify({
+          translations: formData,
+          image_url: uploadedUrl ?? imageUrl,
+        }),
       });
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || "Failed to save category");
+        throw new Error(error.error || tf("createFailed"));
       }
 
-      toast.success("Category created successfully!");
+      toast.success(tf(isEditMode ? "updated" : "created"));
       setTimeout(() => router.push("/admin/categories"), 1000);
     } catch (err) {
       toast.error(
-        err instanceof Error ? err.message : "Failed to save category"
+        err instanceof Error ? err.message : tf("createFailed")
       );
     } finally {
       setLoading(false);
@@ -77,7 +94,7 @@ export default function CategoryFormPage() {
   return (
     <div className="max-w-2xl space-y-6">
       <h1 className="text-3xl font-bold">
-        {isEditMode ? "Edit Category" : "New Category"}
+        {tf(isEditMode ? "editTitle" : "newTitle")}
       </h1>
 
       <Card>
@@ -87,7 +104,7 @@ export default function CategoryFormPage() {
               <TabsList>
                 {languages.map((lang) => (
                   <TabsTrigger key={lang} value={lang}>
-                    {lang === "en" ? "English" : "Türkçe"}
+                    {getLanguageName(lang)}
                   </TabsTrigger>
                 ))}
               </TabsList>
@@ -96,10 +113,10 @@ export default function CategoryFormPage() {
                 <TabsContent key={lang} value={lang} className="space-y-4">
                   <div>
                     <label className="mb-2 block text-sm font-medium">
-                      Category Name ({lang.toUpperCase()})
+                      {tf("nameLabel", { lang: lang.toUpperCase() })}
                     </label>
                     <Input
-                      placeholder="e.g. Desserts"
+                      placeholder={tf("namePlaceholder")}
                       value={formData[lang]?.name || ""}
                       onChange={(e) =>
                         setFormData({
@@ -113,10 +130,10 @@ export default function CategoryFormPage() {
 
                   <div>
                     <label className="mb-2 block text-sm font-medium">
-                      Description ({lang.toUpperCase()})
+                      {tf("descriptionLabel", { lang: lang.toUpperCase() })}
                     </label>
                     <Textarea
-                      placeholder="Optional description..."
+                      placeholder={tf("descriptionPlaceholder")}
                       value={formData[lang]?.description || ""}
                       onChange={(e) =>
                         setFormData({
@@ -134,22 +151,34 @@ export default function CategoryFormPage() {
               ))}
             </Tabs>
 
+            <div className="space-y-2">
+              <label className="block text-sm font-medium">
+                {t("categoryImageTitle")}
+              </label>
+              <ImageUpload
+                value={imageUrl ?? undefined}
+                onChange={(url) => setImageUrl(url || null)}
+                onFileSelect={setPendingImageFile}
+                disabled={loading}
+              />
+              <p className="text-xs text-muted-foreground">
+                {t("categoryImageHint")}
+              </p>
+            </div>
+
+
             <div className="flex gap-3">
               <Button type="submit" disabled={loading}>
                 {loading
-                  ? isEditMode
-                    ? "Saving..."
-                    : "Creating..."
-                  : isEditMode
-                    ? "Save"
-                    : "Create"}
+                  ? tf(isEditMode ? "saving" : "creating")
+                  : tf(isEditMode ? "save" : "create")}
               </Button>
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => router.back()}
               >
-                Cancel
+                {tf("cancel")}
               </Button>
             </div>
           </form>

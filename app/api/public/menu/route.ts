@@ -1,4 +1,13 @@
 import { createClient } from "@supabase/supabase-js";
+import {
+  sortCategories,
+  sortProducts,
+  type CategorySort,
+  type ProductSort,
+} from "@/lib/menu-sorting";
+
+/** How far back order history counts toward "popularity". */
+const POPULARITY_WINDOW_DAYS = 90;
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || "",
@@ -82,7 +91,7 @@ export async function GET(request: Request) {
     }
     const { data: categories, error: categoriesError } = await supabaseAdmin
       .from("categories")
-      .select("id, category_translations(name, language_code)")
+      .select("id, image_url, display_order, category_translations(name, language_code)")
       .eq("tenant_id", tenant.id);
 
     if (categoriesError) {
@@ -97,7 +106,7 @@ export async function GET(request: Request) {
     const { data: products, error: productsError } = await supabaseAdmin
       .from("products")
       .select(
-        "id, category_id, is_available, price, currency, image_url, model_glb_url, model_usdz_url, product_translations(name, description, language_code), product_allergens(allergens(code, emoji, display_order, allergen_translations(name, language_code)))"
+        "id, category_id, is_available, is_out_of_stock, display_order, created_at, price, currency, calories, image_url, model_glb_url, model_usdz_url, product_translations(name, description, language_code), product_allergens(allergens(code, emoji, display_order, allergen_translations(name, language_code)))"
       )
       .eq("tenant_id", tenant.id)
       .eq("is_available", true);
@@ -110,13 +119,68 @@ export async function GET(request: Request) {
       );
     }
 
+    // Popularity is only computed when a sort actually asks for it — most
+    // venues use manual order and should not pay for this query.
+    const categorySortMode = (tenant.category_sort ?? "manual") as CategorySort;
+    const productSortMode = (tenant.product_sort ?? "manual") as ProductSort;
+    const needsPopularity =
+      categorySortMode === "popularity" || productSortMode === "popularity";
+
+    const productPopularity = new Map<string, number>();
+    const categoryPopularity = new Map<string, number>();
+
+    if (needsPopularity) {
+      const since = new Date();
+      since.setDate(since.getDate() - POPULARITY_WINDOW_DAYS);
+
+      // order_items carries tenant_id directly now, so this needs no join.
+      const { data: soldItems, error: soldError } = await supabaseAdmin
+        .from("order_items")
+        .select("product_id, quantity")
+        .eq("tenant_id", tenant.id)
+        .gte("created_at", since.toISOString());
+
+      if (soldError) {
+        // Popularity is a nicety — a failure here must not blank the menu.
+        console.error("[API:public/menu] Popularity query failed:", soldError);
+      } else {
+        const categoryOf = new Map<string, string>();
+        (products || []).forEach((prod: any) => {
+          categoryOf.set(String(prod.id), String(prod.category_id));
+        });
+
+        (soldItems || []).forEach((item: any) => {
+          const key = String(item.product_id);
+          const qty = item.quantity ?? 0;
+          productPopularity.set(key, (productPopularity.get(key) ?? 0) + qty);
+
+          const catKey = categoryOf.get(key);
+          if (catKey) {
+            categoryPopularity.set(
+              catKey,
+              (categoryPopularity.get(catKey) ?? 0) + qty
+            );
+          }
+        });
+      }
+    }
+
     // Process categories
     const processedCategories = (categories || [])
       .map((cat: any) => {
         const translation = cat.category_translations?.find(
           (t: any) => t.language_code === lang
         );
+        // Sold-out items are still rendered, but counting them would promise
+        // more than the kitchen can serve.
         const productCount = (products || []).filter(
+          (prod: any) =>
+            prod.category_id === cat.id &&
+            prod.is_available === true &&
+            prod.is_out_of_stock !== true
+        ).length;
+
+        const totalCount = (products || []).filter(
           (prod: any) =>
             prod.category_id === cat.id && prod.is_available === true
         ).length;
@@ -124,10 +188,25 @@ export async function GET(request: Request) {
         return {
           id: cat.id,
           name: translation?.name || "Unnamed Category",
+          image: cat.image_url || null,
+          display_order: cat.display_order ?? 0,
           productCount,
+          totalCount,
         };
       })
-      .filter((cat: any) => cat.productCount > 0); // Hide categories with no products
+      .filter(
+        (cat: any) =>
+          // Keep a category whose items are all sold out — hiding it would
+          // make the menu look like the dish never existed.
+          cat.productCount > 0 || cat.totalCount > 0
+      );
+
+    const orderedCategories = sortCategories(
+      processedCategories,
+      categorySortMode,
+      lang,
+      categoryPopularity
+    );
 
     // Process products
     const processedProducts = (products || [])
@@ -159,12 +238,31 @@ export async function GET(request: Request) {
           description: translation?.description || "",
           image: prod.image_url || null,
           price: prod.price || 0,
+          // Kept nullish rather than defaulted: NULL means the venue
+          // never declared a value, and 0 kcal would be a false claim.
+          calories: prod.calories ?? null,
           currency: prod.currency || "TRY",
           allergens,
           model_glb: prod.model_glb_url || null,
           model_usdz: prod.model_usdz_url || null,
+          // Still listed, but the menu renders it as sold out and the order
+          // endpoint refuses it.
+          out_of_stock: prod.is_out_of_stock === true,
+          display_order: prod.display_order ?? 0,
+          created_at: prod.created_at,
         };
       });
+
+    // The menu renders products grouped under their category, so ordering is
+    // meaningful per category, not across the whole list.
+    const orderedProducts = orderedCategories.flatMap((cat: any) =>
+      sortProducts(
+        processedProducts.filter((p: any) => p.category_id === cat.id),
+        productSortMode,
+        lang,
+        productPopularity
+      )
+    );
 
     // Detect available languages from category translations
     const availableLanguages = new Set<string>();
@@ -193,6 +291,14 @@ export async function GET(request: Request) {
         description: tenant.description || undefined,
         phone: tenant.phone || undefined,
         logo_url: tenant.logo_url || undefined,
+        // This payload is an explicit allowlist, not a spread — anything the
+        // public menu needs has to be named here or it silently arrives as
+        // undefined. Defaults are applied so an older row without these
+        // columns still behaves like the previous release.
+        qr_ordering_enabled: tenant.qr_ordering_enabled ?? true,
+        menu_layout: tenant.menu_layout ?? "products",
+        category_sort: tenant.category_sort ?? "manual",
+        product_sort: tenant.product_sort ?? "manual",
         menu_languages: tenantLanguages,
         languages: languages, // Available languages for the tenant
         contact_info: {
@@ -204,8 +310,8 @@ export async function GET(request: Request) {
           whatsapp: contactInfo.whatsapp || undefined,
         },
       },
-      categories: processedCategories,
-      products: processedProducts,
+      categories: orderedCategories,
+      products: orderedProducts,
     });
   } catch (error) {
     console.error("[API:public/menu] Unexpected error:", error);

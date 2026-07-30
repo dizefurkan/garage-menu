@@ -62,6 +62,17 @@ const CLOSE_LABELS: Record<string, string> = {
   ar: "إغلاق",
 };
 
+const OUT_OF_STOCK_LABELS: Record<string, string> = {
+  tr: "Tükendi",
+  en: "Sold out",
+  de: "Ausverkauft",
+  fr: "Épuisé",
+  es: "Agotado",
+  ru: "Нет в наличии",
+  ar: "نفدت الكمية",
+  zh: "已售罄",
+};
+
 const MAX_VISIBLE_ALLERGEN_ICONS = 6;
 
 interface ProductAllergen {
@@ -88,11 +99,17 @@ export function ProductCard({
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const allergens: ProductAllergen[] = product.allergens || [];
   const allergensLabel = ALLERGENS_LABELS[lang] || ALLERGENS_LABELS.en;
+  const outOfStock = product.out_of_stock === true;
+  const outOfStockLabel = OUT_OF_STOCK_LABELS[lang] || OUT_OF_STOCK_LABELS.en;
 
   return (
     <>
       <div
-        className="group rounded-2xl overflow-hidden bg-white border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 hover:scale-105 cursor-pointer"
+        className={`group rounded-2xl overflow-hidden bg-white border border-gray-100 shadow-sm transition-all duration-300 cursor-pointer ${
+          outOfStock
+            ? "opacity-60"
+            : "hover:shadow-lg hover:scale-105"
+        }`}
         data-product-id={product.id}
         data-category-id={categoryId}
         role="button"
@@ -150,12 +167,22 @@ export function ProductCard({
           {/* 3D availability badge */}
           {product.model_glb && (
             <div
-              className="absolute left-2 top-2 flex items-center gap-1 rounded-full bg-white/90 px-2 py-1 text-xs font-semibold text-gray-800 shadow-sm backdrop-blur-sm"
+              className={`absolute left-2 flex items-center gap-1 rounded-full bg-white/90 px-2 py-1 text-xs font-semibold text-gray-800 shadow-sm backdrop-blur-sm ${
+                // Yields the top-left corner to the sold-out badge, which
+                // matters more to the guest than the 3D affordance.
+                outOfStock ? "top-11" : "top-2"
+              }`}
               aria-hidden="true"
             >
               <Box className="h-3.5 w-3.5" />
               3D
             </div>
+          )}
+
+          {outOfStock && (
+            <span className="absolute left-2 top-2 rounded-full bg-gray-900/85 px-2.5 py-1 text-xs font-semibold text-white">
+              {outOfStockLabel}
+            </span>
           )}
 
           {/* Price pill overlaid on the image */}
@@ -181,6 +208,14 @@ export function ProductCard({
           {product.description && (
             <p className="text-sm text-gray-600 line-clamp-2">
               {product.description}
+            </p>
+          )}
+
+          {/* `kcal` is the same symbol in every locale this menu supports, so
+              it needs no translation table like the allergen labels do. */}
+          {typeof product.calories === "number" && (
+            <p className="text-xs font-medium text-gray-500">
+              {product.calories} kcal
             </p>
           )}
         </div>
@@ -221,6 +256,8 @@ function ProductDetailModal({
   onClose: () => void;
 }) {
   const { addToCart } = useCart();
+  const outOfStock = product.out_of_stock === true;
+  const outOfStockLabel = OUT_OF_STOCK_LABELS[lang] || OUT_OF_STOCK_LABELS.en;
   // Mounted closed, then flipped to visible so the enter transition plays;
   // close animates out first, then unmounts.
   const [isVisible, setIsVisible] = useState(false);
@@ -379,6 +416,12 @@ function ProductDetailModal({
               </p>
             )}
 
+            {typeof product.calories === "number" && (
+              <p className="text-sm font-medium text-gray-500">
+                {product.calories} kcal
+              </p>
+            )}
+
             {allergens.length > 0 && (
               <div>
                 <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
@@ -398,7 +441,13 @@ function ProductDetailModal({
               </div>
             )}
 
-            {tableId && (
+            {tableId && outOfStock && (
+              <div className="w-full rounded-lg bg-gray-100 px-4 py-3 text-center text-sm font-medium text-gray-500">
+                {outOfStockLabel}
+              </div>
+            )}
+
+            {tableId && !outOfStock && (
               <button
                 onClick={() => {
                   addToCart(product.id, product.name, product.price, product.image);

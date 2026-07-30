@@ -11,6 +11,8 @@ import { getSessionWithTenant } from "@/lib/auth/session";
 import { redirect } from "next/navigation";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { hasAddon } from "@/lib/licensing/hasAddon";
+import { supabaseAdmin } from "@/lib/supabase";
 
 async function getDashboardStats(tenantId: number) {
   const cookieStore = await cookies();
@@ -85,14 +87,42 @@ export default async function DashboardPage({
   const stats = await getDashboardStats(tenant.id);
   const userName = user.email?.split("@")[0] || "User";
 
+  // Ordering off is a quiet state — nothing else in the panel shows it, so a
+  // venue can leave it closed by accident and silently take no orders. Only
+  // meaningful for venues that actually licensed ordering.
+  const ordersLicensed = await hasAddon(
+    tenant,
+    "orders_management",
+    supabaseAdmin
+  );
+  const qrOrderingOn = tenant.qr_ordering_enabled !== false;
+
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold tracking-tight">
-          {t("welcome", { name: userName })}
-        </h1>
-        <p className="text-sm text-foreground/60">{t("description")}</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-2xl font-semibold tracking-tight">
+            {t("welcome", { name: userName })}
+          </h1>
+          <p className="text-sm text-foreground/60">{t("description")}</p>
+        </div>
+
+        {ordersLicensed && (
+          <Link
+            href={`/admin/${lang}/orders/settings`}
+            className="flex items-center gap-2 rounded-full border border-foreground/10 px-3 py-1.5 text-xs font-medium transition-colors hover:bg-accent"
+          >
+            <span
+              className={`size-1.5 shrink-0 rounded-full ${
+                qrOrderingOn ? "bg-emerald-500" : "bg-foreground/30"
+              }`}
+            />
+            <span className={qrOrderingOn ? "" : "text-foreground/60"}>
+              {qrOrderingOn ? t("qrOrderingOn") : t("qrOrderingOff")}
+            </span>
+          </Link>
+        )}
       </div>
 
       {/* Stats Cards */}

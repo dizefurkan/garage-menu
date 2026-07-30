@@ -164,7 +164,9 @@
     "member_many": "üye",
     "totalProducts": "Toplam Ürünler",
     "totalCategories": "Toplam Kategoriler",
-    "activeMenus": "Aktif Menüler"
+    "activeMenus": "Aktif Menüler",
+    "qrOrderingOn": "QR Sipariş: Açık",
+    "qrOrderingOff": "QR Sipariş: Kapalı"
   },
   "products": {
     "title": "Ürünler",
@@ -250,7 +252,23 @@
     "tiktokPlaceholder": "@kullanıcıadınız",
     "contactSaved": "İletişim bilgileri başarıyla kaydedildi",
     "themeSaved": "Tema ayarları başarıyla güncellendi",
-    "failedToUpdate": "Tema güncellenemedi"
+    "failedToUpdate": "Tema güncellenemedi",
+    "menuLayoutTitle": "Menü Düzeni",
+    "menuLayoutHint": "Müşteri QR'ı okuttuğunda menünün ilk açılış görünümü.",
+    "menuLayoutProducts": "Ürün listesi",
+    "menuLayoutProductsHint": "Tüm kategoriler ve ürünleri tek sayfada alt alta listelenir.",
+    "menuLayoutCategories": "Kategori kartları",
+    "menuLayoutCategoriesHint": "Önce kategoriler geniş görsel kartlar olarak açılır, tıklayınca o kategorinin ürünleri görünür.",
+    "menuLayoutNoImagesWarning": "Hiçbir kategoride görsel yok. Bu düzeni seçerseniz kategoriler düz kart olarak görünür — Kategoriler sayfasından görsel yükleyebilirsiniz.",
+    "categorySortTitle": "Kategori sıralaması",
+    "productSortTitle": "Ürün sıralaması",
+    "sortManual": "Elle sıralama",
+    "sortAlphabetical": "Alfabetik (A-Z)",
+    "sortPopularity": "En çok sipariş edilen",
+    "sortPriceAsc": "Fiyat: düşükten yükseğe",
+    "sortPriceDesc": "Fiyat: yüksekten düşüğe",
+    "sortNewest": "Önce yeni eklenenler",
+    "sortPopularityNeedsOrders": "Sipariş verisi olmadan bu mod elle sıralamaya döner."
   },
   "errors": {
     "required": "Bu alan gereklidir",
@@ -479,6 +497,101 @@
     "requiredBadge": "Zorunlu",
     "optionalBadge": "Opsiyonel",
     "productImageSectionDescription": "Menüde ürünle birlikte gösterilecek fotoğraf.",
-    "model3dSectionDescription": "Müşterilerin ürünü 3 boyutlu görüntülemesini sağlayan model dosyaları."
+    "model3dSectionDescription": "Müşterilerin ürünü 3 boyutlu görüntülemesini sağlayan model dosyaları.",
+    "calories": "Kalori",
+    "caloriesPlaceholder": "örn. 450",
+    "caloriesHint": "İsteğe bağlı. Boş bırakırsanız menüde kalori gösterilmez.",
+    "categoryImageTitle": "Kategori Görseli",
+    "categoryImageHint": "Kategori-önce menü düzeninde geniş bir banner olarak görünür. En iyi sonuç için yatay (21:9) bir görsel yükleyin. Boş bırakılırsa düz bir kart gösterilir.",
+    "availabilityTitle": "Satış durumu",
+    "availabilityOnSale": "Satışta",
+    "availabilityOutOfStock": "Tükendi",
+    "availabilityHidden": "Satışa kapalı",
+    "availabilityOnSaleHint": "Menüde görünür ve sipariş edilebilir.",
+    "availabilityOutOfStockHint": "Menüde görünür ama sipariş edilemez; üzerinde “Tükendi” yazar.",
+    "availabilityHiddenHint": "Menüde hiç görünmez."
+  },
+  "orderSettings": {
+    "title": "Sipariş Ayarları",
+    "loadError": "Ayarlar yüklenemedi",
+    "wifi": {
+      "title": "WiFi Ağ Kaydı",
+      "description": "Kafenizin WiFi ağının IP adresini kaydederek, müşteriler aynı ağ üzerindeyse PIN sorulmadan sipariş verebilirler.",
+      "currentIpLabel": "Sizin Geçerli IP'niz",
+      "registeredIpLabel": "Kayıtlı IP Adresi",
+      "statusMatches": "Geçerli IP, kayıtlı IP ile eşleşiyor",
+      "statusMismatch": "Geçerli IP, kayıtlı IP ile eşleşmiyor (başka ağdasınız)",
+      "statusUnregistered": "Henüz IP kaydı yapılmamış",
+      "updateButton": "IP Adresini Güncelle",
+      "registerButton": "Geçerli IP'yi Kaydet"
+    },
+    "pin": {
+      "title": "Sipariş PIN Kodu",
+      "description": "WiFi ağında olmayan müşteriler siparişlerini doğrulamak için bu 4 haneli kodu girer. Kod, siz yeni kod üretene kadar geçerli kalır — günlük otomatik değişmez.",
+      "notGenerated": "PIN kodu henüz üretilmemiş",
+      "lastGenerated": "Son üretim: {date}",
+      "generateButton": "Kod Üret",
+      "regenerateButton": "Yeni Kod Üret"
+    },
+    "howItWorks": {
+      "title": "Nasıl Çalışır?",
+      "step1Label": "WiFi IP Kaydı",
+      "step1": "Kafenizin WiFi ağının IP adresini kaydettikten sonra, müşteriler bu ağdan sipariş verirse otomatik olarak doğrulanır.",
+      "step2Label": "PIN Doğrulaması",
+      "step2": "WiFi ağında olmayan müşteriler (mobil veri kullananlar gibi) PIN kodunu girer.",
+      "step3Label": "Yedek Yöntem",
+      "step3": "WiFi ağında olsa bile müşteri isterse PIN ile doğrulayabilir."
+    },
+    "qrOrdering": {
+      "title": "QR Sipariş",
+      "description": "Müşterileriniz QR kodu okutup masadan doğrudan sipariş verebilir. Kapattığınızda menü bir vitrine dönüşür: fiyatlar ve ürünler görünmeye devam eder, sipariş butonları kaybolur ve siparişi garson alır.",
+      "switchLabel": "QR'dan sipariş almayı aç",
+      "statusOn": "Açık",
+      "statusOff": "Kapalı",
+      "statusOnHint": "Müşteriler masadan sipariş verebiliyor.",
+      "statusOffHint": "Menü vitrin modunda. Sipariş butonları gizli.",
+      "saveError": "Ayar kaydedilemedi"
+    }
+  },
+  "emptyStates": {
+    "products": {
+      "title": "Henüz ürün yok",
+      "description": "Menünüzde görünecek ilk ürünü ekleyin. Fotoğraf, fiyat ve açıklamayı sonradan da düzenleyebilirsiniz.",
+      "action": "Ürün ekle"
+    },
+    "categories": {
+      "title": "Henüz kategori yok",
+      "description": "Ürünlerinizi gruplamak için bir kategori oluşturun — menüde başlık olarak görünür.",
+      "action": "Kategori ekle"
+    },
+    "orders": {
+      "title": "Henüz sipariş yok",
+      "description": "Masalardan sipariş geldikçe burada anlık olarak listelenecek."
+    },
+    "accessDenied": {
+      "title": "Bu sayfaya erişiminiz yok",
+      "description": "Hesabınızın rolü bu bölümü görüntüleyemiyor. Erişim gerekiyorsa işletme yöneticinizle görüşün."
+    }
+  },
+  "categoryForm": {
+    "newTitle": "Yeni Kategori",
+    "editTitle": "Kategoriyi Düzenle",
+    "nameLabel": "Kategori Adı ({lang})",
+    "namePlaceholder": "örn. Tatlılar",
+    "descriptionLabel": "Açıklama ({lang})",
+    "descriptionPlaceholder": "İsteğe bağlı açıklama...",
+    "loading": "Yükleniyor...",
+    "notFound": "Kategori bulunamadı",
+    "nameRequired": "En az bir dilde kategori adı gerekli",
+    "created": "Kategori oluşturuldu",
+    "updated": "Kategori güncellendi",
+    "createFailed": "Kategori oluşturulamadı",
+    "updateFailed": "Kategori güncellenemedi",
+    "loadFailed": "Kategori yüklenemedi",
+    "save": "Kaydet",
+    "saving": "Kaydediliyor...",
+    "create": "Oluştur",
+    "creating": "Oluşturuluyor...",
+    "cancel": "İptal"
   }
 }

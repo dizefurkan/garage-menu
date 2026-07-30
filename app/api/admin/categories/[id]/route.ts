@@ -157,7 +157,7 @@ export async function PUT(
     }
 
     const categoryId = parseInt(id, 10);
-    const { translations } = await req.json();
+    const { translations, image_url } = await req.json();
 
     // Verify category belongs to tenant
     const { data: category, error: fetchError } = await (supabaseAdmin as any)
@@ -181,11 +181,16 @@ export async function PUT(
     }
 
     // Update category
+    const categoryUpdate: Record<string, unknown> = { updated_by: user.id };
+    // Only touch the image when the caller actually sent the key, so partial
+    // callers can't wipe an existing banner they never edited.
+    if (image_url !== undefined) {
+      categoryUpdate.image_url = image_url || null;
+    }
+
     const { error: updateError } = await (supabaseAdmin as any)
       .from("categories")
-      .update({
-        updated_by: user.id,
-      })
+      .update(categoryUpdate)
       .eq("id", categoryId);
 
     if (updateError) {
@@ -216,6 +221,10 @@ export async function PUT(
         );
       }
     }
+
+    // The category banner and name are rendered on the public menu, which is
+    // fetched with a 60s ISR cache — without this the edit appears a minute late.
+    await revalidateTenant(tenant.slug, ["categories"]);
 
     return NextResponse.json({ success: true, category_id: categoryId });
   } catch (error) {
