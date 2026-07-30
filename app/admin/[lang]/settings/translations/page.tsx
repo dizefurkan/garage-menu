@@ -1,9 +1,8 @@
 import { getSessionWithTenant } from "@/lib/auth/session";
 import { supabaseAdmin } from "@/lib/supabase";
 import { redirect, notFound } from "next/navigation";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import { TranslationsWorkbench } from "./translations-workbench";
+import { SettingsSubPageHeader } from "../settings-shell";
 
 type SearchParams = {
   target?: string;
@@ -82,19 +81,24 @@ export default async function TranslationPage({ params, searchParams }: Props) {
   const initialType = query.type === "category" ? "category" : "product";
   const initialId = query.id ? Number(query.id) : null;
 
+  // Editors reach this page too, so it keeps its own guard above rather than
+  // going through the owner-only loadSettingsPage.
+  const messages = (await import(`@/messages/${lang}.json`)).default;
+  const settingsMessages = (messages.settings || {}) as Record<string, string>;
+  const t = (key: string, defaultValue: string = "") =>
+    settingsMessages[key] || defaultValue;
+
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Translations</h1>
-          <p className="mt-2 text-gray-600">
-            Translate products and categories faster, one item at a time.
-          </p>
-        </div>
-        <Button variant="outline" asChild>
-          <Link href={`/admin/${lang}/settings`}>Back to Settings</Link>
-        </Button>
-      </div>
+      <SettingsSubPageHeader
+        lang={lang}
+        title={t("translations", "Translations")}
+        description={t(
+          "translationsDescription",
+          "Translate products and categories faster"
+        )}
+        backLabel={t("backToSettings", "Back to settings")}
+      />
 
       <TranslationsWorkbench
         categories={categories}

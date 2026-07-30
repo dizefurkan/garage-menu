@@ -1,14 +1,14 @@
-import { getSessionWithTenant } from "@/lib/auth/session";
-import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LanguageSettingsWrapper } from "./language-settings-wrapper";
-import { ThemeSettings } from "./theme-settings";
-import { ContactSettings } from "./contact-settings";
-import { supabaseAdmin } from "@/lib/supabase";
+import {
+  Building2,
+  ChevronRight,
+  Contact,
+  Languages,
+  Palette,
+  Type,
+  type LucideIcon,
+} from "lucide-react";
+import { loadSettingsPage } from "./settings-shell";
 
 interface Props {
   params: Promise<{
@@ -18,31 +18,60 @@ interface Props {
 
 export default async function SettingsPage({ params }: Props) {
   const { lang } = await params;
-  const { user, tenant, role } = await getSessionWithTenant();
+  const { t } = await loadSettingsPage(lang);
 
-  if (!user || !tenant || role !== "owner") {
-    redirect("/admin/dashboard");
-  }
-
-  // Load messages for this locale
-  const messages = (await import(`@/messages/${lang}.json`)).default;
-  const settingsMessages = messages.settings || {};
-
-  const t = (key: string, defaultValue: string = "") => {
-    return (
-      (settingsMessages[key as keyof typeof settingsMessages] as string) ||
-      defaultValue
-    );
-  };
-
-  // The category-first layout leans on banner images. Knowing whether any
-  // exist lets the theme picker warn before the venue picks a layout that
-  // would render as blank tiles.
-  const { count: categoriesWithImages } = await (supabaseAdmin as any)
-    .from("categories")
-    .select("id", { count: "exact", head: true })
-    .eq("tenant_id", tenant.id)
-    .not("image_url", "is", null);
+  const sections: Array<{
+    href: string;
+    icon: LucideIcon;
+    title: string;
+    description: string;
+  }> = [
+    {
+      href: "general",
+      icon: Building2,
+      title: t("basicInformation", "Basic Information"),
+      description: t(
+        "basicInformationDescription",
+        "Business name, email and phone."
+      ),
+    },
+    {
+      href: "languages",
+      icon: Languages,
+      title: t("languages", "Languages"),
+      description: t(
+        "languagesDescription",
+        "Dashboard language, menu languages and the default one."
+      ),
+    },
+    {
+      href: "translations",
+      icon: Type,
+      title: t("translations", "Translations"),
+      description: t(
+        "translationsDescription",
+        "Translate products and categories faster"
+      ),
+    },
+    {
+      href: "appearance",
+      icon: Palette,
+      title: t("appearance", "Appearance"),
+      description: t(
+        "appearanceDescription",
+        "Colours, menu layout and the order items appear in."
+      ),
+    },
+    {
+      href: "contact",
+      icon: Contact,
+      title: t("contactInformation", "Contact Information"),
+      description: t(
+        "contactInformationDescription",
+        "Address and the social accounts shown on your menu."
+      ),
+    },
+  ];
 
   return (
     <div className="max-w-2xl space-y-6">
@@ -50,140 +79,40 @@ export default async function SettingsPage({ params }: Props) {
         <h1 className="text-3xl font-bold tracking-tight">
           {t("title", "Settings")}
         </h1>
-        <p className="mt-2 text-gray-600">
+        <p className="mt-2 text-muted-foreground">
           {t("description", "Manage your restaurant information")}
         </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{t("basicInformation", "Basic Information")}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form className="space-y-4">
-            <div>
-              <label className="mb-2 block text-sm font-medium">
-                {t("restaurantName", "Restaurant Name")}
-              </label>
-              <Input
-                defaultValue={tenant.name}
-                placeholder="e.g. Garage Chocolate"
+      <div className="divide-y overflow-hidden rounded-lg border">
+        {sections.map((section) => {
+          const Icon = section.icon;
+          return (
+            <Link
+              key={section.href}
+              href={`/admin/${lang}/settings/${section.href}`}
+              className="flex items-center justify-between gap-4 p-4 transition-colors hover:bg-muted/50"
+            >
+              <div className="flex items-start gap-3">
+                <Icon
+                  className="mt-0.5 size-5 shrink-0 text-muted-foreground"
+                  aria-hidden
+                />
+                <div>
+                  <p className="font-medium">{section.title}</p>
+                  <p className="mt-0.5 text-sm text-muted-foreground">
+                    {section.description}
+                  </p>
+                </div>
+              </div>
+              <ChevronRight
+                className="size-4 shrink-0 text-muted-foreground"
+                aria-hidden
               />
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-medium">
-                {t("email", "Email")}
-              </label>
-              <Input
-                type="email"
-                defaultValue={tenant.email || ""}
-                placeholder="info@restaurant.com"
-              />
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-medium">
-                {t("phone", "Phone")}
-              </label>
-              <Input
-                defaultValue={tenant.phone || ""}
-                placeholder="+90 555 123 4567"
-              />
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-medium">
-                {t("menuSlug", "Menu Slug")}
-              </label>
-              <Input value={tenant.slug} disabled className="bg-gray-100" />
-              <p className="mt-1 text-xs text-gray-500">
-                {t(
-                  "slugDescription",
-                  `Your public menu URL: /${tenant.slug}/en`
-                )}
-              </p>
-            </div>
-
-            <Button type="submit">{t("saveChanges", "Save Changes")}</Button>
-          </form>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>{t("languages", "Languages")}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <LanguageSettingsWrapper
-            tenant={tenant}
-            currentLang={lang}
-            messages={settingsMessages as Record<string, string>}
-          />
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>{t("translations", "Translations")}</CardTitle>
-        </CardHeader>
-        <CardContent className="flex items-center justify-between gap-4">
-          <div>
-            <p className="text-sm text-gray-600">
-              {t(
-                "translationsDescription",
-                "Translate products and categories faster"
-              )}
-            </p>
-          </div>
-          <Button type="button" asChild>
-            <Link href={`/admin/${lang}/settings/translations`}>
-              {t("openTranslations", "Open")}
             </Link>
-          </Button>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>{t("appearance", "Appearance")}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ThemeSettings
-            tenant={tenant}
-            messages={settingsMessages as Record<string, string>}
-            hasCategoryImages={(categoriesWithImages ?? 0) > 0}
-          />
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            {t("contactInformation", "Contact Information")}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ContactSettings
-            tenant={tenant}
-            messages={settingsMessages as Record<string, string>}
-          />
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Danger Zone</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Button
-            variant="destructive"
-            className="bg-red-600 text-white hover:bg-red-700"
-          >
-            Delete Restaurant
-          </Button>
-        </CardContent>
-      </Card>
+          );
+        })}
+      </div>
     </div>
   );
 }

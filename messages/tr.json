@@ -268,7 +268,17 @@
     "sortPriceAsc": "Fiyat: düşükten yükseğe",
     "sortPriceDesc": "Fiyat: yüksekten düşüğe",
     "sortNewest": "Önce yeni eklenenler",
-    "sortPopularityNeedsOrders": "Sipariş verisi olmadan bu mod elle sıralamaya döner."
+    "sortPopularityNeedsOrders": "Sipariş verisi olmadan bu mod elle sıralamaya döner.",
+    "basicInformationDescription": "İşletme adı, e-posta ve telefon.",
+    "languagesDescription": "Panel dili, menü dilleri ve varsayılan dil.",
+    "appearanceDescription": "Renkler, menü düzeni ve ürünlerin sıralanışı.",
+    "contactInformationDescription": "Adres ve menüde gösterilen sosyal medya hesapları.",
+    "backToSettings": "Ayarlara dön",
+    "saving": "Kaydediliyor...",
+    "generalSaved": "İşletme bilgileri kaydedildi",
+    "failedToUpdateGeneral": "İşletme bilgileri güncellenemedi",
+    "nameRequired": "İşletme adı zorunludur",
+    "slugLocked": "Bu adres değiştirilemez — basılı QR kodlarınız buna bağlıdır."
   },
   "errors": {
     "required": "Bu alan gereklidir",

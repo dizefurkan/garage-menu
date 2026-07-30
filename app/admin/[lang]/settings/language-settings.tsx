@@ -94,8 +94,10 @@ export function LanguageSettings({
 
   const handleDashboardLanguageChange = (value: string | null) => {
     if (value && value !== currentLang) {
-      // Redirect immediately without saving to database
-      router.push(`/admin/${value}/settings`);
+      // Redirect immediately without saving to database. Stay on this page —
+      // the dashboard language lives here now, and bouncing to the settings
+      // index would lose the half-edited menu-language selection below.
+      router.push(`/admin/${value}/settings/languages`);
     }
   };
 

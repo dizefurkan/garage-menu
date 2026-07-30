@@ -268,7 +268,17 @@
     "sortPriceAsc": "Price: low to high",
     "sortPriceDesc": "Price: high to low",
     "sortNewest": "Newest first",
-    "sortPopularityNeedsOrders": "Without order data this mode falls back to manual order."
+    "sortPopularityNeedsOrders": "Without order data this mode falls back to manual order.",
+    "basicInformationDescription": "Business name, email and phone.",
+    "languagesDescription": "Dashboard language, menu languages and the default one.",
+    "appearanceDescription": "Colours, menu layout and the order items appear in.",
+    "contactInformationDescription": "Address and the social accounts shown on your menu.",
+    "backToSettings": "Back to settings",
+    "saving": "Saving...",
+    "generalSaved": "Business information saved",
+    "failedToUpdateGeneral": "Failed to update business information",
+    "nameRequired": "Business name is required",
+    "slugLocked": "This address cannot be changed — your printed QR codes depend on it."
   },
   "errors": {
     "required": "This field is required",
