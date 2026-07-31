@@ -22,17 +22,9 @@ const LanguageSettings = dynamic(
 export function LanguageSettingsWrapper({
   tenant,
   currentLang,
-  messages,
 }: {
   tenant: Tenant;
   currentLang: string;
-  messages?: Record<string, string>;
 }) {
-  return (
-    <LanguageSettings
-      tenant={tenant}
-      currentLang={currentLang}
-      messages={messages}
-    />
-  );
+  return <LanguageSettings tenant={tenant} currentLang={currentLang} />;
 }

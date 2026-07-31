@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { Database } from "@/lib/database.types";
@@ -10,16 +11,11 @@ type Tenant = Database["public"]["Tables"]["tenants"]["Row"];
 
 interface GeneralSettingsProps {
   tenant: Tenant;
-  messages?: Record<string, string>;
 }
 
-export function GeneralSettings({
-  tenant,
-  messages = {},
-}: GeneralSettingsProps) {
+export function GeneralSettings({ tenant }: GeneralSettingsProps) {
   const router = useRouter();
-  const t = (key: string, defaultValue: string = "") =>
-    messages[key] || defaultValue;
+  const t = useTranslations("settings");
 
   const [name, setName] = useState(tenant.name || "");
   const [email, setEmail] = useState(tenant.email || "");
@@ -29,7 +25,7 @@ export function GeneralSettings({
 
   const handleSave = async () => {
     if (!name.trim()) {
-      setMessage(`✗ ${t("nameRequired", "Business name is required")}`);
+      setMessage(`✗ ${t("nameRequired")}`);
       return;
     }
 
@@ -46,15 +42,10 @@ export function GeneralSettings({
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(
-          data.error ||
-            t("failedToUpdateGeneral", "Failed to update business information")
-        );
+        throw new Error(data.error || t("failedToUpdateGeneral"));
       }
 
-      setMessage(
-        `✓ ${t("generalSaved", "Business information saved successfully")}`
-      );
+      setMessage(`✓ ${t("generalSaved")}`);
       setTimeout(() => setMessage(""), 3000);
       // The venue name is rendered by the admin shell (sidebar header), which
       // is a server component — without this it keeps showing the old name.
@@ -62,9 +53,7 @@ export function GeneralSettings({
     } catch (error) {
       setMessage(
         `✗ ${
-          error instanceof Error
-            ? error.message
-            : t("failedToUpdateGeneral", "Failed to update business information")
+          error instanceof Error ? error.message : t("failedToUpdateGeneral")
         }`
       );
     } finally {
@@ -76,7 +65,7 @@ export function GeneralSettings({
     <div className="space-y-4">
       <div>
         <label className="mb-2 block text-sm font-medium">
-          {t("restaurantName", "Restaurant Name")}
+          {t("restaurantName")}
         </label>
         <Input
           value={name}
@@ -87,9 +76,7 @@ export function GeneralSettings({
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div>
-          <label className="mb-2 block text-sm font-medium">
-            {t("email", "Email")}
-          </label>
+          <label className="mb-2 block text-sm font-medium">{t("email")}</label>
           <Input
             type="email"
             value={email}
@@ -99,9 +86,7 @@ export function GeneralSettings({
         </div>
 
         <div>
-          <label className="mb-2 block text-sm font-medium">
-            {t("phone", "Phone")}
-          </label>
+          <label className="mb-2 block text-sm font-medium">{t("phone")}</label>
           <Input
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
@@ -112,21 +97,13 @@ export function GeneralSettings({
 
       <div>
         <label className="mb-2 block text-sm font-medium">
-          {t("menuSlug", "Menu Slug")}
+          {t("menuSlug")}
         </label>
         <Input value={tenant.slug} disabled />
         <p className="mt-1.5 text-xs text-muted-foreground">
-          {t("slugDescription", "Your public menu URL: /{slug}/en").replace(
-            "{slug}",
-            tenant.slug
-          )}
+          {t("slugDescription", { slug: tenant.slug })}
         </p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          {t(
-            "slugLocked",
-            "This address cannot be changed — your printed QR codes depend on it."
-          )}
-        </p>
+        <p className="mt-1 text-xs text-muted-foreground">{t("slugLocked")}</p>
       </div>
 
       {message && (
@@ -142,7 +119,7 @@ export function GeneralSettings({
       )}
 
       <Button onClick={handleSave} disabled={saving}>
-        {saving ? t("saving", "Saving...") : t("saveChanges", "Save Changes")}
+        {saving ? t("saving") : t("saveChanges")}
       </Button>
     </div>
   );

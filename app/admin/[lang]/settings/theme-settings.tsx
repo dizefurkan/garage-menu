@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription } from "@/components/ui/card";
 import type { Database } from "@/lib/database.types";
 
@@ -14,19 +14,15 @@ type ProductSort = Tenant["product_sort"];
 
 interface ThemeSettingsProps {
   tenant: Tenant;
-  messages?: Record<string, string>;
   /** Whether any category has a banner image — drives the fallback warning. */
   hasCategoryImages?: boolean;
 }
 
 export function ThemeSettings({
   tenant,
-  messages = {},
   hasCategoryImages = true,
 }: ThemeSettingsProps) {
-  const t = (key: string, defaultValue: string = "") => {
-    return (messages[key] as string) || defaultValue;
-  };
+  const t = useTranslations("settings");
 
   const themeConfig = (tenant.theme_config as {
     primary: string;
@@ -82,9 +78,7 @@ export function ThemeSettings({
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(
-          data.error || t("failedToUpdate", "Failed to update theme")
-        );
+        throw new Error(data.error || t("failedToUpdate"));
       }
 
       setSuccess(true);
@@ -101,7 +95,7 @@ export function ThemeSettings({
       <div className="space-y-4">
         <div>
           <label className="mb-3 block text-sm font-medium">
-            {t("primaryColor", "Primary Color")}
+            {t("primaryColor")}
           </label>
           <div className="flex items-center gap-3">
             <input
@@ -125,7 +119,7 @@ export function ThemeSettings({
 
         <div>
           <label className="mb-3 block text-sm font-medium">
-            {t("secondaryColor", "Secondary Color")}
+            {t("secondaryColor")}
           </label>
           <div className="flex items-center gap-3">
             <input
@@ -147,7 +141,7 @@ export function ThemeSettings({
 
         <div>
           <label className="mb-3 block text-sm font-medium">
-            {t("accentColor", "Accent Color")} (Optional)
+            {t("accentColor")} (Optional)
           </label>
           <div className="flex items-center gap-3">
             <input
@@ -173,28 +167,26 @@ export function ThemeSettings({
       <div className="space-y-3">
         <div>
           <label className="block text-sm font-medium">
-            {t("menuLayoutTitle", "Menu Layout")}
+            {t("menuLayoutTitle")}
           </label>
           <p className="mt-1 text-xs text-muted-foreground">
-            {t("menuLayoutHint", "")}
+            {t("menuLayoutHint")}
           </p>
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2">
-          {(
-            [
-              {
-                value: "products" as const,
-                label: t("menuLayoutProducts", "Product list"),
-                hint: t("menuLayoutProductsHint", ""),
-              },
-              {
-                value: "categories" as const,
-                label: t("menuLayoutCategories", "Category cards"),
-                hint: t("menuLayoutCategoriesHint", ""),
-              },
-            ]
-          ).map((option) => {
+          {[
+            {
+              value: "products" as const,
+              label: t("menuLayoutProducts"),
+              hint: t("menuLayoutProductsHint"),
+            },
+            {
+              value: "categories" as const,
+              label: t("menuLayoutCategories"),
+              hint: t("menuLayoutCategoriesHint"),
+            },
+          ].map((option) => {
             const selected = menuLayout === option.value;
             return (
               <button
@@ -245,7 +237,7 @@ export function ThemeSettings({
 
         {menuLayout === "categories" && !hasCategoryImages && (
           <p className="rounded-md border border-border bg-muted p-3 text-xs text-muted-foreground">
-            {t("menuLayoutNoImagesWarning", "")}
+            {t("menuLayoutNoImagesWarning")}
           </p>
         )}
       </div>
@@ -258,7 +250,7 @@ export function ThemeSettings({
             htmlFor="category-sort"
             className="mb-2 block text-sm font-medium"
           >
-            {t("categorySortTitle", "Category order")}
+            {t("categorySortTitle")}
           </label>
           <select
             id="category-sort"
@@ -266,13 +258,9 @@ export function ThemeSettings({
             onChange={(e) => setCategorySort(e.target.value as CategorySort)}
             className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
           >
-            <option value="manual">{t("sortManual", "Manual order")}</option>
-            <option value="alphabetical">
-              {t("sortAlphabetical", "Alphabetical (A-Z)")}
-            </option>
-            <option value="popularity">
-              {t("sortPopularity", "Most ordered")}
-            </option>
+            <option value="manual">{t("sortManual")}</option>
+            <option value="alphabetical">{t("sortAlphabetical")}</option>
+            <option value="popularity">{t("sortPopularity")}</option>
           </select>
         </div>
 
@@ -281,7 +269,7 @@ export function ThemeSettings({
             htmlFor="product-sort"
             className="mb-2 block text-sm font-medium"
           >
-            {t("productSortTitle", "Product order")}
+            {t("productSortTitle")}
           </label>
           <select
             id="product-sort"
@@ -289,26 +277,18 @@ export function ThemeSettings({
             onChange={(e) => setProductSort(e.target.value as ProductSort)}
             className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
           >
-            <option value="manual">{t("sortManual", "Manual order")}</option>
-            <option value="alphabetical">
-              {t("sortAlphabetical", "Alphabetical (A-Z)")}
-            </option>
-            <option value="popularity">
-              {t("sortPopularity", "Most ordered")}
-            </option>
-            <option value="price_asc">
-              {t("sortPriceAsc", "Price: low to high")}
-            </option>
-            <option value="price_desc">
-              {t("sortPriceDesc", "Price: high to low")}
-            </option>
-            <option value="newest">{t("sortNewest", "Newest first")}</option>
+            <option value="manual">{t("sortManual")}</option>
+            <option value="alphabetical">{t("sortAlphabetical")}</option>
+            <option value="popularity">{t("sortPopularity")}</option>
+            <option value="price_asc">{t("sortPriceAsc")}</option>
+            <option value="price_desc">{t("sortPriceDesc")}</option>
+            <option value="newest">{t("sortNewest")}</option>
           </select>
         </div>
 
         {(categorySort === "popularity" || productSort === "popularity") && (
           <p className="text-xs text-muted-foreground sm:col-span-2">
-            {t("sortPopularityNeedsOrders", "")}
+            {t("sortPopularityNeedsOrders")}
           </p>
         )}
       </div>
@@ -353,12 +333,12 @@ export function ThemeSettings({
 
       {success && (
         <div className="rounded-md bg-green-50 p-4 text-sm text-green-700">
-          {t("themeSaved", "Theme settings updated successfully")}
+          {t("themeSaved")}
         </div>
       )}
 
       <Button type="submit" disabled={loading}>
-        {loading ? "Saving..." : t("saveChanges", "Save Theme")}
+        {loading ? t("saving") : t("saveChanges")}
       </Button>
     </form>
   );

@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -46,19 +47,14 @@ const SUPPORTED_LANGUAGES = [
 interface LanguageSettingsProps {
   tenant: Tenant;
   currentLang: string;
-  messages?: Record<string, string>;
 }
 
 export function LanguageSettings({
   tenant,
   currentLang,
-  messages = {},
 }: LanguageSettingsProps) {
   const router = useRouter();
-
-  const t = (key: string, defaultValue: string = "") => {
-    return (messages[key] as string) || defaultValue;
-  };
+  const t = useTranslations("settings");
 
   // Parse tenant languages safely (can be array or JSON string)
   let parsedLanguages: string[] = ["en"];
@@ -111,21 +107,14 @@ export function LanguageSettings({
     setLoading(true);
 
     if (selectedLanguages.length === 0) {
-      toast.error(
-        t("minimumOneLanguageRequired", "At least one language is required")
-      );
+      toast.error(t("minimumOneLanguageRequired"));
       setLoading(false);
       return;
     }
 
     // Check if default language is in selected languages
     if (!selectedLanguages.includes(defaultLanguage)) {
-      toast.error(
-        t(
-          "defaultLanguageMustBeSelected",
-          "Default language must be one of the selected languages"
-        )
-      );
+      toast.error(t("defaultLanguageMustBeSelected"));
       setLoading(false);
       return;
     }
@@ -147,14 +136,10 @@ export function LanguageSettings({
       });
 
       if (!response.ok) {
-        throw new Error(
-          t("failedToUpdateLanguages", "Failed to update languages")
-        );
+        throw new Error(t("failedToUpdateLanguages"));
       }
 
-      toast.success(
-        t("menuLanguagesUpdatedSuccess", "Menu languages updated successfully!")
-      );
+      toast.success(t("menuLanguagesUpdatedSuccess"));
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "An error occurred");
     } finally {
@@ -167,30 +152,23 @@ export function LanguageSettings({
       {/* Dashboard Language */}
       <div>
         <label className="mb-2 block text-sm font-medium">
-          {t("dashboardLanguage", "Dashboard Language")}
+          {t("dashboardLanguage")}
         </label>
         <p className="text-xs text-gray-500 mb-2">
-          {t(
-            "dashboardLanguageDescription",
-            "Choose the language for your admin dashboard interface"
-          )}
+          {t("dashboardLanguageDescription")}
         </p>
         <Select
           value={currentLang}
           onValueChange={handleDashboardLanguageChange}
         >
           <SelectTrigger className="w-full">
-            <SelectValue
-              placeholder={t("selectLanguagePlaceholder", "Select language")}
-            >
-              {currentLang === "en"
-                ? t("englishEN", "English (EN)")
-                : t("turkishTR", "Türkçe (TR)")}
+            <SelectValue placeholder={t("selectLanguagePlaceholder")}>
+              {currentLang === "en" ? t("englishEN") : t("turkishTR")}
             </SelectValue>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="en">{t("englishEN", "English (EN)")}</SelectItem>
-            <SelectItem value="tr">{t("turkishTR", "Türkçe (TR)")}</SelectItem>
+            <SelectItem value="en">{t("englishEN")}</SelectItem>
+            <SelectItem value="tr">{t("turkishTR")}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -198,13 +176,10 @@ export function LanguageSettings({
       {/* Menu Languages - Multi-Select with Popover */}
       <div>
         <label className="mb-2 block text-sm font-medium">
-          {t("menuLanguages", "Menu Languages")}
+          {t("menuLanguages")}
         </label>
         <p className="text-xs text-gray-500 mb-3">
-          {t(
-            "menuLanguagesDescription",
-            "Select which languages will be available for your menu. At least one language is required."
-          )}
+          {t("menuLanguagesDescription")}
         </p>
 
         {/* Available Languages - Multi-Select Combobox */}
@@ -217,13 +192,10 @@ export function LanguageSettings({
       {/* Default Menu Language */}
       <div>
         <label className="mb-2 block text-sm font-medium">
-          {t("defaultMenuLanguage", "Default Menu Language")}
+          {t("defaultMenuLanguage")}
         </label>
         <p className="text-xs text-gray-500 mb-2">
-          {t(
-            "defaultMenuLanguageDescription",
-            "This language will be shown when visitors first access your menu."
-          )}
+          {t("defaultMenuLanguageDescription")}
         </p>
         <Select
           value={
@@ -238,10 +210,7 @@ export function LanguageSettings({
             <SelectValue
               placeholder={
                 selectedLanguages.length === 0
-                  ? t(
-                      "selectOneLanguageFirst",
-                      "Select at least one language first"
-                    )
+                  ? t("selectOneLanguageFirst")
                   : undefined
               }
             >
@@ -264,9 +233,7 @@ export function LanguageSettings({
       </div>
 
       <Button type="submit" disabled={loading}>
-        {loading
-          ? t("savingLanguages", "Saving...")
-          : t("saveLanguages", "Save Languages")}
+        {loading ? t("savingLanguages") : t("saveLanguages")}
       </Button>
     </form>
   );

@@ -9,7 +9,7 @@ interface Props {
 
 export default async function AppearanceSettingsPage({ params }: Props) {
   const { lang } = await params;
-  const { tenant, settingsMessages, t } = await loadSettingsPage(lang);
+  const { tenant, t } = await loadSettingsPage(lang);
 
   // The category-first layout leans on banner images. Knowing whether any
   // exist lets the theme picker warn before the venue picks a layout that
@@ -24,19 +24,15 @@ export default async function AppearanceSettingsPage({ params }: Props) {
     <div className="max-w-2xl space-y-6">
       <SettingsSubPageHeader
         lang={lang}
-        title={t("appearance", "Appearance")}
-        description={t(
-          "appearanceDescription",
-          "Colours, menu layout and the order items appear in."
-        )}
-        backLabel={t("backToSettings", "Back to settings")}
+        title={t("appearance")}
+        description={t("appearanceDescription")}
+        backLabel={t("backToSettings")}
       />
 
       <Card>
         <CardContent>
           <ThemeSettings
             tenant={tenant}
-            messages={settingsMessages}
             hasCategoryImages={(categoriesWithImages ?? 0) > 0}
           />
         </CardContent>

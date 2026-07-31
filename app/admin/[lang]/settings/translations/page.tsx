@@ -1,6 +1,7 @@
 import { getSessionWithTenant } from "@/lib/auth/session";
 import { supabaseAdmin } from "@/lib/supabase";
 import { redirect, notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { TranslationsWorkbench } from "./translations-workbench";
 import { SettingsSubPageHeader } from "../settings-shell";
 
@@ -83,21 +84,15 @@ export default async function TranslationPage({ params, searchParams }: Props) {
 
   // Editors reach this page too, so it keeps its own guard above rather than
   // going through the owner-only loadSettingsPage.
-  const messages = (await import(`@/messages/${lang}.json`)).default;
-  const settingsMessages = (messages.settings || {}) as Record<string, string>;
-  const t = (key: string, defaultValue: string = "") =>
-    settingsMessages[key] || defaultValue;
+  const t = await getTranslations({ locale: lang, namespace: "settings" });
 
   return (
     <div className="space-y-6">
       <SettingsSubPageHeader
         lang={lang}
-        title={t("translations", "Translations")}
-        description={t(
-          "translationsDescription",
-          "Translate products and categories faster"
-        )}
-        backLabel={t("backToSettings", "Back to settings")}
+        title={t("translations")}
+        description={t("translationsDescription")}
+        backLabel={t("backToSettings")}
       />
 
       <TranslationsWorkbench

@@ -1,6 +1,9 @@
 import { redirect, notFound } from "next/navigation";
+import { NextIntlClientProvider, hasLocale } from "next-intl";
+import { setRequestLocale } from "next-intl/server";
 import { getSessionWithTenant } from "@/lib/auth/session";
 import { supabaseAdmin } from "@/lib/supabase";
+import { routing } from "@/i18n/routing";
 import { AdminLayoutClient } from "./layout-client";
 
 export default async function AdminLayout({
@@ -12,13 +15,14 @@ export default async function AdminLayout({
 }) {
   const { lang } = await params;
 
-  // Validate locale
-  if (!["en", "tr"].includes(lang)) {
+  if (!hasLocale(routing.locales, lang)) {
     notFound();
   }
 
-  // Load messages for this locale
-  const messages = (await import(`@/messages/${lang}.json`)).default;
+  // We don't run next-intl's middleware (see i18n/routing.ts), so this is what
+  // tells `i18n/request.ts` which locale the request is for. Everything below
+  // — server pages and the client provider alike — reads from it.
+  setRequestLocale(lang);
 
   const { user, tenant, role } = await getSessionWithTenant();
 
@@ -45,15 +49,18 @@ export default async function AdminLayout({
   }
 
   return (
-    <AdminLayoutClient
-      user={user}
-      tenant={tenant}
-      role={role || "viewer"}
-      lang={lang}
-      messages={messages}
-      enabledAddons={enabledAddons}
-    >
-      {children}
-    </AdminLayoutClient>
+    // Rendered from a Server Component, so the provider inherits locale,
+    // messages and timeZone from i18n/request.ts — no message prop drilling.
+    <NextIntlClientProvider>
+      <AdminLayoutClient
+        user={user}
+        tenant={tenant}
+        role={role || "viewer"}
+        lang={lang}
+        enabledAddons={enabledAddons}
+      >
+        {children}
+      </AdminLayoutClient>
+    </NextIntlClientProvider>
   );
 }

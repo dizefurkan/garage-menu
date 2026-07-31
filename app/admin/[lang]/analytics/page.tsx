@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import { getTranslations } from 'next-intl/server';
 import { redirect } from 'next/navigation';
 import { BarChart3 } from 'lucide-react';
 
@@ -21,8 +22,7 @@ export async function generateMetadata({
   params: Promise<{ lang: string }>;
 }): Promise<Metadata> {
   const { lang } = await params;
-  const messages = await loadLocaleMessages(lang);
-  const t = createTranslator(messages);
+  const t = await getTranslations({ locale: lang, namespace: 'admin' });
 
   return {
     title: `${t('analytics')} - Dashboard`,
@@ -32,20 +32,6 @@ export async function generateMetadata({
 
 interface AnalyticsPageProps {
   params: Promise<{ lang: string }>;
-}
-
-async function loadLocaleMessages(lang: string) {
-  try {
-    const messages = (await import(`@/messages/${lang}.json`)).default;
-    return messages.admin ?? {};
-  } catch {
-    const fallback = (await import('@/messages/en.json')).default;
-    return fallback.admin ?? {};
-  }
-}
-
-function createTranslator(messages: Record<string, string>) {
-  return (key: string) => messages[key] || key;
 }
 
 /**
@@ -61,11 +47,10 @@ export default async function AnalyticsPage({ params }: AnalyticsPageProps) {
     redirect('/auth/login');
   }
 
-  try {
-    // Get translations
-    const messages = await loadLocaleMessages(lang);
-    const t = createTranslator(messages);
+  // Resolved before the try so the error branch below can reuse it.
+  const t = await getTranslations({ locale: lang, namespace: 'admin' });
 
+  try {
     // Default empty values for analytics data
     const defaultSummary = {
       totalViews: 0,
@@ -122,10 +107,6 @@ export default async function AnalyticsPage({ params }: AnalyticsPageProps) {
       </div>
     );
   } catch (error) {
-    // Get translations for error message
-    const messages = await loadLocaleMessages(lang);
-    const t = createTranslator(messages);
-
     console.error('Analytics page error:', error);
 
     return (

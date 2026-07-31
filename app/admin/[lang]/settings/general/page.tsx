@@ -8,23 +8,20 @@ interface Props {
 
 export default async function GeneralSettingsPage({ params }: Props) {
   const { lang } = await params;
-  const { tenant, settingsMessages, t } = await loadSettingsPage(lang);
+  const { tenant, t } = await loadSettingsPage(lang);
 
   return (
     <div className="max-w-2xl space-y-6">
       <SettingsSubPageHeader
         lang={lang}
-        title={t("basicInformation", "Basic Information")}
-        description={t(
-          "basicInformationDescription",
-          "Business name, email and phone."
-        )}
-        backLabel={t("backToSettings", "Back to settings")}
+        title={t("basicInformation")}
+        description={t("basicInformationDescription")}
+        backLabel={t("backToSettings")}
       />
 
       <Card>
         <CardContent>
-          <GeneralSettings tenant={tenant} messages={settingsMessages} />
+          <GeneralSettings tenant={tenant} />
         </CardContent>
       </Card>
     </div>

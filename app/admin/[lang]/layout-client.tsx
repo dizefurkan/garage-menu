@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { NextIntlClientProvider } from "next-intl";
 import { toast } from "sonner";
 import { logout } from "@/lib/auth/logout";
 import { createBrowserSupabaseClient } from "@/lib/supabase-browser-client";
@@ -58,7 +57,6 @@ interface AdminLayoutClientProps {
   tenant: Database["public"]["Tables"]["tenants"]["Row"];
   role: string;
   lang: string;
-  messages: Record<string, any>;
   enabledAddons?: string[];
 }
 
@@ -276,18 +274,12 @@ export function AdminLayoutClient({
   tenant,
   role,
   lang,
-  messages,
   enabledAddons = [],
 }: AdminLayoutClientProps) {
   const pathname = usePathname();
 
   return (
-    <NextIntlClientProvider
-      locale={lang}
-      messages={messages}
-      timeZone="Europe/Istanbul"
-    >
-      <>
+    <>
         {enabledAddons.includes("orders_management") && (
           <OrderNotificationsListener tenantId={tenant.id} lang={lang} />
         )}
@@ -407,7 +399,6 @@ export function AdminLayoutClient({
           </div>
         </SidebarInset>
       </SidebarProvider>
-      </>
-    </NextIntlClientProvider>
+    </>
   );
 }

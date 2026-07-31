@@ -1,12 +1,17 @@
 import { getSessionWithTenant } from "@/lib/auth/session";
+import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 /**
- * Every settings route is owner-only and reads the same message bundle. Doing
- * it in one place keeps a new sub-page from shipping without the guard.
+ * Every settings route is owner-only and reads the same namespace. Doing it in
+ * one place keeps a new sub-page from shipping without the guard.
+ *
+ * The locale is passed to `getTranslations` explicitly rather than relying on
+ * the `setRequestLocale()` call in the admin layout: layouts and pages may
+ * render in parallel, so a page must not depend on the layout having run first.
  */
 export async function loadSettingsPage(lang: string) {
   const { user, tenant, role } = await getSessionWithTenant();
@@ -15,13 +20,9 @@ export async function loadSettingsPage(lang: string) {
     redirect("/admin/dashboard");
   }
 
-  const messages = (await import(`@/messages/${lang}.json`)).default;
-  const settingsMessages = (messages.settings || {}) as Record<string, string>;
+  const t = await getTranslations({ locale: lang, namespace: "settings" });
 
-  const t = (key: string, defaultValue: string = "") =>
-    settingsMessages[key] || defaultValue;
-
-  return { tenant, settingsMessages, t };
+  return { tenant, t };
 }
 
 export function SettingsSubPageHeader({

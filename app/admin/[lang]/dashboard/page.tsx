@@ -8,6 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { getSessionWithTenant } from "@/lib/auth/session";
+import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
@@ -56,27 +57,7 @@ export default async function DashboardPage({
   params: Promise<{ lang: string }>;
 }) {
   const { lang } = await params;
-
-  // Load messages for this locale
-  const messages = (await import(`@/messages/${lang}.json`)).default;
-  const dashboardMessages = messages.dashboard || {};
-
-  const t = (key: string, replacements?: Record<string, string | number>) => {
-    const value = dashboardMessages[key as keyof typeof dashboardMessages];
-
-    if (typeof value !== "string") {
-      return key;
-    }
-
-    // Simple replacement for placeholders like {name}
-    if (replacements) {
-      return Object.entries(replacements).reduce(
-        (acc, [k, v]) => acc.replace(`{${k}}`, String(v)),
-        value
-      );
-    }
-    return value;
-  };
+  const t = await getTranslations({ locale: lang, namespace: "dashboard" });
 
   const { user, tenant, role } = await getSessionWithTenant();
 

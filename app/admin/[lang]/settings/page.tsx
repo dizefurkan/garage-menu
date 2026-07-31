@@ -29,59 +29,40 @@ export default async function SettingsPage({ params }: Props) {
     {
       href: "general",
       icon: Building2,
-      title: t("basicInformation", "Basic Information"),
-      description: t(
-        "basicInformationDescription",
-        "Business name, email and phone."
-      ),
+      title: t("basicInformation"),
+      description: t("basicInformationDescription"),
     },
     {
       href: "languages",
       icon: Languages,
-      title: t("languages", "Languages"),
-      description: t(
-        "languagesDescription",
-        "Dashboard language, menu languages and the default one."
-      ),
+      title: t("languages"),
+      description: t("languagesDescription"),
     },
     {
       href: "translations",
       icon: Type,
-      title: t("translations", "Translations"),
-      description: t(
-        "translationsDescription",
-        "Translate products and categories faster"
-      ),
+      title: t("translations"),
+      description: t("translationsDescription"),
     },
     {
       href: "appearance",
       icon: Palette,
-      title: t("appearance", "Appearance"),
-      description: t(
-        "appearanceDescription",
-        "Colours, menu layout and the order items appear in."
-      ),
+      title: t("appearance"),
+      description: t("appearanceDescription"),
     },
     {
       href: "contact",
       icon: Contact,
-      title: t("contactInformation", "Contact Information"),
-      description: t(
-        "contactInformationDescription",
-        "Address and the social accounts shown on your menu."
-      ),
+      title: t("contactInformation"),
+      description: t("contactInformationDescription"),
     },
   ];
 
   return (
     <div className="max-w-2xl space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">
-          {t("title", "Settings")}
-        </h1>
-        <p className="mt-2 text-muted-foreground">
-          {t("description", "Manage your restaurant information")}
-        </p>
+        <h1 className="text-3xl font-bold tracking-tight">{t("title")}</h1>
+        <p className="mt-2 text-muted-foreground">{t("description")}</p>
       </div>
 
       <div className="divide-y overflow-hidden rounded-lg border">

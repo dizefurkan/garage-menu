@@ -1,4 +1,5 @@
 import { getSessionWithTenant } from "@/lib/auth/session";
+import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { supabaseAdmin } from "@/lib/supabase";
@@ -49,20 +50,6 @@ async function getCategories(tenantId: number, lang: string) {
   });
 }
 
-async function loadLocaleMessages(lang: string) {
-  try {
-    const messages = (await import(`@/messages/${lang}.json`)).default;
-    return messages.admin ?? {};
-  } catch {
-    const fallback = (await import('@/messages/en.json')).default;
-    return fallback.admin ?? {};
-  }
-}
-
-function createTranslator(messages: Record<string, string>) {
-  return (key: string) => messages[key] || key;
-}
-
 export default async function ProductsPage({
   params,
 }: {
@@ -75,8 +62,7 @@ export default async function ProductsPage({
     redirect("/admin/dashboard");
   }
 
-  const messages = await loadLocaleMessages(lang);
-  const t = createTranslator(messages);
+  const t = await getTranslations({ locale: lang, namespace: "admin" });
   const categories = await getCategories(tenant.id, lang);
 
   return (
