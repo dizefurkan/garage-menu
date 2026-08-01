@@ -591,14 +591,34 @@ Kullanıcının panel üzerinde gezip verdiği geri bildirimlerden çıktı. Sı
    ekrana literal `{slug}` basıyordu. (d) Çeviriler sayfasının başlığı ve
    geri linki hardcoded İngilizceydi.
 
-3. **FEAT — Ürün tablosunda checkbox + toplu işlem.** `components/ui/data-table.tsx`
-   TanStack Table kullanıyor; satır seçimi onun `rowSelection` state'i ile
-   yapılır. Seçim yapılınca üstte bir toplu işlem çubuğu belirir.
+3. ~~**FEAT — Ürün tablosunda checkbox + toplu işlem.**~~ ✅ Yapıldı
+   (`2c149d2`, tasarım düzeltmesi `8627ec6`). Satır seçimi `DataTable`'da
+   **opt-in** (diğer 5 tablo etkilenmedi). Çubuktaki işlemler: durum
+   değiştirme + silme (onaylı). Yeni uç: `POST /api/admin/products/bulk`.
 
-4. **FEAT — Toplu yüzdesel fiyat değişikliği.** Seçili ürünlere, ya da filtreye
-   uyan tüm ürünlere ("şunlar hariç" desteğiyle) yüzdesel zam/indirim.
-   Yeni bir API ucu gerekecek; `tenant_id` kontrolü ve yuvarlama kuralı
-   (kuruş) düşünülmeli. Önizleme göstermeden uygulamamalı — geri alınamaz.
+   **Server-side pagination'ın dayattığı üç karar — madde 4 bunları devralır:**
+   - Seçim state'i `ProductsFilterBar`'da (DataTable'ın içinde değil), sayfa
+     değişince kaybolmasın diye.
+   - `getRowId` ile **ürün id**'sine anahtarlanıyor; satır index'i kayar.
+   - Başlık checkbox'ı **sadece o sayfayı** seçer. Tablo diğer sayfaların
+     satırlarını hiç tutmadığı için "hepsi" diyemez → madde 4'teki "filtreye
+     uyan tüm ürünler" **ayrı bir mekanizma** gerektirecek (id listesi değil,
+     sunucuya filtre gönderme).
+   - Kategori filtresi değişince seçim temizlenir.
+
+   **Yan bulgu — hata:** son sayfadaki tüm satırlar silinince kullanıcı boş
+   sayfada kalıyordu; `loadProducts` artık kaç satır getirdiğini döndürüyor ve
+   sayfa boşalırsa 1'e düşülüyor. Tek satırlık silmede de vardı, o da düzeldi.
+
+4. **FEAT — Toplu yüzdesel fiyat değişikliği. ← SIRADAKİ İŞ**
+   Seçili ürünlere, ya da filtreye uyan tüm ürünlere ("şunlar hariç"
+   desteğiyle) yüzdesel zam/indirim. Yeni bir API ucu gerekecek; `tenant_id`
+   kontrolü ve yuvarlama kuralı (kuruş) düşünülmeli. Önizleme göstermeden
+   uygulamamalı — geri alınamaz.
+
+   Madde 3'ten devralınan kısıt: "filtreye uyan tüm ürünler" seçili id
+   listesiyle **ifade edilemez** (tablo sadece o sayfayı tutuyor). Sunucuya
+   filtrenin kendisi + hariç tutulan id'ler gönderilmeli.
 
 5. **Madde 10 — Ürün varyant/opsiyon sistemi UI'ı.** Aşağıdaki maddeye bakınız.
    Madde 2'nin kalan kısmı (`product_option_values.calories` +
@@ -613,6 +633,39 @@ Kullanıcının panel üzerinde gezip verdiği geri bildirimlerden çıktı. Sı
   `bigint` diyor (PostgREST BIGINT'i `number` döndürür). `lib/db/queries.ts`
   hâlâ kullanıyor. Emekliye ayrılmalı.
 - `ROADMAP.md` bayat: Phase 2-4'teki yapılmış işler hâlâ `[ ]` işaretli.
+- **Public menü hâlâ next-intl dışında.** `/menu/[slug]/[lang]` sayfaları
+  `NextIntlClientProvider` altında değil, birkaç metni yerel sözlükten
+  okuyor (`page.tsx` ve `category-landing.tsx` içindeki yorumlara bakınız).
+  Artık kurulum düzgün olduğu için `setRequestLocale(lang)` + `getTranslations`
+  ile bunlar da taşınabilir — ayrı bir kalem.
+- `components/ui/` içinde registry'den sapmış başka bileşenler olabilir.
+  `checkbox.tsx` sapmıştı (`"use client"` ve `rounded-sm` eksikti), `0ef8bb7`
+  ile registry sürümüne alındı. `sidebar.tsx` bilinçli olarak saptırılmış —
+  ona dokunma (bkz. Ortak Kurallar).
+
+### 2026-08-01 oturumunda yapılan altyapı işleri
+
+- **next-intl doğru kuruldu** (`868d20f`). Kütüphane hiç bağlanmamıştı:
+  `next.config.ts`'te `createNextIntlPlugin()` yoktu ve kökteki
+  `i18n.config.ts`'i plugin zaten aramıyor (sadece `./i18n/request.ts` ve
+  `./src/i18n/request.ts`). Sonuç: `next-intl/server` paketin hata fırlatan
+  stub'ına düşüyordu, o yüzden 8 server dosyası JSON'u elle import edip kendi
+  çevirmenini yazmıştı.
+  - Yeni: `i18n/routing.ts` (locale listesi tek kaynak), `i18n/request.ts`.
+    `i18n.config.ts` ve `next-intl.config.ts` silindi.
+  - **`createMiddleware`/`createNavigation` bilinçli olarak alınmadı** —
+    locale'in ilk segment olduğunu varsayıyorlar, bizim public menümüzde
+    (`/menu/[slug]/[lang]`) locale **sonda**. Mevcut `middleware.ts` kalıyor,
+    locale next-intl'e locale layout'larındaki `setRequestLocale()` ile gidiyor.
+  - Server component'lerde `getTranslations({ locale, namespace })` — locale
+    **açıkça** veriliyor, çünkü layout ve page paralel render olabiliyor;
+    page, layout'un önce çalıştığına bel bağlamamalı.
+  - `NextIntlClientProvider` artık server admin layout'unda ve **propsuz**;
+    mesajları `i18n/request.ts`'ten miras alıyor.
+- **shadcn MCP kuruldu** (`0ef8bb7`). `.mcp.json` 0 byte'lık boş bir dosyaydı;
+  `components.json`'daki `registries` bloğu ise dokümandaki örnek
+  placeholder'dı (`@acme` → `acme.com`, 404). Artık `npx shadcn@latest mcp`
+  sunucusu tanımlı — **bileşen ekleme/güncelleme MCP üzerinden yapılmalı.**
 
 ---
 
