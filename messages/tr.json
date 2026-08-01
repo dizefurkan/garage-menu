@@ -519,7 +519,17 @@
     "availabilityHidden": "Satışa kapalı",
     "availabilityOnSaleHint": "Menüde görünür ve sipariş edilebilir.",
     "availabilityOutOfStockHint": "Menüde görünür ama sipariş edilemez; üzerinde “Tükendi” yazar.",
-    "availabilityHiddenHint": "Menüde hiç görünmez."
+    "availabilityHiddenHint": "Menüde hiç görünmez.",
+    "selectAllOnPage": "Bu sayfadaki tüm ürünleri seç",
+    "selectRow": "Ürünü seç",
+    "bulkSelectedCount": "{count} ürün seçildi",
+    "bulkChangeStatus": "Durumu değiştir",
+    "bulkClearSelection": "Seçimi temizle",
+    "bulkStatusDone": "{count} ürünün durumu güncellendi",
+    "bulkDeleteTitle": "Seçili ürünler silinsin mi?",
+    "bulkDeleteDescription": "{count} ürün kalıcı olarak silinecek. Bu işlem geri alınamaz.",
+    "bulkDeleteDone": "{count} ürün silindi",
+    "bulkFailed": "Toplu işlem başarısız oldu"
   },
   "orderSettings": {
     "title": "Sipariş Ayarları",

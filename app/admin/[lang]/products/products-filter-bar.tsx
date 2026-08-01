@@ -13,7 +13,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Filter } from "lucide-react";
+import type { RowSelectionState } from "@tanstack/react-table";
 import { createColumns } from "./columns";
+import { BulkActionsBar } from "./bulk-actions-bar";
 
 interface ProductsFilterBarProps {
   tenantId: number;
@@ -47,6 +49,9 @@ export function ProductsFilterBar({
   const [totalAllProducts, setTotalAllProducts] = useState(0);
   const [pageCount, setPageCount] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
+  // Owned here rather than inside DataTable so a page change doesn't wipe it —
+  // keys are product ids (see getRowId below), which stay valid across pages.
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
   // Load products when component mounts or filters change
   const loadProducts = useCallback(
@@ -71,9 +76,11 @@ export function ProductsFilterBar({
         setTotal(result.totalCount);
         setCurrentPage(result.currentPage);
         setPageCount(result.pageCount);
+        return result.products.length as number;
       } catch (error) {
         console.error("Failed to load products:", error);
         setProducts([]);
+        return 0;
       } finally {
         setIsLoading(false);
       }
@@ -137,6 +144,9 @@ export function ProductsFilterBar({
   const handleCategoryChange = (val: string | null) => {
     if (val) {
       setSelectedCategory(val);
+      // Changing the filter changes what "selected" refers to; keeping ids
+      // from the previous category would act on rows no longer on screen.
+      setRowSelection({});
       const categoryId = val === "all" ? undefined : parseInt(val);
 
       // Update URL
@@ -210,13 +220,31 @@ export function ProductsFilterBar({
     return <div className="text-center py-8">{t('loadingAnalytics')}</div>;
   }
 
+  const reloadCurrentPage = () =>
+    loadProducts(
+      currentPage,
+      selectedCategory && selectedCategory !== "all"
+        ? Number(selectedCategory)
+        : undefined,
+      pageSize
+    );
+
+  // Deleting every row on the last page leaves that page empty and stranded,
+  // so fall back to the first page when the refetch comes back with nothing.
+  const reloadAfterBulk = async () => {
+    const loaded = await reloadCurrentPage();
+    if (loaded === 0 && currentPage > 1) {
+      handlePaginationChange(0);
+    }
+  };
+
+  const selectedIds = Object.keys(rowSelection)
+    .filter((id) => rowSelection[id])
+    .map(Number);
+
   return (
     <DataTable
-      columns={createColumns(t, () =>
-        loadProducts(currentPage, selectedCategory && selectedCategory !== "all"
-          ? Number(selectedCategory)
-          : undefined, pageSize)
-      )}
+      columns={createColumns(t, reloadCurrentPage)}
       data={mappedProducts}
       filterElement={filterElement}
       filterPlaceholder={t('searchProducts')}
@@ -230,6 +258,17 @@ export function ProductsFilterBar({
       onPageSizeChange={handlePageSizeChange}
       pageSizeOptions={PAGE_SIZE_OPTIONS}
       showColumnToggle={false}
+      enableRowSelection
+      getRowId={(row) => String(row.id)}
+      rowSelection={rowSelection}
+      onRowSelectionChange={setRowSelection}
+      selectionToolbar={
+        <BulkActionsBar
+          selectedIds={selectedIds}
+          onClear={() => setRowSelection({})}
+          onDone={reloadAfterBulk}
+        />
+      }
     />
   );
 }

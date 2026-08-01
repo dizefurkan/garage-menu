@@ -5,6 +5,8 @@ import { useTranslations } from "next-intl";
 import {
   ColumnDef,
   ColumnFiltersState,
+  OnChangeFn,
+  RowSelectionState,
   SortingState,
   VisibilityState,
   flexRender,
@@ -64,6 +66,18 @@ interface DataTableProps<TData, TValue> {
   pageSizeOptions?: number[];
   showColumnToggle?: boolean;
   useFixedLayout?: boolean;
+  /**
+   * Row selection is opt-in so the tables that don't want it keep their
+   * current behaviour. When enabled the caller owns the selection state, which
+   * is what lets it survive a page change under server-side pagination.
+   */
+  enableRowSelection?: boolean;
+  /** Key selection by a stable id — row index would shift between pages. */
+  getRowId?: (row: TData, index: number) => string;
+  rowSelection?: RowSelectionState;
+  onRowSelectionChange?: OnChangeFn<RowSelectionState>;
+  /** Rendered between the filter row and the table, e.g. a bulk action bar. */
+  selectionToolbar?: React.ReactNode;
 }
 
 export function DataTable<TData, TValue>({
@@ -83,6 +97,11 @@ export function DataTable<TData, TValue>({
   onPageSizeChange,
   pageSizeOptions = [5, 10, 20],
   showColumnToggle = true,
+  enableRowSelection = false,
+  getRowId,
+  rowSelection,
+  onRowSelectionChange,
+  selectionToolbar,
 }: DataTableProps<TData, TValue>) {
   const t = useTranslations('admin');
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -126,6 +145,9 @@ export function DataTable<TData, TValue>({
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
+    enableRowSelection,
+    getRowId,
+    onRowSelectionChange,
     onPaginationChange: (updater) => {
       const newState =
         typeof updater === "function"
@@ -146,6 +168,7 @@ export function DataTable<TData, TValue>({
       columnFilters,
       columnVisibility,
       pagination: isServerSidePagination ? undefined : pagination,
+      ...(rowSelection ? { rowSelection } : {}),
     },
     manualPagination: isServerSidePagination,
     pageCount: isServerSidePagination ? totalPages : undefined,
@@ -194,6 +217,8 @@ export function DataTable<TData, TValue>({
           </DropdownMenu>
         )}
       </div>
+
+      {selectionToolbar}
 
       <div className="rounded-md border">
         <Table className={useFixedLayout ? "table-fixed" : undefined}>

@@ -519,7 +519,17 @@
     "availabilityHidden": "Closed for sale",
     "availabilityOnSaleHint": "Visible on the menu and orderable.",
     "availabilityOutOfStockHint": "Visible on the menu but not orderable; shows a “Sold out” label.",
-    "availabilityHiddenHint": "Not shown on the menu at all."
+    "availabilityHiddenHint": "Not shown on the menu at all.",
+    "selectAllOnPage": "Select all products on this page",
+    "selectRow": "Select product",
+    "bulkSelectedCount": "{count} products selected",
+    "bulkChangeStatus": "Change status",
+    "bulkClearSelection": "Clear selection",
+    "bulkStatusDone": "Updated the status of {count} products",
+    "bulkDeleteTitle": "Delete the selected products?",
+    "bulkDeleteDescription": "{count} products will be permanently deleted. This cannot be undone.",
+    "bulkDeleteDone": "Deleted {count} products",
+    "bulkFailed": "Bulk action failed"
   },
   "orderSettings": {
     "title": "Order Settings",
