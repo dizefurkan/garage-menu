@@ -14,8 +14,19 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Trash2, X } from "lucide-react";
-import { fromProductStatus, type ProductStatus } from "./product-status-select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ChevronDown, Trash2, X } from "lucide-react";
+import {
+  PRODUCT_STATUSES,
+  ProductStatusLabel,
+  fromProductStatus,
+  type ProductStatus,
+} from "./product-status-select";
 
 interface BulkActionsBarProps {
   selectedIds: number[];
@@ -70,27 +81,27 @@ export function BulkActionsBar({
           {t("bulkSelectedCount", { count })}
         </span>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm text-muted-foreground">
-            {t("availabilityTitle")}
-          </span>
-          <select
-            value=""
+        <DropdownMenu>
+          {/* Base UI composes via `render`, not `asChild`. */}
+          <DropdownMenuTrigger
+            render={<Button variant="outline" size="sm" />}
             disabled={busy}
-            onChange={(e) => {
-              if (e.target.value) {
-                handleStatusChange(e.target.value as ProductStatus);
-              }
-            }}
-            aria-label={t("bulkChangeStatus")}
-            className="h-8 rounded-md border border-input bg-background px-2 text-xs font-medium disabled:opacity-50"
           >
-            <option value="">{t("bulkChangeStatus")}</option>
-            <option value="on_sale">{t("availabilityOnSale")}</option>
-            <option value="out_of_stock">{t("availabilityOutOfStock")}</option>
-            <option value="hidden">{t("availabilityHidden")}</option>
-          </select>
-        </div>
+            {t("bulkChangeStatus")}
+            <ChevronDown className="ml-2 size-4" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            {PRODUCT_STATUSES.map((status) => (
+              <DropdownMenuItem
+                key={status}
+                className="gap-2"
+                onSelect={() => handleStatusChange(status)}
+              >
+                <ProductStatusLabel status={status} />
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         <Button
           variant="outline"

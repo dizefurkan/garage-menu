@@ -7,6 +7,13 @@ import {
   EyeOff,
   type LucideIcon,
 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export type ProductStatus = "on_sale" | "out_of_stock" | "hidden";
 
@@ -31,7 +38,11 @@ const STATUS_META: Record<
   },
 };
 
-const STATUS_ORDER: ProductStatus[] = ["on_sale", "out_of_stock", "hidden"];
+export const PRODUCT_STATUSES: ProductStatus[] = [
+  "on_sale",
+  "out_of_stock",
+  "hidden",
+];
 
 /**
  * Two booleans, one control. "hidden" wins over "out of stock" because an
@@ -58,6 +69,19 @@ export function fromProductStatus(status: ProductStatus): {
   };
 }
 
+/** Icon + label pair, shared by the select options and the bulk menu. */
+export function ProductStatusLabel({ status }: { status: ProductStatus }) {
+  const t = useTranslations("admin");
+  const meta = STATUS_META[status];
+  const Icon = meta.icon;
+  return (
+    <>
+      <Icon className={meta.className} aria-hidden />
+      <span>{t(meta.labelKey)}</span>
+    </>
+  );
+}
+
 interface ProductStatusSelectProps {
   value: ProductStatus;
   onChange: (next: ProductStatus) => void;
@@ -65,6 +89,7 @@ interface ProductStatusSelectProps {
   /** Pulses the icon while a change is being persisted. */
   busy?: boolean;
   size?: "sm" | "default";
+  /** Applied to the trigger, e.g. to match a neighbouring button's height. */
   className?: string;
 }
 
@@ -74,35 +99,38 @@ export function ProductStatusSelect({
   disabled = false,
   busy = false,
   size = "default",
-  className = "flex items-center gap-2",
+  className,
 }: ProductStatusSelectProps) {
   const t = useTranslations("admin");
   const meta = STATUS_META[value];
   const Icon = meta.icon;
 
   return (
-    <div className={className}>
-      <Icon
-        className={`size-4 shrink-0 ${meta.className} ${
-          busy ? "animate-pulse" : ""
-        }`}
-        aria-hidden
-      />
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value as ProductStatus)}
-        disabled={disabled}
+    <Select
+      value={value}
+      onValueChange={(next) => next && onChange(next as ProductStatus)}
+      disabled={disabled}
+    >
+      <SelectTrigger
+        size={size}
         aria-label={t("availabilityTitle")}
-        className={`rounded-md border border-input bg-background font-medium disabled:opacity-50 ${
-          size === "sm" ? "h-8 px-2 text-xs" : "h-9 px-3 text-sm"
-        }`}
+        className={className}
       >
-        {STATUS_ORDER.map((status) => (
-          <option key={status} value={status}>
-            {t(STATUS_META[status].labelKey)}
-          </option>
+        <SelectValue>
+          <Icon
+            className={`${meta.className} ${busy ? "animate-pulse" : ""}`}
+            aria-hidden
+          />
+          <span>{t(meta.labelKey)}</span>
+        </SelectValue>
+      </SelectTrigger>
+      <SelectContent>
+        {PRODUCT_STATUSES.map((status) => (
+          <SelectItem key={status} value={status}>
+            <ProductStatusLabel status={status} />
+          </SelectItem>
         ))}
-      </select>
-    </div>
+      </SelectContent>
+    </Select>
   );
 }

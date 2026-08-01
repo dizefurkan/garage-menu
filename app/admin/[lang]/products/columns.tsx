@@ -303,14 +303,15 @@ function StatusCell({
   };
 
   return (
-    <ProductStatusSelect
-      value={status}
-      onChange={handleStatusChange}
-      disabled={isToggling}
-      busy={isToggling}
-      size="sm"
-      className="flex items-center justify-end gap-2"
-    />
+    <div className="flex justify-end">
+      <ProductStatusSelect
+        value={status}
+        onChange={handleStatusChange}
+        disabled={isToggling}
+        busy={isToggling}
+        size="sm"
+      />
+    </div>
   );
 }
 
