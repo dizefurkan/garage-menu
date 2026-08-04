@@ -391,7 +391,8 @@ export default async function LandingPage({ params }: Props) {
           </div>
 
           <div className="mt-12 border-t border-border pt-8 text-center text-sm text-muted-foreground">
-            <p>{t("footer_text").replace("{year}", year.toString())}</p>
+            {/* String, not the number: ICU would group it as "2.026". */}
+            <p>{t("footer_text", { year: String(year) })}</p>
           </div>
         </div>
       </footer>
