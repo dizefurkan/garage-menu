@@ -30,12 +30,36 @@ export default async function LandingPage({ params }: Props) {
   const year = new Date().getFullYear();
 
   const features = [
-    { icon: QrCode, title: t("feature_1_title"), description: t("feature_1_desc") },
-    { icon: Zap, title: t("feature_2_title"), description: t("feature_2_desc") },
-    { icon: Smartphone, title: t("feature_3_title"), description: t("feature_3_desc") },
-    { icon: Users, title: t("feature_4_title"), description: t("feature_4_desc") },
-    { icon: Globe, title: t("feature_5_title"), description: t("feature_5_desc") },
-    { icon: Settings, title: t("feature_6_title"), description: t("feature_6_desc") },
+    {
+      icon: QrCode,
+      title: t("feature_1_title"),
+      description: t("feature_1_desc"),
+    },
+    {
+      icon: Zap,
+      title: t("feature_2_title"),
+      description: t("feature_2_desc"),
+    },
+    {
+      icon: Smartphone,
+      title: t("feature_3_title"),
+      description: t("feature_3_desc"),
+    },
+    {
+      icon: Users,
+      title: t("feature_4_title"),
+      description: t("feature_4_desc"),
+    },
+    {
+      icon: Globe,
+      title: t("feature_5_title"),
+      description: t("feature_5_desc"),
+    },
+    {
+      icon: Settings,
+      title: t("feature_6_title"),
+      description: t("feature_6_desc"),
+    },
   ];
 
   const benefits = [
@@ -82,9 +106,18 @@ export default async function LandingPage({ params }: Props) {
   ];
 
   const footerColumns = [
-    { title: t("footer_product"), links: [t("footer_features"), t("footer_pricing"), t("footer_faq")] },
-    { title: t("footer_company"), links: [t("footer_about"), t("footer_blog"), t("footer_contact")] },
-    { title: t("footer_legal"), links: [t("footer_privacy"), t("footer_terms")] },
+    {
+      title: t("footer_product"),
+      links: [t("footer_features"), t("footer_pricing"), t("footer_faq")],
+    },
+    {
+      title: t("footer_company"),
+      links: [t("footer_about"), t("footer_blog"), t("footer_contact")],
+    },
+    {
+      title: t("footer_legal"),
+      links: [t("footer_privacy"), t("footer_terms")],
+    },
   ];
 
   return (
@@ -210,13 +243,16 @@ export default async function LandingPage({ params }: Props) {
             </p>
           </Reveal>
 
-          <Reveal className="grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-2 lg:grid-cols-3" stagger>
+          <Reveal
+            className="grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-2 lg:grid-cols-3"
+            stagger
+          >
             {features.map((feature, idx) => {
               const Icon = feature.icon;
               return (
                 <div
                   key={idx}
-                  className="group bg-card p-7 transition-colors hover:bg-muted/50"
+                  className="group bg-card p-7 transition-colors hover:bg-muted/50 h-full"
                 >
                   <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-foreground text-background transition-transform duration-300 group-hover:scale-110">
                     <Icon className="h-5 w-5" strokeWidth={1.75} />
@@ -312,7 +348,9 @@ export default async function LandingPage({ params }: Props) {
                         />
                         <span
                           className={`text-sm ${
-                            dark ? "text-background/80" : "text-muted-foreground"
+                            dark
+                              ? "text-background/80"
+                              : "text-muted-foreground"
                           }`}
                         >
                           {feature}
