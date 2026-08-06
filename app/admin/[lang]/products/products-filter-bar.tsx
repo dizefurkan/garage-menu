@@ -241,7 +241,7 @@ export function ProductsFilterBar({
       <DropdownMenuContent align="end">
         <DropdownMenuItem
           className="gap-2"
-          onSelect={() => setPriceDialogOpen(true)}
+          onClick={() => setPriceDialogOpen(true)}
         >
           <Percent className="size-4" />
           {t("bulkPriceTitle")}

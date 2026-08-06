@@ -76,6 +76,15 @@ function DropdownMenuLabel({
   );
 }
 
+/**
+ * Handle activation with `onClick`, NOT `onSelect`.
+ *
+ * Base UI's Menu.Item exposes `onClick`; Radix's exposes `onSelect`. Reaching
+ * for `onSelect` out of habit compiles cleanly here — it is a real DOM event
+ * (text selection), so it satisfies the underlying div props — and then simply
+ * never fires. The menu closes on click as usual, so the item looks wired up
+ * and does nothing. It shipped that way once already, in the bulk status menu.
+ */
 function DropdownMenuItem({
   className,
   inset,

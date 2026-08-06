@@ -107,7 +107,7 @@ export function BulkActionsBar({
               <DropdownMenuItem
                 key={status}
                 className="gap-2"
-                onSelect={() => handleStatusChange(status)}
+                onClick={() => handleStatusChange(status)}
               >
                 <ProductStatusLabel status={status} />
               </DropdownMenuItem>

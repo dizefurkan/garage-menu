@@ -566,6 +566,17 @@ Bunlar `.claude/CLAUDE.md`'den ve mevcut mimariden geliyor, her madde için geç
 - **Multi-tenant.** Yeni her tabloda `tenant_id` + RLS policy (referans: `supabase/migrations/20250115000000_enable_rls_security.sql`).
 - **Migration.** Supabase CLI ile: `supabase migration new <ad>` → `supabase db push`. `docs/migrations/` eski arşiv, oraya yazılmaz.
 - **UI.** shadcn/ui bileşenleri. ⚠️ `components/ui/sidebar.tsx` registry'den saptırılmış — sidebar'a dokunan iş çıkarsa önce registry ile diff al.
+- ⚠️ **Base UI tuzağı — menü öğesinde `onClick`, `onSelect` DEĞİL.** Base UI'ın
+  `Menu.Item`'ında `onSelect` diye bir prop yok; Radix'te var. Alışkanlıkla
+  `onSelect` yazmak **tip hatası vermez** (gerçek bir DOM event'i, div
+  prop'larına uyar) ve hiç tetiklenmez. Menü tıklayınca zaten kapandığı için
+  öğe bağlıymış gibi görünür. Bu şekilde bir kez sevk edildi (toplu durum
+  değiştirme, `2c149d2`). Aynı sınıf tuzak: `Select`/`DropdownMenu` `asChild`
+  değil `render={}` ile kompoze olur.
+- ⚠️ **Radix Dialog içinde Base UI popup.** Base UI popup'ları `<body>`'ye
+  portal eder; modal Radix Dialog dışarıda `pointer-events: none` yapıp focus'u
+  kilitlediği için popup açılır açılmaz kapanır. Çözüm: `SelectContent`'e
+  `container={dialogContentRef}` ver (bkz. `bulk-price-dialog.tsx`).
 
 ---
 
@@ -620,6 +631,12 @@ Kullanıcının panel üzerinde gezip verdiği geri bildirimlerden çıktı. Sı
    (`2c149d2`, tasarım düzeltmesi `8627ec6`). Satır seçimi `DataTable`'da
    **opt-in** (diğer 5 tablo etkilenmedi). Çubuktaki işlemler: durum
    değiştirme + silme (onaylı). Yeni uç: `POST /api/admin/products/bulk`.
+
+   ⚠️ **Düzeltme (2026-08-07):** Toplu **durum değiştirme** aslında sevk
+   edildiği günden beri **çalışmıyordu** — menü öğesi `onSelect` kullanıyordu,
+   Base UI'da öyle bir prop yok (bkz. aşağıdaki tuzak). Menü tıklayınca
+   kapandığı için bağlıymış gibi görünüyordu. Silme etkilenmemişti (o normal
+   bir buton). `8af32a5` sonrası düzeltildi.
 
    **Server-side pagination'ın dayattığı üç karar — madde 4 bunları devralır:**
    - Seçim state'i `ProductsFilterBar`'da (DataTable'ın içinde değil), sayfa
