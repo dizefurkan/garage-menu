@@ -64,14 +64,21 @@ function SelectContent({
   align = "center",
   alignOffset = 0,
   alignItemWithTrigger = true,
+  container,
   ...props
 }: SelectPrimitive.Popup.Props &
   Pick<
     SelectPrimitive.Positioner.Props,
     "align" | "alignOffset" | "side" | "sideOffset" | "alignItemWithTrigger"
-  >) {
+  > &
+  Pick<SelectPrimitive.Portal.Props, "container">) {
   return (
-    <SelectPrimitive.Portal>
+    // `container` defaults to <body>, which is right everywhere except inside a
+    // Radix dialog: that dialog sets pointer-events:none on everything outside
+    // its content and traps focus, so a popup portalled to <body> opens and is
+    // immediately dismissed. Callers inside a dialog pass its content element
+    // here to keep the popup within the trap.
+    <SelectPrimitive.Portal container={container}>
       <SelectPrimitive.Positioner
         side={side}
         sideOffset={sideOffset}

@@ -76,8 +76,15 @@ interface DataTableProps<TData, TValue> {
   getRowId?: (row: TData, index: number) => string;
   rowSelection?: RowSelectionState;
   onRowSelectionChange?: OnChangeFn<RowSelectionState>;
-  /** Rendered between the filter row and the table, e.g. a bulk action bar. */
-  selectionToolbar?: React.ReactNode;
+  /**
+   * Rendered between the filter row and the table, e.g. a bulk action bar.
+   * The function form receives the ids the table is actually showing — the
+   * selection outlives both paging and the search box, so a toolbar counting
+   * selected rows needs to know how many of them the user can currently see.
+   */
+  selectionToolbar?:
+    | React.ReactNode
+    | ((context: { visibleIds: string[] }) => React.ReactNode);
 }
 
 export function DataTable<TData, TValue>({
@@ -218,7 +225,11 @@ export function DataTable<TData, TValue>({
         )}
       </div>
 
-      {selectionToolbar}
+      {typeof selectionToolbar === "function"
+        ? selectionToolbar({
+            visibleIds: table.getRowModel().rows.map((row) => row.id),
+          })
+        : selectionToolbar}
 
       <div className="rounded-md border">
         <Table className={useFixedLayout ? "table-fixed" : undefined}>

@@ -30,6 +30,12 @@ import {
 
 interface BulkActionsBarProps {
   selectedIds: number[];
+  /**
+   * How many selected products are not on screen right now. Selection survives
+   * paging and the search box on purpose, so without this the bar can claim
+   * "2 selected" over a list showing one ticked row and look broken.
+   */
+  hiddenCount: number;
   onClear: () => void;
   /** Refetch the current page once the server has been updated. */
   onDone: () => void;
@@ -37,6 +43,7 @@ interface BulkActionsBarProps {
 
 export function BulkActionsBar({
   selectedIds,
+  hiddenCount,
   onClear,
   onDone,
 }: BulkActionsBarProps) {
@@ -79,6 +86,11 @@ export function BulkActionsBar({
       <div className="flex flex-wrap items-center gap-3 rounded-md border bg-muted/40 px-4 py-3">
         <span className="text-sm font-medium">
           {t("bulkSelectedCount", { count })}
+          {hiddenCount > 0 && (
+            <span className="ml-1 font-normal text-muted-foreground">
+              {t("bulkSelectedHidden", { count: hiddenCount })}
+            </span>
+          )}
         </span>
 
         <DropdownMenu>

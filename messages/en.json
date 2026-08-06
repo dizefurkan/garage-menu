@@ -523,6 +523,7 @@
     "selectAllOnPage": "Select all products on this page",
     "selectRow": "Select product",
     "bulkSelectedCount": "{count} products selected",
+    "bulkSelectedHidden": "({count} not in this view)",
     "bulkChangeStatus": "Change status",
     "bulkClearSelection": "Clear selection",
     "bulkStatusDone": "Updated the status of {count} products",

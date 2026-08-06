@@ -13,7 +13,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Filter, Percent } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ChevronDown, Filter, Percent } from "lucide-react";
 import type { RowSelectionState } from "@tanstack/react-table";
 import { createColumns } from "./columns";
 import { BulkActionsBar } from "./bulk-actions-bar";
@@ -219,17 +225,29 @@ export function ProductsFilterBar({
       </Select>
     </div>
 
-    {/* Lives next to the filter rather than in the selection toolbar: that bar
-        only exists once rows are ticked, and the common case ("put 10% on the
+    {/* Tucked into a menu rather than sitting on the toolbar as its own button:
+        it is an occasional action, and a permanently visible one competes for
+        attention with the filter. Not in the selection bar either — that bar
+        only exists once rows are ticked, and the common case ("10% across the
         whole menu") starts with nothing selected. */}
-    <Button
-      variant="outline"
-      className="h-10"
-      onClick={() => setPriceDialogOpen(true)}
-    >
-      <Percent className="mr-2 size-4" />
-      {t("bulkPriceTitle")}
-    </Button>
+    <DropdownMenu>
+      {/* Base UI composes via `render`, not `asChild`. */}
+      <DropdownMenuTrigger
+        render={<Button variant="outline" className="ml-auto h-10" />}
+      >
+        {t("actions")}
+        <ChevronDown className="ml-2 size-4" />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem
+          className="gap-2"
+          onSelect={() => setPriceDialogOpen(true)}
+        >
+          <Percent className="size-4" />
+          {t("bulkPriceTitle")}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
     </>
   );
 
@@ -295,13 +313,16 @@ export function ProductsFilterBar({
       getRowId={(row) => String(row.id)}
       rowSelection={rowSelection}
       onRowSelectionChange={setRowSelection}
-      selectionToolbar={
+      selectionToolbar={({ visibleIds }) => (
         <BulkActionsBar
           selectedIds={selectedIds}
+          hiddenCount={
+            selectedIds.filter((id) => !visibleIds.includes(String(id))).length
+          }
           onClear={() => setRowSelection({})}
           onDone={reloadAfterBulk}
         />
-      }
+      )}
     />
     </>
   );

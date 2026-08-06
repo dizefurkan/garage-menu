@@ -523,6 +523,7 @@
     "selectAllOnPage": "Bu sayfadaki tüm ürünleri seç",
     "selectRow": "Ürünü seç",
     "bulkSelectedCount": "{count} ürün seçildi",
+    "bulkSelectedHidden": "({count} tanesi bu görünümde değil)",
     "bulkChangeStatus": "Durumu değiştir",
     "bulkClearSelection": "Seçimi temizle",
     "bulkStatusDone": "{count} ürünün durumu güncellendi",

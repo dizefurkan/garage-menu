@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -58,6 +58,12 @@ export function BulkPriceDialog({
   const t = useTranslations("admin");
   const params = useParams();
   const currentLang = (params?.lang as string) || "en";
+
+  // Base UI portals its popups to <body> by default. The Radix dialog around
+  // them kills pointer events outside its content and traps focus, so a popup
+  // landing on <body> is dismissed the instant it opens. Anchoring the portals
+  // to the dialog's own element is what makes these selects usable at all.
+  const contentRef = useRef<HTMLDivElement>(null);
 
   const [direction, setDirection] = useState<Direction>("increase");
   const [amount, setAmount] = useState("10");
@@ -158,7 +164,7 @@ export function BulkPriceDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xl">
+      <DialogContent ref={contentRef} className="max-w-xl">
         <DialogHeader>
           <DialogTitle>{t("bulkPriceTitle")}</DialogTitle>
           <DialogDescription>{t("bulkPriceDescription")}</DialogDescription>
@@ -175,7 +181,7 @@ export function BulkPriceDialog({
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent container={contentRef}>
                 <SelectItem value="selected" disabled={selectedIds.length === 0}>
                   {t("bulkPriceScopeSelected", { count: selectedIds.length })}
                 </SelectItem>
@@ -255,7 +261,7 @@ export function BulkPriceDialog({
                 <SelectTrigger className="w-44">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent container={contentRef}>
                   <SelectItem value="cent">
                     {t("bulkPriceRoundingCent")}
                   </SelectItem>
