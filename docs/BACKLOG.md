@@ -1,6 +1,6 @@
 # Backlog — Tartışılacak Özellikler
 
-> Oluşturma: 2026-07-26 · Son güncelleme: 2026-07-30
+> Oluşturma: 2026-07-26 · Son güncelleme: 2026-08-05
 >
 > **Durum:** Madde 5, 9, 4 ve madde 2'nin taban kısmı **yapıldı ve `main`'e
 > merge edildi** (commit `34dea0d`). 6 migration canlı Supabase'e uygulandı.
@@ -517,6 +517,31 @@ Backlog'da yoktu; madde 2 uygulanırken ortaya çıktı.
 | QR sipariş aç/kapat | **Temel pakette** (mevcut `orders_management` içinde) | — |
 | Boş durum / 403 ekranları | **Temel pakette** | — |
 
+### Fiyatlandırma / deneme — karar (2026-08-05)
+
+Landing'de Başlangıç `$0 → 200 ₺`, Profesyonel `$19 → 350 ₺` oldu (`b800296`).
+**Ücretsiz plan kalktı.** Bu, sayfadaki beş metni sessizce yanlış hâle
+getirmişti ("Ücretsiz başlayın", "Ücretsiz Başla", "Ücretsiz Hemen Başla");
+hepsi **deneme** diline çevrildi.
+
+**Neden ücretsiz plan değil de deneme:** Bugün karşılayabildiğimiz iddia bu.
+Ödeme entegrasyonu **yok** (Stripe/iyzico/PayTR hiçbiri), hesaplar zaten elle
+açılıyor ve `tenant_addons.expires_at` üç yerde zorlanıyor
+(`hasAddon.ts`, admin layout, `api/order/route.ts`). Yani süreli hesap
+yazacağımız bir satır, borçlandığımız bir özellik değil. "Kredi kartı
+gerekmez" de aynı sebeple duruyor — zaten alamıyoruz.
+
+**Açık iş — sırada değil, tartışılacak:**
+
+1. **Demo menü (kayıt gerektirmez).** Gerçek bir demo tenant + dolu menü +
+   landing'de "Demo Menüyü Gör". Restoran sahibinin sorusu "nasıl görünüyor?";
+   cevabı QR menünün kendisi, panel turu değil. Sıfır altyapı, tanıtım
+   videosundan ucuz ve daha ikna edici.
+2. **15 günlük deneme.** Asıl mesele deneme değil **bitişi**. Restoran 80
+   ürünü elle girer; 15. günde menü kapanırsa masadaki basılı QR ölür — bu
+   restoranın müşterisini vurur, bizi değil. Kural olmalı: **menü asla
+   kapanmaz, panel salt-okunur olur.**
+
 > **Açık tartışma — sonraya bırakıldı:** "Her şeyi ek paket yapıp satmak doğru mu?" Tek gerçek risk **paket parçalanması**: temel ürün içi boş hissettirir ve fiyatlandırma sayfası labirente döner. Genel kabul, ek paketin ya gerçek marjinal maliyeti olması ya da yalnızca bir alt kümenin ihtiyaç duyması. Bu ölçüte göre garson çağırma ve ürün önerileri sağlam ek paket adayı; **kategori görselleri zayıf** (kozmetik, herkes ister). Şimdilik karar uygulanıyor, fiyatlandırma bütününü ayrıca konuşacağız.
 
 ## Garson Yetkisi — Karar
@@ -610,19 +635,40 @@ Kullanıcının panel üzerinde gezip verdiği geri bildirimlerden çıktı. Sı
    sayfada kalıyordu; `loadProducts` artık kaç satır getirdiğini döndürüyor ve
    sayfa boşalırsa 1'e düşülüyor. Tek satırlık silmede de vardı, o da düzeldi.
 
-4. **FEAT — Toplu yüzdesel fiyat değişikliği. ← SIRADAKİ İŞ**
-   Seçili ürünlere, ya da filtreye uyan tüm ürünlere ("şunlar hariç"
-   desteğiyle) yüzdesel zam/indirim. Yeni bir API ucu gerekecek; `tenant_id`
-   kontrolü ve yuvarlama kuralı (kuruş) düşünülmeli. Önizleme göstermeden
-   uygulamamalı — geri alınamaz.
+4. ~~**FEAT — Toplu yüzdesel fiyat değişikliği.**~~ ✅ Yapıldı (`59ee5d9`).
+   Kapsam: seçili ürünler **veya** filtreye uyan tüm ürünler ("seçili N ürünü
+   hariç tut" seçeneğiyle). Zorunlu önizleme → sonra uygula.
 
-   Madde 3'ten devralınan kısıt: "filtreye uyan tüm ürünler" seçili id
-   listesiyle **ifade edilemez** (tablo sadece o sayfayı tutuyor). Sunucuya
-   filtrenin kendisi + hariç tutulan id'ler gönderilmeli.
+   **Karar — iş SQL'de, route'ta değil.** Yeni migration
+   `20260805203938_bulk_adjust_product_prices.sql`, `p_dry_run` bayraklı tek
+   fonksiyon. İki gerekçe: (a) PostgREST `price = price * 1.1` ifadesini
+   kuramıyor, Node'dan yapmak ürün başına bir UPDATE demek — 300 kalemlik
+   menüde 300 gidiş-geliş ve atomik değil; (b) işlem geri alınamaz olduğu için
+   önizleme ile yazma **aynı kod yolu** olmak zorunda, ayrı hesaplanırsa
+   yuvarlamada sapıp göstermediğimiz fiyatı yazabiliriz.
 
-5. **Madde 10 — Ürün varyant/opsiyon sistemi UI'ı.** Aşağıdaki maddeye bakınız.
-   Madde 2'nin kalan kısmı (`product_option_values.calories` +
-   `product_option_groups.calorie_mode`) bununla aynı migration'da gelmeli.
+   **Madde 3'ten devralınan kısıt karşılandı:** "filtreye uyan tüm ürünler" id
+   listesiyle ifade edilemiyordu; fonksiyona filtrenin kendisi (`p_category_id`)
+   + `p_exclude_ids` gidiyor.
+
+   ⚠️ **`SECURITY DEFINER` tuzağı — sonraki RPC'lerde tekrar edecek.** Fonksiyon
+   RLS'i baypas ediyor, yani `p_tenant_id` iki işletmeyi ayıran **tek** şey. Ve
+   Postgres `EXECUTE`'u varsayılan olarak `PUBLIC`'e verir → `REVOKE` yazılmasa
+   giriş yapmış herhangi bir kullanıcı PostgREST üzerinden başkasının
+   tenant id'siyle çağırıp fiyatlarını değiştirebilirdi. Canlıda doğrulandı:
+   `anon` → "permission denied", yabancı tenant → 0 satır.
+
+   **Yan iş:** `components/ui/dialog.tsx` registry'den sapmıştı (`bg-white`,
+   `border-slate-200`, `text-slate-500` hardcoded) — dark mode'da tüm
+   diyaloglar beyaz kutu çıkıyordu. `alert-dialog.tsx`'in kullandığı token'lara
+   çekildi. Registry'nin güncel sürümü alınmadı: o sürüm birleşik `radix-ui`
+   paketine ve `data-slot` yapısına geçmiş, 5 Dialog kullanıcısını birden
+   değiştirmek gerekirdi.
+
+5. **Madde 10 — Ürün varyant/opsiyon sistemi UI'ı. ← SIRADAKİ İŞ**
+   Aşağıdaki maddeye bakınız. Madde 2'nin kalan kısmı
+   (`product_option_values.calories` + `product_option_groups.calorie_mode`)
+   bununla aynı migration'da gelmeli.
 
 6. **Madde 1 Faz 1** (manuel ürün önerileri) → **Madde 6** (waiter rolü +
    `waiter_calls`) → **Madde 7** (bölüm bazlı masa görünümü) →
