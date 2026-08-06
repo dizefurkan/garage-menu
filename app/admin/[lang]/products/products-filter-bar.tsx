@@ -12,10 +12,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Filter } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Filter, Percent } from "lucide-react";
 import type { RowSelectionState } from "@tanstack/react-table";
 import { createColumns } from "./columns";
 import { BulkActionsBar } from "./bulk-actions-bar";
+import { BulkPriceDialog } from "./bulk-price-dialog";
 
 interface ProductsFilterBarProps {
   tenantId: number;
@@ -52,6 +54,7 @@ export function ProductsFilterBar({
   // Owned here rather than inside DataTable so a page change doesn't wipe it —
   // keys are product ids (see getRowId below), which stay valid across pages.
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+  const [priceDialogOpen, setPriceDialogOpen] = useState(false);
 
   // Load products when component mounts or filters change
   const loadProducts = useCallback(
@@ -182,6 +185,7 @@ export function ProductsFilterBar({
   };
 
   const filterElement = (
+    <>
     <div
       suppressHydrationWarning
       className="flex h-10 items-center gap-2 rounded-md border border-input bg-background pl-3 pr-2"
@@ -214,6 +218,19 @@ export function ProductsFilterBar({
         </SelectContent>
       </Select>
     </div>
+
+    {/* Lives next to the filter rather than in the selection toolbar: that bar
+        only exists once rows are ticked, and the common case ("put 10% on the
+        whole menu") starts with nothing selected. */}
+    <Button
+      variant="outline"
+      className="h-10"
+      onClick={() => setPriceDialogOpen(true)}
+    >
+      <Percent className="mr-2 size-4" />
+      {t("bulkPriceTitle")}
+    </Button>
+    </>
   );
 
   if (isLoading && products.length === 0) {
@@ -243,6 +260,22 @@ export function ProductsFilterBar({
     .map(Number);
 
   return (
+    <>
+    <BulkPriceDialog
+      open={priceDialogOpen}
+      onOpenChange={setPriceDialogOpen}
+      selectedIds={selectedIds}
+      categoryId={
+        selectedCategory && selectedCategory !== "all"
+          ? Number(selectedCategory)
+          : null
+      }
+      filterTotal={total}
+      onApplied={() => {
+        setRowSelection({});
+        reloadCurrentPage();
+      }}
+    />
     <DataTable
       columns={createColumns(t, reloadCurrentPage)}
       data={mappedProducts}
@@ -270,5 +303,6 @@ export function ProductsFilterBar({
         />
       }
     />
+    </>
   );
 }
