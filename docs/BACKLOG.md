@@ -764,13 +764,24 @@ Sıra kolaydan zora. Her madde ayrı commit.
 
 | # | Tür | İş | Bulgu |
 | - | --- | -- | ----- |
-| 1 | Hata | Navigasyon sonrası dil kaybı | `router.push("/admin/products")` gibi dilsiz yollar `middleware.ts` ile `/admin/en/...`'e düşüyor. Çözüm: tüm linkler `lang` ile; middleware fallback'i `admin_lang` cookie'sinden okusun (dil değişince set edilir). |
-| 2 | Hata | Görsel "Değiştir" çalışmıyor | `image-upload.tsx`: file input sadece `!displayUrl` bloğunda render ediliyor, önizleme varken ref `null`. Input blok dışına alınacak. |
-| 3 | Hata | Kategori select'inde id görünüyor | Seçili değer id string/number uyuşmazlığı + `/api/admin/categories` adı hep `en` tercihli döndürüyor. `lang` parametresi + `items` ile label. |
-| 4 | İyileştirme | Toast denetimi | Sonner zaten kurulu (`app/layout.tsx`); ürün/kategori formları kullanıyor. Eksik kalan save/update/delete akışları taranıp tamamlanacak. |
+| 1 ✅ | Hata | Navigasyon sonrası dil kaybı | `router.push("/admin/products")` gibi dilsiz yollar `middleware.ts` ile `/admin/en/...`'e düşüyor. Çözüm: tüm linkler `lang` ile; middleware fallback'i `admin_lang` cookie'sinden okusun (dil değişince set edilir). |
+| 2 ✅ | Hata | Görsel "Değiştir" çalışmıyor | `image-upload.tsx`: file input sadece `!displayUrl` bloğunda render ediliyor, önizleme varken ref `null`. Input blok dışına alınacak. |
+| 3 ✅ | Hata | Kategori select'inde id görünüyor | Seçili değer id string/number uyuşmazlığı + `/api/admin/categories` adı hep `en` tercihli döndürüyor. `lang` parametresi + `items` ile label. |
+| 4 ✅ | İyileştirme | Toast denetimi | Sonner zaten kurulu (`app/layout.tsx`); ürün/kategori formları kullanıyor. Eksik kalan save/update/delete akışları taranıp tamamlanacak. |
 | 5 | Hata | Ürün formunda doğrulama hatası görünmüyor | `handleSubmit(onSubmit)` hata dalı yok; çeviri sekmesindeki boş ad görünmeyen sekmede kalıyor. `onInvalid` → toast + ilgili alana odak. (Madde 6 ile birlikte büyük ölçüde kalkar.) |
 | 6 | Mimari | Çeviriler ürün/kategori satırına taşınsın | `products`/`categories`'e `name`, `description` (ana dil). `*_translations` sadece diğer diller. Migration: `tenants.default_language` satırını kopyala, sonra o dil satırlarını sil. Etkilenen ~26 dosya (menu-db, public menu API, admin API'ler, translations workbench, analytics, orders, MenuEditor). Formlardan dil sekmeleri kalkar; diğer diller Ayarlar → Çeviriler'den. Açık soru: tenant `default_language` değiştirirse ana dil metni ne olur → uyarı göster, otomatik taşıma yapma. |
-| 7 | Özellik | Alt kategori (1 seviye) | `categories.parent_id` (self FK, tenant_id aynı, derinlik 1 CHECK/trigger). Kategori formunda üst kategori seçimi; menüde grup altında alt kategoriler; ürün formunda hepsi seçilebilir. |
+| 7 ✅ | Özellik | Alt kategori (1 seviye) | `categories.parent_id` (self FK, tenant_id aynı, derinlik 1 CHECK/trigger). Kategori formunda üst kategori seçimi; menüde grup altında alt kategoriler; ürün formunda hepsi seçilebilir. |
 | 8 | Özellik | Kategori grid seçimi (1'li / 2'li) | Tema ayarı (menü layout'u yanında), `tenants` allowlist tuzağına dikkat (3 elle yazılmış liste). |
 
 Not: 6, 7'den önce gelmeli (aynı tabloya dokunuyor, `name` kolonu hazır olsun).
+
+**Karar (2026-10-08): madde 6 ertelendi.** Çeviri şeması değişmiyor (ana dil de
+`*_translations`'ta; ana dil sadece işaretçi, değişimi sorunsuz). Bunun yerine
+ürün/kategori formları yalnız `getPrimaryLanguage(tenant)` dilini soruyor, diğer
+diller Ayarlar → Çeviriler'den giriliyor. Madde 5 de böylece kapandı.
+
+**Madde 7 notu:** `20261008043221_add_category_parent.sql` yazıldı, canlıya
+`supabase db push` ile uygulanması gerekiyor (kod `parent_id` seçtiği için
+uygulanmadan admin kategori listesi/formları hata verir). Ürünler hem ana hem
+alt kategoriye atanabilir; public menüde ana kategori bölümü kendi ürünleri +
+altında alt kategori başlıkları olarak render edilir.

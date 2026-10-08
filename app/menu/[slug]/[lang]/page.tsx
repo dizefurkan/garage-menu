@@ -469,7 +469,16 @@ export default async function MenuPage({ params, searchParams }: Props) {
               const categoryProducts = products.filter(
                 (p: any) => p.category_id === category.id
               );
-              if (categoryProducts.length === 0) return null;
+              const subSections = (category.children ?? [])
+                .map((child: any) => ({
+                  category: child,
+                  products: products.filter(
+                    (p: any) => p.category_id === child.id
+                  ),
+                }))
+                .filter((sub: any) => sub.products.length > 0);
+              if (categoryProducts.length === 0 && subSections.length === 0)
+                return null;
 
               return (
                 <CategorySection
@@ -477,6 +486,7 @@ export default async function MenuPage({ params, searchParams }: Props) {
                   id={category.id}
                   category={category}
                   products={categoryProducts}
+                  subSections={subSections}
                   primaryColor={primaryColor}
                   lang={lang}
                   tableId={orderingTableId}
@@ -576,10 +586,6 @@ function CategoryNav({
 }) {
   if (!categories || categories.length === 0) return null;
 
-  const getProductCount = (categoryId: string) => {
-    return products.filter((p: any) => p.category_id === categoryId).length;
-  };
-
   return (
     <nav className="hidden md:block sticky top-0 z-30 bg-white border-b border-gray-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -596,7 +602,8 @@ function CategoryNav({
           )}
           {backHref && <span className="h-5 w-px shrink-0 bg-gray-200" />}
           {categories.map((cat: any) => {
-            const count = getProductCount(cat.id);
+            // totalCount covers the whole branch (sub-categories included)
+            const count = cat.totalCount ?? 0;
             return (
               <a
                 key={cat.id}
@@ -636,10 +643,6 @@ function MobileCategoryButton({
 }) {
   if (!categories || categories.length === 0) return null;
 
-  const getProductCount = (categoryId: string) => {
-    return products.filter((p: any) => p.category_id === categoryId).length;
-  };
-
   return (
     <div className="md:hidden fixed bottom-6 right-6 z-40">
       <details className="group">
@@ -649,7 +652,8 @@ function MobileCategoryButton({
         <div className="absolute bottom-16 right-0 bg-white rounded-2xl shadow-2xl p-4 min-w-[240px]">
           <ul className="space-y-2">
             {categories.map((cat: any) => {
-              const count = getProductCount(cat.id);
+              // totalCount covers the whole branch (sub-categories included)
+            const count = cat.totalCount ?? 0;
               const isActive = String(cat.id) === String(activeCategoryId);
               const className = `block px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
                 isActive ? "bg-gray-100 text-gray-900" : "hover:bg-gray-100"
@@ -747,6 +751,7 @@ function CategorySection({
   id,
   category,
   products,
+  subSections = [],
   primaryColor,
   lang,
   tableId,
@@ -754,10 +759,31 @@ function CategorySection({
   id: string;
   category: any;
   products: any[];
+  /** Sub-categories of this category that have items, in display order. */
+  subSections?: { category: any; products: any[] }[];
   primaryColor: string;
   lang: string;
   tableId?: string;
 }) {
+  const totalCount =
+    products.length +
+    subSections.reduce((sum, sub) => sum + sub.products.length, 0);
+
+  const renderGrid = (items: any[], gridCategoryId: string) => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+      {items.map((product: any) => (
+        <ProductCard
+          key={product.id}
+          product={product}
+          categoryId={gridCategoryId}
+          primaryColor={primaryColor}
+          lang={lang}
+          tableId={tableId}
+        />
+      ))}
+    </div>
+  );
+
   return (
     <section id={`category-${id}`} className="scroll-mt-32">
       <h2
@@ -765,21 +791,26 @@ function CategorySection({
         style={{ borderColor: primaryColor, color: primaryColor }}
       >
         {category.name}{" "}
-        <span className="text-gray-400 text-lg">({products.length})</span>
+        <span className="text-gray-400 text-lg">({totalCount})</span>
       </h2>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-        {products.map((product: any) => (
-          <ProductCard
-            key={product.id}
-            product={product}
-            categoryId={id}
-            primaryColor={primaryColor}
-            lang={lang}
-            tableId={tableId}
-          />
-        ))}
-      </div>
+      {products.length > 0 && renderGrid(products, id)}
+
+      {subSections.map((sub) => (
+        <div
+          key={sub.category.id}
+          id={`category-${sub.category.id}`}
+          className={`scroll-mt-32 ${products.length > 0 ? "mt-10" : "mt-0"} first:mt-0`}
+        >
+          <h3 className="mb-5 text-xl font-semibold text-gray-900">
+            {sub.category.name}{" "}
+            <span className="text-gray-400 text-base">
+              ({sub.products.length})
+            </span>
+          </h3>
+          {renderGrid(sub.products, sub.category.id)}
+        </div>
+      ))}
     </section>
   );
 }

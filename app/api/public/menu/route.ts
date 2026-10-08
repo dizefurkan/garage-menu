@@ -91,7 +91,7 @@ export async function GET(request: Request) {
     }
     const { data: categories, error: categoriesError } = await supabaseAdmin
       .from("categories")
-      .select("id, image_url, display_order, category_translations(name, language_code)")
+      .select("id, image_url, display_order, parent_id, category_translations(name, language_code)")
       .eq("tenant_id", tenant.id);
 
     if (categoriesError) {
@@ -165,6 +165,14 @@ export async function GET(request: Request) {
       }
     }
 
+    // A parent ranks by everything sold under it, sub-categories included
+    (categories || []).forEach((cat: any) => {
+      if (!cat.parent_id) return;
+      const sold = categoryPopularity.get(String(cat.id)) ?? 0;
+      const key = String(cat.parent_id);
+      categoryPopularity.set(key, (categoryPopularity.get(key) ?? 0) + sold);
+    });
+
     // Process categories
     const processedCategories = (categories || [])
       .map((cat: any) => {
@@ -190,23 +198,51 @@ export async function GET(request: Request) {
           name: translation?.name || "Unnamed Category",
           image: cat.image_url || null,
           display_order: cat.display_order ?? 0,
+          parent_id: cat.parent_id ?? null,
           productCount,
           totalCount,
         };
-      })
-      .filter(
-        (cat: any) =>
-          // Keep a category whose items are all sold out — hiding it would
-          // make the menu look like the dish never existed.
-          cat.productCount > 0 || cat.totalCount > 0
-      );
+      });
 
+    // Parents and sub-categories are ranked together, then split: the menu
+    // gets top-level categories with their sub-categories nested inside.
     const orderedCategories = sortCategories(
       processedCategories,
       categorySortMode,
       lang,
       categoryPopularity
     );
+
+    const childrenOf = new Map<number, any[]>();
+    orderedCategories.forEach((cat: any) => {
+      if (cat.parent_id === null) return;
+      childrenOf.set(cat.parent_id, [
+        ...(childrenOf.get(cat.parent_id) ?? []),
+        cat,
+      ]);
+    });
+
+    // Keep a category whose items are all sold out — hiding it would make the
+    // menu look like the dish never existed. A parent with nothing of its own
+    // survives while any of its sub-categories has items.
+    const hasItems = (cat: any) => cat.productCount > 0 || cat.totalCount > 0;
+    const categoryTree = orderedCategories
+      .filter((cat: any) => cat.parent_id === null)
+      .map((cat: any) => {
+        const children = (childrenOf.get(cat.id) ?? []).filter(hasItems);
+        return {
+          ...cat,
+          children,
+          // Landing counts and nav badges cover the whole branch
+          productCount:
+            cat.productCount +
+            children.reduce((sum: number, c: any) => sum + c.productCount, 0),
+          totalCount:
+            cat.totalCount +
+            children.reduce((sum: number, c: any) => sum + c.totalCount, 0),
+        };
+      })
+      .filter(hasItems);
 
     // Process products
     const processedProducts = (products || [])
@@ -310,7 +346,7 @@ export async function GET(request: Request) {
           whatsapp: contactInfo.whatsapp || undefined,
         },
       },
-      categories: orderedCategories,
+      categories: categoryTree,
       products: orderedProducts,
     });
   } catch (error) {
