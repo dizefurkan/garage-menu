@@ -605,13 +605,13 @@
       "statusOff": "Off",
       "statusOnHint": "Guests can order from their table.",
       "statusOffHint": "Menu is in showcase mode. Ordering buttons are hidden.",
-      "saveError": "Could not save the setting"
+      "saveError": "Could not save the setting",
+      "saved": "Setting saved"
     },
     "ipRegistered": "Network registered",
     "ipRegisterFailed": "Could not register the network",
     "pinGenerated": "PIN generated",
-    "pinGenerateFailed": "Could not generate the PIN",
-    "saved": "Setting saved"
+    "pinGenerateFailed": "Could not generate the PIN"
   },
   "emptyStates": {
     "products": {

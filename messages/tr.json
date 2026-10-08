@@ -605,13 +605,13 @@
       "statusOff": "Kapalı",
       "statusOnHint": "Müşteriler masadan sipariş verebiliyor.",
       "statusOffHint": "Menü vitrin modunda. Sipariş butonları gizli.",
-      "saveError": "Ayar kaydedilemedi"
+      "saveError": "Ayar kaydedilemedi",
+      "saved": "Ayar kaydedildi"
     },
     "ipRegistered": "Ağ kaydedildi",
     "ipRegisterFailed": "Ağ kaydedilemedi",
     "pinGenerated": "PIN oluşturuldu",
-    "pinGenerateFailed": "PIN oluşturulamadı",
-    "saved": "Ayar kaydedildi"
+    "pinGenerateFailed": "PIN oluşturulamadı"
   },
   "emptyStates": {
     "products": {
