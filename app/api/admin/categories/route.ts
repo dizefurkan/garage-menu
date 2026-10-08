@@ -18,6 +18,8 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    const lang = req.nextUrl.searchParams.get("lang") || "en";
+
     const { data, error } = await (supabaseAdmin as any)
       .from("categories")
       .select(
@@ -37,12 +39,14 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // Prefer English, but fall back to whatever translation exists so
-    // tenants without an English name (e.g. Turkish-only menus) still get
-    // a real category name instead of "N/A".
+    // Prefer the requested dashboard language, then English, then whatever
+    // translation exists so tenants without a name in the dashboard language
+    // still get a real category name instead of "N/A".
     const transformed = (data || []).map((cat: any) => ({
       id: cat.id,
       name:
+        cat.category_translations?.find((t: any) => t.language_code === lang)
+          ?.name ||
         cat.category_translations?.find((t: any) => t.language_code === "en")
           ?.name ||
         cat.category_translations?.[0]?.name ||

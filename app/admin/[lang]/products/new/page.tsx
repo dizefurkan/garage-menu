@@ -99,7 +99,7 @@ export default function ProductFormPage() {
   useEffect(() => {
     async function loadCategories() {
       try {
-        const response = await fetch("/api/admin/categories");
+        const response = await fetch(`/api/admin/categories?lang=${currentLang}`);
         if (response.ok) {
           const data = await response.json();
           setCategories(data);
@@ -330,6 +330,7 @@ export default function ProductFormPage() {
                   {t("category")}
                 </label>
                 <Select
+                  items={categories.map((cat) => ({ value: cat.id.toString(), label: cat.name }))}
                   onValueChange={(value) =>
                     setValue("category_id", Number(value as string))
                   }

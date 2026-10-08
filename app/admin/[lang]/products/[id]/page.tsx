@@ -174,7 +174,7 @@ export default function EditProductPage() {
         );
 
         // Fetch categories
-        const catRes = await fetch("/api/admin/categories");
+        const catRes = await fetch(`/api/admin/categories?lang=${currentLang}`);
         if (catRes.ok) {
           const catData = await catRes.json();
           setCategories(catData);
@@ -295,10 +295,6 @@ export default function EditProductPage() {
   const languages = tenantLanguagesList.includes(currentLang)
     ? [currentLang, ...tenantLanguagesList.filter((l) => l !== currentLang)]
     : tenantLanguagesList;
-  const selectedCategoryId = watch("category_id");
-  const selectedCategoryName = categories.find(
-    (cat) => cat.id === selectedCategoryId
-  )?.name;
 
   return (
     <div className="max-w-4xl space-y-6">
@@ -426,17 +422,14 @@ export default function EditProductPage() {
                   {t("category")}
                 </label>
                 <Select
+                  items={categories.map((cat) => ({ value: cat.id.toString(), label: cat.name }))}
                   value={watch("category_id")?.toString() || ""}
                   onValueChange={(value) =>
                     setValue("category_id", Number(value as string))
                   }
                 >
                   <SelectTrigger className="!h-10 w-full">
-                    {selectedCategoryName ? (
-                      <span>{selectedCategoryName}</span>
-                    ) : (
-                      <SelectValue placeholder={t("selectCategory")} />
-                    )}
+                    <SelectValue placeholder={t("selectCategory")} />
                   </SelectTrigger>
                   <SelectContent>
                     {categories.map((cat) => (
