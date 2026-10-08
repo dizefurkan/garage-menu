@@ -160,6 +160,21 @@ export function ImageUpload({
 
   return (
     <div className="space-y-3">
+      {/* Outside the empty-state block so "Değiştir" still has an input to
+          click once a preview is showing. Reset value so re-picking the same
+          file fires onChange again. */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={(e) => {
+          if (e.target.files?.[0]) handleFileSelect(e.target.files[0]);
+          e.target.value = "";
+        }}
+        disabled={disabled || loading}
+        className="hidden"
+      />
+
       {/* Helper Text */}
       <div className="text-xs text-gray-600 bg-blue-50 border border-blue-100 rounded p-2">
         <p>
@@ -180,17 +195,6 @@ export function ImageUpload({
                 : "cursor-pointer border-gray-300 bg-gray-50 hover:bg-gray-100"
             }`}
           >
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={(e) =>
-                e.target.files && handleFileSelect(e.target.files[0])
-              }
-              disabled={disabled || loading}
-              className="hidden"
-            />
-
             {loading ? (
               <Loader className="h-8 w-8 animate-spin text-gray-400" />
             ) : (
