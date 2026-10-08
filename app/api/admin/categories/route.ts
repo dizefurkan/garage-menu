@@ -2,6 +2,7 @@ import { getSessionWithTenant } from "@/lib/auth/session";
 import { supabaseAdmin } from "@/lib/supabase";
 import { revalidateTenant } from "@/lib/cache/revalidation";
 import { NextRequest, NextResponse } from "next/server";
+import { parseParentId, validateCategoryParent } from "@/lib/category-parent";
 
 export async function GET(req: NextRequest) {
   try {
@@ -27,6 +28,7 @@ export async function GET(req: NextRequest) {
         id,
         image_url,
         display_order,
+        parent_id,
         category_translations(name, language_code)
       `
       )
@@ -42,8 +44,9 @@ export async function GET(req: NextRequest) {
     // Prefer the requested dashboard language, then English, then whatever
     // translation exists so tenants without a name in the dashboard language
     // still get a real category name instead of "N/A".
-    const transformed = (data || []).map((cat: any) => ({
+    const named = (data || []).map((cat: any) => ({
       id: cat.id,
+      parent_id: cat.parent_id ?? null,
       name:
         cat.category_translations?.find((t: any) => t.language_code === lang)
           ?.name ||
@@ -51,6 +54,18 @@ export async function GET(req: NextRequest) {
           ?.name ||
         cat.category_translations?.[0]?.name ||
         "N/A",
+    }));
+
+    // Sub-categories carry "Parent › Child" so pickers stay unambiguous
+    // ("Tostlar" can sit under more than one parent).
+    const nameById = new Map<number, string>(
+      named.map((c: any) => [c.id, c.name])
+    );
+    const transformed = named.map((c: any) => ({
+      ...c,
+      label: c.parent_id
+        ? `${nameById.get(c.parent_id) ?? "N/A"} › ${c.name}`
+        : c.name,
     }));
 
     return NextResponse.json(transformed);
@@ -71,7 +86,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { translations, image_url } = await req.json();
+    const { translations, image_url, parent_id } = await req.json();
+    const parentId = parseParentId(parent_id) ?? null;
+
+    if (parentId !== null) {
+      const parentError = await validateCategoryParent(
+        supabaseAdmin,
+        tenant.id,
+        null,
+        parentId
+      );
+      if (parentError) {
+        return NextResponse.json({ error: parentError }, { status: 400 });
+      }
+    }
 
     if (!supabaseAdmin) {
       return NextResponse.json(
@@ -88,6 +116,7 @@ export async function POST(req: NextRequest) {
       .insert({
         tenant_id: tenant.id,
         image_url: image_url || null,
+        parent_id: parentId,
         created_by: user.id,
         updated_by: user.id,
       })

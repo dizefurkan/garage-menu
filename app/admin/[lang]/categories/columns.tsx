@@ -31,6 +31,7 @@ export type Category = {
   is_draft: boolean;
   created_at: string;
   productCount?: number;
+  parentName?: string | null;
 };
 
 export function createColumns(t: (key: string, params?: Record<string, string | number>) => string): ColumnDef<Category>[] {
@@ -61,6 +62,15 @@ export function createColumns(t: (key: string, params?: Record<string, string | 
           </div>
         );
       },
+    },
+    {
+      accessorKey: "parentName",
+      header: t('parentColumn'),
+      cell: ({ row }) => (
+        <span className="text-muted-foreground">
+          {(row.getValue("parentName") as string | null) ?? "—"}
+        </span>
+      ),
     },
     {
       accessorKey: "productCount",
@@ -133,6 +143,9 @@ function ActionsCell({ category, t }: { category: Category; t: (key: string, par
         const error = await response.json();
         if (error.error === "CATEGORY_HAS_PRODUCTS") {
           throw new Error(t('categoryHasProducts', { count: error.count }));
+        }
+        if (error.error === "CATEGORY_HAS_CHILDREN") {
+          throw new Error(t('categoryHasChildren', { count: error.count }));
         }
         throw new Error(error.error || t('deleteFailed'));
       }

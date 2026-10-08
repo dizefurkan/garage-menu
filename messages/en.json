@@ -564,7 +564,9 @@
     "productDeleteFailed": "Could not delete the product",
     "productStatusUpdated": "Availability updated",
     "productStatusUpdateFailed": "Could not update the availability",
-    "categoryDeleted": "Category deleted"
+    "categoryDeleted": "Category deleted",
+    "categoryHasChildren": "This category has {count} sub-categories. Move or delete them first.",
+    "parentColumn": "Parent category"
   },
   "orderSettings": {
     "title": "Order Settings",
@@ -652,6 +654,14 @@
     "saving": "Saving...",
     "create": "Create",
     "creating": "Creating...",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "parentLabel": "Parent category",
+    "parentNone": "None (top-level category)",
+    "parentHint": "Pick a parent to list this category under it, e.g. Toasts under Breakfast. One level only.",
+    "parentLockedHint": "This category has sub-categories, so it cannot have a parent itself.",
+    "PARENT_NOT_FOUND": "The selected parent category was not found",
+    "PARENT_IS_SELF": "A category cannot be its own parent",
+    "PARENT_IS_CHILD": "The selected parent is already a sub-category; only one level is supported",
+    "CATEGORY_HAS_CHILDREN": "This category has sub-categories, so it cannot get a parent"
   }
 }

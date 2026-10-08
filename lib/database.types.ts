@@ -142,6 +142,7 @@ export type Database = {
           id: number
           image_url: string | null
           is_draft: boolean | null
+          parent_id: number | null
           published_at: string | null
           tenant_id: number
           updated_at: string | null
@@ -154,6 +155,7 @@ export type Database = {
           id?: number
           image_url?: string | null
           is_draft?: boolean | null
+          parent_id?: number | null
           published_at?: string | null
           tenant_id: number
           updated_at?: string | null
@@ -166,6 +168,7 @@ export type Database = {
           id?: number
           image_url?: string | null
           is_draft?: boolean | null
+          parent_id?: number | null
           published_at?: string | null
           tenant_id?: number
           updated_at?: string | null

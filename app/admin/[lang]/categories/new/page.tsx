@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTenant } from "@/lib/context/tenant-context";
 import { useTranslations } from "next-intl";
+import { ParentSelect } from "../parent-select";
 import { ImageUpload } from "@/components/ui/image-upload";
 import { uploadImageFile } from "@/lib/deferred-uploads";
 import { getLanguageName, getPrimaryLanguage } from "@/lib/language-flags";
@@ -22,6 +23,7 @@ export default function CategoryFormPage() {
   const tf = useTranslations("categoryForm");
   const [loading, setLoading] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [parentId, setParentId] = useState<string | null>(null);
   const [pendingImageFile, setPendingImageFile] = useState<File | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [formData, setFormData] = useState<
@@ -71,12 +73,15 @@ export default function CategoryFormPage() {
         body: JSON.stringify({
           translations: formData,
           image_url: uploadedUrl ?? imageUrl,
+          parent_id: parentId,
         }),
       });
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || tf("createFailed"));
+        throw new Error(
+          tf.has(error.error) ? tf(error.error) : error.error || tf("createFailed")
+        );
       }
 
       toast.success(tf(isEditMode ? "updated" : "created"));
@@ -149,6 +154,13 @@ export default function CategoryFormPage() {
                 </TabsContent>
               ))}
             </Tabs>
+
+            <ParentSelect
+              value={parentId}
+              onChange={setParentId}
+              lang={(params?.lang as string) || "en"}
+              disabled={loading}
+            />
 
             <div className="space-y-2">
               <label className="block text-sm font-medium">

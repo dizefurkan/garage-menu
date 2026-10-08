@@ -564,7 +564,9 @@
     "productDeleteFailed": "Ürün silinemedi",
     "productStatusUpdated": "Satış durumu güncellendi",
     "productStatusUpdateFailed": "Satış durumu güncellenemedi",
-    "categoryDeleted": "Kategori silindi"
+    "categoryDeleted": "Kategori silindi",
+    "categoryHasChildren": "Bu kategorinin {count} alt kategorisi var. Önce onları taşıyın veya silin.",
+    "parentColumn": "Üst kategori"
   },
   "orderSettings": {
     "title": "Sipariş Ayarları",
@@ -652,6 +654,14 @@
     "saving": "Kaydediliyor...",
     "create": "Oluştur",
     "creating": "Oluşturuluyor...",
-    "cancel": "İptal"
+    "cancel": "İptal",
+    "parentLabel": "Üst kategori",
+    "parentNone": "Yok (ana kategori)",
+    "parentHint": "Bu kategoriyi bir kategorinin altında göstermek için seçin; örneğin Kahvaltılar altında Tostlar. Yalnızca bir seviye.",
+    "parentLockedHint": "Bu kategorinin alt kategorileri var, bu yüzden kendisine üst kategori seçilemez.",
+    "PARENT_NOT_FOUND": "Seçilen üst kategori bulunamadı",
+    "PARENT_IS_SELF": "Bir kategori kendi üst kategorisi olamaz",
+    "PARENT_IS_CHILD": "Seçilen kategori zaten bir alt kategori; yalnızca bir seviye desteklenir",
+    "CATEGORY_HAS_CHILDREN": "Bu kategorinin alt kategorileri var, üst kategori seçilemez"
   }
 }

@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { ParentSelect } from "../parent-select";
 import { ImageUpload } from "@/components/ui/image-upload";
 import { uploadImageFile } from "@/lib/deferred-uploads";
 import { useTenant } from "@/lib/context/tenant-context";
@@ -31,6 +32,7 @@ export default function EditCategoryPage() {
     Record<string, { name: string; description: string }>
   >({});
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [parentId, setParentId] = useState<string | null>(null);
   const [pendingImageFile, setPendingImageFile] = useState<File | null>(null);
 
   // Fetch category and initialize form
@@ -46,6 +48,7 @@ export default function EditCategoryPage() {
         const data = await response.json();
         setCategory(data);
         setImageUrl(data.image_url ?? null);
+        setParentId(data.parent_id != null ? String(data.parent_id) : null);
 
         // Initialize form with translations for ALL tenant languages
         const initialData = languages.reduce(
@@ -102,12 +105,17 @@ export default function EditCategoryPage() {
         body: JSON.stringify({
           translations: formData,
           image_url: uploadedUrl ?? imageUrl,
+          parent_id: parentId,
         }),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || tf("updateFailed"));
+        throw new Error(
+          tf.has(errorData.error)
+            ? tf(errorData.error)
+            : errorData.error || tf("updateFailed")
+        );
       }
 
       toast.success(tf("updated"));
@@ -217,6 +225,14 @@ export default function EditCategoryPage() {
                 </TabsContent>
               ))}
             </Tabs>
+
+            <ParentSelect
+              value={parentId}
+              onChange={setParentId}
+              lang={(params?.lang as string) || "en"}
+              excludeId={categoryId ? Number(categoryId) : undefined}
+              disabled={saving}
+            />
 
             <div className="space-y-2">
               <label className="block text-sm font-medium">

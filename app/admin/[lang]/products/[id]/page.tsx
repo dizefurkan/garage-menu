@@ -91,7 +91,7 @@ export default function EditProductPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [categories, setCategories] = useState<
-    Array<{ id: number; name: string }>
+    Array<{ id: number; name: string; label: string }>
   >([]);
   const [allergens, setAllergens] = useState<AllergenOption[]>([]);
   const [product, setProduct] = useState<any>(null);
@@ -420,7 +420,7 @@ export default function EditProductPage() {
                   {t("category")}
                 </label>
                 <Select
-                  items={categories.map((cat) => ({ value: cat.id.toString(), label: cat.name }))}
+                  items={categories.map((cat) => ({ value: cat.id.toString(), label: cat.label }))}
                   value={watch("category_id")?.toString() || ""}
                   onValueChange={(value) =>
                     setValue("category_id", Number(value as string))
@@ -432,7 +432,7 @@ export default function EditProductPage() {
                   <SelectContent>
                     {categories.map((cat) => (
                       <SelectItem key={cat.id} value={cat.id.toString()}>
-                        {cat.name}
+                        {cat.label}
                       </SelectItem>
                     ))}
                   </SelectContent>

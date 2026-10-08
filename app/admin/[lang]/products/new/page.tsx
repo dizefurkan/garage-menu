@@ -83,7 +83,7 @@ export default function ProductFormPage() {
   const tenant = useTenant();
   const [saving, setSaving] = useState(false);
   const [categories, setCategories] = useState<
-    Array<{ id: number; name: string }>
+    Array<{ id: number; name: string; label: string }>
   >([]);
   const [allergens, setAllergens] = useState<AllergenOption[]>([]);
 
@@ -327,7 +327,7 @@ export default function ProductFormPage() {
                   {t("category")}
                 </label>
                 <Select
-                  items={categories.map((cat) => ({ value: cat.id.toString(), label: cat.name }))}
+                  items={categories.map((cat) => ({ value: cat.id.toString(), label: cat.label }))}
                   onValueChange={(value) =>
                     setValue("category_id", Number(value as string))
                   }
@@ -338,7 +338,7 @@ export default function ProductFormPage() {
                   <SelectContent>
                     {categories.map((cat) => (
                       <SelectItem key={cat.id} value={cat.id.toString()}>
-                        {cat.name}
+                        {cat.label}
                       </SelectItem>
                     ))}
                   </SelectContent>

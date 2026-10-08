@@ -2,6 +2,7 @@ import { getSessionWithTenant } from "@/lib/auth/session";
 import { supabaseAdmin } from "@/lib/supabase";
 import { revalidateTenant } from "@/lib/cache/revalidation";
 import { NextRequest, NextResponse } from "next/server";
+import { parseParentId, validateCategoryParent } from "@/lib/category-parent";
 
 export async function DELETE(
   req: NextRequest,
@@ -42,6 +43,19 @@ export async function DELETE(
       return NextResponse.json(
         { error: "Unauthorized - category belongs to different tenant" },
         { status: 403 }
+      );
+    }
+
+    // Block deletion while sub-categories hang under it (FK is RESTRICT too)
+    const { count: childCount } = await (supabaseAdmin as any)
+      .from("categories")
+      .select("id", { count: "exact", head: true })
+      .eq("parent_id", categoryId);
+
+    if (childCount && childCount > 0) {
+      return NextResponse.json(
+        { error: "CATEGORY_HAS_CHILDREN", count: childCount },
+        { status: 409 }
       );
     }
 
@@ -157,7 +171,8 @@ export async function PUT(
     }
 
     const categoryId = parseInt(id, 10);
-    const { translations, image_url } = await req.json();
+    const { translations, image_url, parent_id } = await req.json();
+    const parentId = parseParentId(parent_id);
 
     // Verify category belongs to tenant
     const { data: category, error: fetchError } = await (supabaseAdmin as any)
@@ -180,12 +195,28 @@ export async function PUT(
       );
     }
 
+    if (parentId !== undefined && parentId !== null) {
+      const parentError = await validateCategoryParent(
+        supabaseAdmin,
+        tenant.id,
+        categoryId,
+        parentId
+      );
+      if (parentError) {
+        return NextResponse.json({ error: parentError }, { status: 400 });
+      }
+    }
+
     // Update category
     const categoryUpdate: Record<string, unknown> = { updated_by: user.id };
     // Only touch the image when the caller actually sent the key, so partial
     // callers can't wipe an existing banner they never edited.
     if (image_url !== undefined) {
       categoryUpdate.image_url = image_url || null;
+    }
+    // Same rule for the parent: absent key leaves it alone, null detaches.
+    if (parentId !== undefined) {
+      categoryUpdate.parent_id = parentId;
     }
 
     const { error: updateError } = await (supabaseAdmin as any)

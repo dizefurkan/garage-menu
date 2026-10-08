@@ -21,6 +21,7 @@ async function getCategories(tenantId: number, lang: string) {
       created_at,
       is_draft,
       display_order,
+      parent_id,
       category_translations(name, language_code)
     `
     )
@@ -49,7 +50,14 @@ async function getCategories(tenantId: number, lang: string) {
     })
   );
 
-  return categoriesWithCount;
+  // Sub-categories show their parent's name next to them
+  const nameById = new Map<number, string>(
+    categoriesWithCount.map((c: any) => [c.id, c.name])
+  );
+  return categoriesWithCount.map((c: any) => ({
+    ...c,
+    parentName: c.parent_id ? (nameById.get(c.parent_id) ?? null) : null,
+  }));
 }
 
 export default async function CategoriesPage({
