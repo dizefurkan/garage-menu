@@ -12,7 +12,7 @@ import { useTenant } from "@/lib/context/tenant-context";
 import { useTranslations } from "next-intl";
 import { ImageUpload } from "@/components/ui/image-upload";
 import { uploadImageFile } from "@/lib/deferred-uploads";
-import { getLanguageName } from "@/lib/language-flags";
+import { getLanguageName, getPrimaryLanguage } from "@/lib/language-flags";
 
 export default function CategoryFormPage() {
   const router = useRouter();
@@ -34,8 +34,7 @@ export default function CategoryFormPage() {
   useEffect(() => {
     setIsEditMode(isEdit);
     // Initialize form data with selected languages
-    const languages = tenant.languages || ["en"];
-    const initialData = languages.reduce(
+    const initialData = [getPrimaryLanguage(tenant)].reduce(
       (acc, lang) => {
         acc[lang] = { name: "", description: "" };
         return acc;
@@ -45,7 +44,7 @@ export default function CategoryFormPage() {
     setFormData(initialData);
   }, [tenant, isEdit]);
 
-  const languages = tenant.languages || ["en"];
+  const languages = [getPrimaryLanguage(tenant)];
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -101,7 +100,7 @@ export default function CategoryFormPage() {
         <CardContent className="pt-6">
           <form onSubmit={handleSubmit} className="space-y-6">
             <Tabs defaultValue={languages[0] || "en"}>
-              <TabsList>
+              <TabsList className="hidden">
                 {languages.map((lang) => (
                   <TabsTrigger key={lang} value={lang}>
                     {getLanguageName(lang)}

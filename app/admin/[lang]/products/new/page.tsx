@@ -47,7 +47,7 @@ import {
 } from "../allergen-selector";
 import { ModelUploadSection } from "../model-upload-section";
 import { uploadImageFile, uploadModelFile } from "@/lib/deferred-uploads";
-import { getLanguageName } from "@/lib/language-flags";
+import { getLanguageName, getPrimaryLanguage } from "@/lib/language-flags";
 
 const productSchema = z.object({
   price: z.coerce.number().min(0).max(999999),
@@ -127,16 +127,13 @@ export default function ProductFormPage() {
     loadAllergens();
   }, [currentLang]);
 
-  // Dashboard language first, remaining tenant languages after
-  const tenantLanguagesList = tenant.languages || ["en"];
-  const languages = tenantLanguagesList.includes(currentLang)
-    ? [currentLang, ...tenantLanguagesList.filter((l) => l !== currentLang)]
-    : tenantLanguagesList;
+  // Only the primary menu language is authored here; the rest are
+  // translated from Settings -> Translations.
+  const languages = [getPrimaryLanguage(tenant)];
 
   // Initialize translations for all tenant languages
   const defaultTranslations: Record<string, any> = {};
-  const tenantLanguages = tenant.languages || ["en"];
-  for (const lang of tenantLanguages) {
+  for (const lang of languages) {
     defaultTranslations[lang] = {
       name: "",
       description: "",
@@ -248,7 +245,7 @@ export default function ProductFormPage() {
           <CardContent className="space-y-6">
             {/* Multi-language Tabs */}
             <Tabs defaultValue={languages[0] || "en"}>
-              <TabsList>
+              <TabsList className="hidden">
                 {languages.map((lang) => (
                   <TabsTrigger key={lang} value={lang}>
                     {getLanguageName(lang)}

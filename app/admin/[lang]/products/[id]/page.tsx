@@ -51,7 +51,7 @@ import {
   uploadImageFile,
   uploadModelFile,
 } from "@/lib/deferred-uploads";
-import { getLanguageName } from "@/lib/language-flags";
+import { getLanguageName, getPrimaryLanguage } from "@/lib/language-flags";
 
 const productSchema = z.object({
   price: z.coerce.number().min(0).max(999999),
@@ -135,8 +135,7 @@ export default function EditProductPage() {
         const translations: Record<string, any> = {};
 
         // First, initialize empty translations for all tenant languages
-        const tenantLanguages = tenant.languages || ["en"];
-        for (const lang of tenantLanguages) {
+        for (const lang of [getPrimaryLanguage(tenant)]) {
           translations[lang] = {
             name: "",
             description: "",
@@ -145,6 +144,7 @@ export default function EditProductPage() {
 
         // Then, populate with existing translations from DB
         productData.product_translations?.forEach((trans: any) => {
+          if (!translations[trans.language_code]) return;
           translations[trans.language_code] = {
             name: trans.name,
             description: trans.description || "",
@@ -290,11 +290,9 @@ export default function EditProductPage() {
     );
   }
 
-  // Dashboard language first, remaining tenant languages after
-  const tenantLanguagesList = tenant.languages || ["en"];
-  const languages = tenantLanguagesList.includes(currentLang)
-    ? [currentLang, ...tenantLanguagesList.filter((l) => l !== currentLang)]
-    : tenantLanguagesList;
+  // Only the primary menu language is authored here; the rest are
+  // translated from Settings -> Translations.
+  const languages = [getPrimaryLanguage(tenant)];
 
   return (
     <div className="max-w-4xl space-y-6">
@@ -340,7 +338,7 @@ export default function EditProductPage() {
           <CardContent className="space-y-6">
             {/* Multi-language Tabs */}
             <Tabs defaultValue={languages[0] || "en"}>
-              <TabsList>
+              <TabsList className="hidden">
                 {languages.map((lang) => (
                   <TabsTrigger key={lang} value={lang}>
                     {getLanguageName(lang)}

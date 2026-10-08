@@ -13,7 +13,7 @@ import { useTranslations } from "next-intl";
 import { ImageUpload } from "@/components/ui/image-upload";
 import { uploadImageFile } from "@/lib/deferred-uploads";
 import { useTenant } from "@/lib/context/tenant-context";
-import { getLanguageName } from "@/lib/language-flags";
+import { getLanguageName, getPrimaryLanguage } from "@/lib/language-flags";
 
 export default function EditCategoryPage() {
   const t = useTranslations("admin");
@@ -23,6 +23,7 @@ export default function EditCategoryPage() {
   const tenant = useTenant();
   const categoryId = params?.id as string | undefined;
 
+  const languages = [getPrimaryLanguage(tenant)];
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [category, setCategory] = useState<any>(null);
@@ -47,7 +48,6 @@ export default function EditCategoryPage() {
         setImageUrl(data.image_url ?? null);
 
         // Initialize form with translations for ALL tenant languages
-        const languages = tenant.languages || ["en"];
         const initialData = languages.reduce(
           (acc, lang) => {
             const translation = data.category_translations?.find(
@@ -76,8 +76,6 @@ export default function EditCategoryPage() {
       loadCategory();
     }
   }, [categoryId, tenant]);
-
-  const languages = tenant.languages || ["en"];
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -167,7 +165,7 @@ export default function EditCategoryPage() {
         <CardContent className="pt-6">
           <form onSubmit={handleSubmit} className="space-y-6">
             <Tabs defaultValue={languages[0] || "en"}>
-              <TabsList>
+              <TabsList className="hidden">
                 {languages.map((lang) => (
                   <TabsTrigger key={lang} value={lang}>
                     {getLanguageName(lang)}
@@ -243,7 +241,7 @@ export default function EditCategoryPage() {
                 onClick={() => router.back()}
                 disabled={saving}
               >
-                İptal
+                {t("cancel")}
               </Button>
               <Button type="submit" disabled={saving}>
                 {tf(saving ? "saving" : "save")}

@@ -47,3 +47,18 @@ export function getLanguageName(languageCode: string): string {
   const baseLanguage = languageCode.toLowerCase().split("-")[0];
   return LANGUAGE_NAMES[baseLanguage] || languageCode.toUpperCase();
 }
+
+/**
+ * The language product/category names are authored in. Other menu languages
+ * are translated from Settings -> Translations, so the create/edit forms only
+ * ask for this one.
+ */
+export function getPrimaryLanguage(tenant: {
+  default_language?: string | null;
+  languages?: string[] | null;
+}): string {
+  const languages = tenant.languages?.length ? tenant.languages : ["en"];
+  return tenant.default_language && languages.includes(tenant.default_language)
+    ? tenant.default_language
+    : languages[0];
+}
