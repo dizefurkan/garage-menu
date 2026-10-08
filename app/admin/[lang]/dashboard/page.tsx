@@ -167,13 +167,13 @@ export default async function DashboardPage({
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
             {(role === "owner" || role === "editor") && (
               <>
-                <Link href="/admin/products/new">
+                <Link href={`/admin/${lang}/products/new`}>
                   <Button size="sm" className="w-full">
                     + Add Product
                   </Button>
                 </Link>
 
-                <Link href="/admin/categories">
+                <Link href={`/admin/${lang}/categories`}>
                   <Button size="sm" variant="outline" className="w-full">
                     Categories
                   </Button>
@@ -182,7 +182,7 @@ export default async function DashboardPage({
             )}
 
             {role === "owner" && (
-              <Link href="/admin/team">
+              <Link href={`/admin/${lang}/team`}>
                 <Button size="sm" variant="outline" className="w-full">
                   Team
                 </Button>

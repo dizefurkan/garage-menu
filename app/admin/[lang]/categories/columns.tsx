@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { ArrowUpDown, MoreHorizontal, Trash2, Edit2 } from "lucide-react";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
 export type Category = {
   id: number;
@@ -49,11 +49,12 @@ export function createColumns(t: (key: string, params?: Record<string, string | 
         const category = row.original;
         const name = row.getValue("name") as string;
         const router = useRouter();
+        const lang = useParams().lang as string;
 
         return (
           <div
             className="cursor-pointer truncate transition-opacity hover:opacity-75"
-            onClick={() => router.push(`/admin/categories/${category.id}`)}
+            onClick={() => router.push(`/admin/${lang}/categories/${category.id}`)}
           >
             {name}
           </div>
@@ -112,11 +113,12 @@ export const columns: ColumnDef<Category>[] = createColumns((key) => key);
 
 function ActionsCell({ category, t }: { category: Category; t: (key: string, params?: Record<string, string | number>) => string }) {
   const router = useRouter();
+  const lang = useParams().lang as string;
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleEdit = () => {
-    router.push(`/admin/categories/${category.id}`);
+    router.push(`/admin/${lang}/categories/${category.id}`);
   };
 
   const handleDelete = async () => {

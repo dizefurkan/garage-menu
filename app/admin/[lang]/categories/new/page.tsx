@@ -81,7 +81,7 @@ export default function CategoryFormPage() {
       }
 
       toast.success(tf(isEditMode ? "updated" : "created"));
-      setTimeout(() => router.push("/admin/categories"), 1000);
+      setTimeout(() => router.push(`/admin/${(params?.lang as string) || "en"}/categories`), 1000);
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : tf("createFailed")

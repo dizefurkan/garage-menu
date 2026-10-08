@@ -113,7 +113,7 @@ export default function EditCategoryPage() {
       }
 
       toast.success(tf("updated"));
-      setTimeout(() => router.push("/admin/categories"), 1000);
+      setTimeout(() => router.push(`/admin/${(params?.lang as string) || "en"}/categories`), 1000);
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : tf("updateFailed")

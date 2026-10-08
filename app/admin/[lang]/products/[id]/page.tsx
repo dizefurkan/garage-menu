@@ -249,7 +249,7 @@ export default function EditProductPage() {
       }
 
       toast.success(t("productUpdated"));
-      setTimeout(() => router.push("/admin/products"), 1000);
+      setTimeout(() => router.push(`/admin/${currentLang}/products`), 1000);
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : t("productSaveFailed")

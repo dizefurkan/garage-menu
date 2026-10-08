@@ -35,7 +35,7 @@ import {
   TriangleAlert,
 } from "lucide-react";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import {
   ProductStatusSelect,
   fromProductStatus,
@@ -109,10 +109,11 @@ export function createColumns(
         const name = row.getValue("name") as string;
         const product = row.original;
         const router = useRouter();
+        const lang = useParams().lang as string;
         return (
           <div
             className="flex items-center gap-3 cursor-pointer hover:opacity-75 transition-opacity"
-            onClick={() => router.push(`/admin/products/${product.id}`)}
+            onClick={() => router.push(`/admin/${lang}/products/${product.id}`)}
           >
             {imageUrl ? (
               <div className="relative w-10 h-10 rounded overflow-hidden bg-gray-100 flex-shrink-0">
@@ -317,11 +318,12 @@ function StatusCell({
 
 function ActionsCell({ product }: { product: Product }) {
   const router = useRouter();
+  const lang = useParams().lang as string;
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleEdit = () => {
-    router.push(`/admin/products/${product.id}`);
+    router.push(`/admin/${lang}/products/${product.id}`);
   };
 
   const handleDelete = async () => {

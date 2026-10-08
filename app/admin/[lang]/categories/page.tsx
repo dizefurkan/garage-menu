@@ -61,7 +61,7 @@ export default async function CategoriesPage({
   const { user, tenant, role } = await getSessionWithTenant();
 
   if (!user || !tenant || (role !== "owner" && role !== "editor")) {
-    redirect("/admin/dashboard");
+    redirect(`/admin/${lang}/dashboard`);
   }
 
   const t = await getTranslations({ locale: lang, namespace: "admin" });

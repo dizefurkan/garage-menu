@@ -4,6 +4,8 @@ import { NextRequest, NextResponse } from "next/server";
  * Custom middleware for multi-language routing
  * Handles redirects for legacy /app routes to new structure
  */
+const ADMIN_LANG_COOKIE = "admin_lang";
+
 export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   
@@ -25,17 +27,31 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // Handle admin routes without language parameter -> redirect to /admin/[lang]
-  // /admin/dashboard -> /admin/en/dashboard
-  // /admin/products -> /admin/en/products
+  // Admin routes: remember the dashboard language in a cookie whenever a
+  // localized admin URL is visited, and use it to localize dilsiz paths
+  // (/admin/products -> /admin/<lang>/products) instead of always falling
+  // back to "en".
   if (pathname.startsWith("/admin/") && !pathname.startsWith("/admin/api")) {
     const segments = pathname.split("/").filter(Boolean);
     const KNOWN_LOCALES = ["en", "tr"];
-    
-    // If second segment (after "admin") is not a known locale, redirect to default (en)
+
     if (segments.length > 1 && !KNOWN_LOCALES.includes(segments[1])) {
+      const saved = request.cookies.get(ADMIN_LANG_COOKIE)?.value;
+      const lang = saved && KNOWN_LOCALES.includes(saved) ? saved : "en";
       const adminPath = segments.slice(1).join("/");
-      return NextResponse.redirect(new URL(`/admin/en/${adminPath}`, request.url));
+      return NextResponse.redirect(
+        new URL(`/admin/${lang}/${adminPath}${request.nextUrl.search}`, request.url)
+      );
+    }
+
+    if (segments.length > 1 && request.cookies.get(ADMIN_LANG_COOKIE)?.value !== segments[1]) {
+      const response = NextResponse.next();
+      response.cookies.set(ADMIN_LANG_COOKIE, segments[1], {
+        path: "/",
+        maxAge: 60 * 60 * 24 * 365,
+        sameSite: "lax",
+      });
+      return response;
     }
   }
 

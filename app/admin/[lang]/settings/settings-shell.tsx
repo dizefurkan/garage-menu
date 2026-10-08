@@ -17,7 +17,7 @@ export async function loadSettingsPage(lang: string) {
   const { user, tenant, role } = await getSessionWithTenant();
 
   if (!user || !tenant || role !== "owner") {
-    redirect("/admin/dashboard");
+    redirect(`/admin/${lang}/dashboard`);
   }
 
   const t = await getTranslations({ locale: lang, namespace: "settings" });
