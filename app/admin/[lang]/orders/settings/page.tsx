@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { useTranslations, useLocale } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Loader2, Copy, Check } from "lucide-react";
@@ -71,6 +72,7 @@ export default function OrdersSettingsPage() {
       const data = await res.json();
 
       if (data.success) {
+        toast.success(t("ipRegistered"));
         setNetworkStatus((prev) =>
           prev
             ? {
@@ -83,6 +85,7 @@ export default function OrdersSettingsPage() {
       }
     } catch (error) {
       console.error("Error registering network IP:", error);
+      toast.error(t("ipRegisterFailed"));
     } finally {
       setRegistering(false);
     }
@@ -99,6 +102,7 @@ export default function OrdersSettingsPage() {
       const data = await res.json();
 
       if (data.success) {
+        toast.success(t("pinGenerated"));
         setNetworkStatus((prev) =>
           prev
             ? {
@@ -112,6 +116,7 @@ export default function OrdersSettingsPage() {
       }
     } catch (error) {
       console.error("Error generating PIN:", error);
+      toast.error(t("pinGenerateFailed"));
     } finally {
       setGeneratingPin(false);
     }

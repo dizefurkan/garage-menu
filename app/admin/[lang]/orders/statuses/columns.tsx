@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import { ColumnDef } from "@tanstack/react-table";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
@@ -67,6 +68,7 @@ function ToggleCell({
   status: StatusRow;
   onToggled: (id: number, isEnabled: boolean) => void;
 }) {
+  const t = useTranslations("admin");
   const [isSaving, setIsSaving] = useState(false);
 
   async function handleChange(checked: boolean) {
@@ -78,9 +80,11 @@ function ToggleCell({
         body: JSON.stringify({ is_enabled: checked }),
       });
       if (!res.ok) throw new Error("Failed to update status");
+      toast.success(t("orderStatusUpdated"));
       onToggled(status.id, checked);
     } catch (error) {
       console.error("Error toggling status:", error);
+      toast.error(t("orderStatusUpdateFailed"));
     } finally {
       setIsSaving(false);
     }

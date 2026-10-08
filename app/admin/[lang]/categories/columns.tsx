@@ -1,6 +1,7 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -137,10 +138,11 @@ function ActionsCell({ category, t }: { category: Category; t: (key: string, par
       }
 
       setShowDeleteDialog(false);
+      toast.success(t("categoryDeleted"));
       router.refresh();
     } catch (error) {
       console.error("Delete error:", error);
-      alert(
+      toast.error(
         error instanceof Error
           ? error.message
           : t('deleteError')

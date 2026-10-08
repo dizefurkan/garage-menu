@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,11 +26,9 @@ export function ContactSettings({ tenant }: ContactSettingsProps) {
   const [email, setEmail] = useState(contactInfo.email || "");
   const [whatsapp, setWhatsapp] = useState(contactInfo.whatsapp || "");
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState("");
 
   const handleSave = async () => {
     setSaving(true);
-    setMessage("");
 
     try {
       const response = await fetch(`/api/admin/settings/contact`, {
@@ -52,12 +51,11 @@ export function ContactSettings({ tenant }: ContactSettingsProps) {
         throw new Error(data.error || t("failedToUpdate"));
       }
 
-      setMessage(`✓ ${t("contactSaved")}`);
-      setTimeout(() => setMessage(""), 3000);
+      toast.success(t("contactSaved"));
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : t("failedToUpdate");
-      setMessage(`✗ ${errorMessage}`);
+      toast.error(errorMessage);
       console.error("Error saving contact settings:", error);
     } finally {
       setSaving(false);
@@ -132,17 +130,6 @@ export function ContactSettings({ tenant }: ContactSettingsProps) {
         </div>
       </div>
 
-      {message && (
-        <div
-          className={`rounded-lg p-3 text-sm font-medium ${
-            message.startsWith("✓")
-              ? "bg-green-100 text-green-800"
-              : "bg-red-100 text-red-800"
-          }`}
-        >
-          {message}
-        </div>
-      )}
 
       <Button onClick={handleSave} disabled={saving}>
         {saving ? t("saving") : t("saveChanges")}

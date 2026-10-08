@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
@@ -21,16 +22,14 @@ export function GeneralSettings({ tenant }: GeneralSettingsProps) {
   const [email, setEmail] = useState(tenant.email || "");
   const [phone, setPhone] = useState(tenant.phone || "");
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState("");
 
   const handleSave = async () => {
     if (!name.trim()) {
-      setMessage(`✗ ${t("nameRequired")}`);
+      toast.error(t("nameRequired"));
       return;
     }
 
     setSaving(true);
-    setMessage("");
 
     try {
       const response = await fetch("/api/admin/settings/general", {
@@ -45,16 +44,13 @@ export function GeneralSettings({ tenant }: GeneralSettingsProps) {
         throw new Error(data.error || t("failedToUpdateGeneral"));
       }
 
-      setMessage(`✓ ${t("generalSaved")}`);
-      setTimeout(() => setMessage(""), 3000);
+      toast.success(t("generalSaved"));
       // The venue name is rendered by the admin shell (sidebar header), which
       // is a server component — without this it keeps showing the old name.
       router.refresh();
     } catch (error) {
-      setMessage(
-        `✗ ${
-          error instanceof Error ? error.message : t("failedToUpdateGeneral")
-        }`
+      toast.error(
+        error instanceof Error ? error.message : t("failedToUpdateGeneral")
       );
     } finally {
       setSaving(false);
@@ -106,17 +102,6 @@ export function GeneralSettings({ tenant }: GeneralSettingsProps) {
         <p className="mt-1 text-xs text-muted-foreground">{t("slugLocked")}</p>
       </div>
 
-      {message && (
-        <div
-          className={`rounded-lg p-3 text-sm font-medium ${
-            message.startsWith("✓")
-              ? "bg-green-100 text-green-800"
-              : "bg-red-100 text-red-800"
-          }`}
-        >
-          {message}
-        </div>
-      )}
 
       <Button onClick={handleSave} disabled={saving}>
         {saving ? t("saving") : t("saveChanges")}

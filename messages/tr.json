@@ -551,7 +551,20 @@
     "bulkPriceNoChange": "Hiçbir fiyat değişmiyor. Yuvarlama sonrası fiyatlar aynı kalıyor.",
     "bulkPriceApply": "Uygula",
     "bulkPriceApplying": "Uygulanıyor...",
-    "bulkPriceDone": "{count} ürünün fiyatı güncellendi"
+    "bulkPriceDone": "{count} ürünün fiyatı güncellendi",
+    "tableRenamed": "Masa yeniden adlandırıldı",
+    "tableRenameFailed": "Masa yeniden adlandırılamadı",
+    "tablesCreated": "Masalar oluşturuldu",
+    "tablesCreateFailed": "Masalar oluşturulamadı",
+    "tableDeleted": "Masa silindi",
+    "tableDeleteFailed": "Masa silinemedi",
+    "orderStatusUpdated": "Durum güncellendi",
+    "orderStatusUpdateFailed": "Durum güncellenemedi",
+    "productDeleted": "Ürün silindi",
+    "productDeleteFailed": "Ürün silinemedi",
+    "productStatusUpdated": "Satış durumu güncellendi",
+    "productStatusUpdateFailed": "Satış durumu güncellenemedi",
+    "categoryDeleted": "Kategori silindi"
   },
   "orderSettings": {
     "title": "Sipariş Ayarları",
@@ -593,7 +606,12 @@
       "statusOnHint": "Müşteriler masadan sipariş verebiliyor.",
       "statusOffHint": "Menü vitrin modunda. Sipariş butonları gizli.",
       "saveError": "Ayar kaydedilemedi"
-    }
+    },
+    "ipRegistered": "Ağ kaydedildi",
+    "ipRegisterFailed": "Ağ kaydedilemedi",
+    "pinGenerated": "PIN oluşturuldu",
+    "pinGenerateFailed": "PIN oluşturulamadı",
+    "saved": "Ayar kaydedildi"
   },
   "emptyStates": {
     "products": {

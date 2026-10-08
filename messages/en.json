@@ -551,7 +551,20 @@
     "bulkPriceNoChange": "No prices change. Rounding leaves them exactly as they are.",
     "bulkPriceApply": "Apply",
     "bulkPriceApplying": "Applying...",
-    "bulkPriceDone": "{count} product prices updated"
+    "bulkPriceDone": "{count} product prices updated",
+    "tableRenamed": "Table renamed",
+    "tableRenameFailed": "Could not rename the table",
+    "tablesCreated": "Tables created",
+    "tablesCreateFailed": "Could not create the tables",
+    "tableDeleted": "Table deleted",
+    "tableDeleteFailed": "Could not delete the table",
+    "orderStatusUpdated": "Status updated",
+    "orderStatusUpdateFailed": "Could not update the status",
+    "productDeleted": "Product deleted",
+    "productDeleteFailed": "Could not delete the product",
+    "productStatusUpdated": "Availability updated",
+    "productStatusUpdateFailed": "Could not update the availability",
+    "categoryDeleted": "Category deleted"
   },
   "orderSettings": {
     "title": "Order Settings",
@@ -593,7 +606,12 @@
       "statusOnHint": "Guests can order from their table.",
       "statusOffHint": "Menu is in showcase mode. Ordering buttons are hidden.",
       "saveError": "Could not save the setting"
-    }
+    },
+    "ipRegistered": "Network registered",
+    "ipRegisterFailed": "Could not register the network",
+    "pinGenerated": "PIN generated",
+    "pinGenerateFailed": "Could not generate the PIN",
+    "saved": "Setting saved"
   },
   "emptyStates": {
     "products": {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 import {
   Dialog,
@@ -46,10 +47,12 @@ export function RenameTableDialog({
         body: JSON.stringify({ label: label.trim() }),
       });
       if (!res.ok) throw new Error("Failed to rename table");
+      toast.success(t("tableRenamed"));
       onRenamed(tableId, label.trim());
       onOpenChange(false);
     } catch (error) {
       console.error("Error renaming table:", error);
+      toast.error(t("tableRenameFailed"));
     } finally {
       setSaving(false);
     }

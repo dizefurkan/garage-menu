@@ -36,6 +36,7 @@ export function QrOrderingCard({ initialEnabled }: QrOrderingCardProps) {
       });
 
       if (!res.ok) throw new Error("Request failed");
+      toast.success(t("saved"));
     } catch (error) {
       console.error("[QrOrderingCard] Failed to save:", error);
       setEnabled(previous);

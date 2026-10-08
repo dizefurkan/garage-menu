@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import { ColumnDef } from "@tanstack/react-table";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
@@ -129,10 +130,12 @@ function ActionsCell({
         method: "DELETE",
       });
       if (!res.ok) throw new Error("Failed to delete table");
+      toast.success(t("tableDeleted"));
       onDeleted(table.id);
       setShowDeleteDialog(false);
     } catch (error) {
       console.error("Error deleting table:", error);
+      toast.error(t("tableDeleteFailed"));
     } finally {
       setIsDeleting(false);
     }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription } from "@/components/ui/card";
@@ -50,13 +51,9 @@ export function ThemeSettings({
     tenant.product_sort ?? "manual"
   );
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    setSuccess(false);
     setLoading(true);
 
     try {
@@ -81,10 +78,9 @@ export function ThemeSettings({
         throw new Error(data.error || t("failedToUpdate"));
       }
 
-      setSuccess(true);
-      setTimeout(() => setSuccess(false), 3000);
+      toast.success(t("themeSaved"));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      toast.error(err instanceof Error ? err.message : t("failedToUpdate"));
     } finally {
       setLoading(false);
     }
@@ -325,17 +321,6 @@ export function ThemeSettings({
         </CardContent>
       </Card>
 
-      {error && (
-        <div className="rounded-md bg-red-50 p-4 text-sm text-red-700">
-          {error}
-        </div>
-      )}
-
-      {success && (
-        <div className="rounded-md bg-green-50 p-4 text-sm text-green-700">
-          {t("themeSaved")}
-        </div>
-      )}
 
       <Button type="submit" disabled={loading}>
         {loading ? t("saving") : t("saveChanges")}

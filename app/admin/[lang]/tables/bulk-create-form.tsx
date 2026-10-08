@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,11 +29,13 @@ export function BulkCreateForm({ onCreated }: BulkCreateFormProps) {
       const data = await res.json();
 
       if (data.success) {
+        toast.success(t("tablesCreated"));
         onCreated(data.tables || []);
         setBulkCount(5);
       }
     } catch (error) {
       console.error("Error creating tables:", error);
+      toast.error(t("tablesCreateFailed"));
     } finally {
       setCreating(false);
     }

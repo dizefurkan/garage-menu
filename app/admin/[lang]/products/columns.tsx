@@ -1,6 +1,8 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
+import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -243,6 +245,7 @@ function StatusCell({
   product: Product;
   onChanged?: () => void;
 }) {
+  const t = useTranslations("admin");
   const router = useRouter();
   const [isToggling, setIsToggling] = useState(false);
 
@@ -284,19 +287,20 @@ function StatusCell({
 
       if (!updateResponse.ok) {
         const error = await updateResponse.json();
-        throw new Error(error.error || "Güncelleme başarısız");
+        throw new Error(error.error || t("productStatusUpdateFailed"));
       }
 
       // Refresh both layers: the server components above the table, and the
       // client-fetched row list inside it.
+      toast.success(t("productStatusUpdated"));
       router.refresh();
       onChanged?.();
     } catch (error) {
       console.error("Toggle error:", error);
-      alert(
+      toast.error(
         error instanceof Error
           ? error.message
-          : "Satış durumu güncellenirken hata oluştu"
+          : t("productStatusUpdateFailed")
       );
     } finally {
       setIsToggling(false);
@@ -318,6 +322,7 @@ function StatusCell({
 
 function ActionsCell({ product }: { product: Product }) {
   const router = useRouter();
+  const t = useTranslations("admin");
   const lang = useParams().lang as string;
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -335,15 +340,16 @@ function ActionsCell({ product }: { product: Product }) {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || "Silme başarısız");
+        throw new Error(error.error || t("productDeleteFailed"));
       }
 
       setShowDeleteDialog(false);
+      toast.success(t("productDeleted"));
       router.refresh();
     } catch (error) {
       console.error("Delete error:", error);
-      alert(
-        error instanceof Error ? error.message : "Ürün silinirken hata oluştu"
+      toast.error(
+        error instanceof Error ? error.message : t("productDeleteFailed")
       );
     } finally {
       setIsDeleting(false);
