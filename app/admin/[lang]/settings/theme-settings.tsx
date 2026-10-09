@@ -44,6 +44,9 @@ export function ThemeSettings({
   const [menuLayout, setMenuLayout] = useState<MenuLayout>(
     tenant.menu_layout ?? "products"
   );
+  const [gridColumns, setGridColumns] = useState<1 | 2>(
+    tenant.category_grid_columns === 2 ? 2 : 1
+  );
   const [categorySort, setCategorySort] = useState<CategorySort>(
     tenant.category_sort ?? "manual"
   );
@@ -68,6 +71,7 @@ export function ThemeSettings({
             accent: accent || undefined,
           },
           menu_layout: menuLayout,
+          category_grid_columns: gridColumns,
           category_sort: categorySort,
           product_sort: productSort,
         }),
@@ -230,6 +234,70 @@ export function ThemeSettings({
             );
           })}
         </div>
+
+        {menuLayout === "categories" && (
+          <div className="space-y-3 pt-2">
+            <div>
+              <label className="block text-sm font-medium">
+                {t("categoryGridTitle")}
+              </label>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {t("categoryGridHint")}
+              </p>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {[
+                {
+                  value: 1 as const,
+                  label: t("categoryGridOne"),
+                  hint: t("categoryGridOneHint"),
+                },
+                {
+                  value: 2 as const,
+                  label: t("categoryGridTwo"),
+                  hint: t("categoryGridTwoHint"),
+                },
+              ].map((option) => {
+                const selected = gridColumns === option.value;
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => setGridColumns(option.value)}
+                    aria-pressed={selected}
+                    className={`rounded-lg border p-4 text-left transition-colors ${
+                      selected
+                        ? "border-foreground bg-accent"
+                        : "border-border hover:bg-accent/50"
+                    }`}
+                  >
+                    <div
+                      className={`mb-3 grid gap-1.5 rounded border border-border bg-background p-2 ${
+                        option.value === 2 ? "grid-cols-2" : "grid-cols-1"
+                      }`}
+                      aria-hidden
+                    >
+                      {Array.from({ length: option.value === 2 ? 4 : 3 }).map(
+                        (_, i) => (
+                          <div
+                            key={i}
+                            className={`rounded bg-foreground/15 ${
+                              option.value === 2 ? "h-6" : "h-4"
+                            }`}
+                          />
+                        )
+                      )}
+                    </div>
+                    <p className="text-sm font-medium">{option.label}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {option.hint}
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {menuLayout === "categories" && !hasCategoryImages && (
           <p className="rounded-md border border-border bg-muted p-3 text-xs text-muted-foreground">

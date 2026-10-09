@@ -771,7 +771,7 @@ Sıra kolaydan zora. Her madde ayrı commit.
 | 5 | Hata | Ürün formunda doğrulama hatası görünmüyor | `handleSubmit(onSubmit)` hata dalı yok; çeviri sekmesindeki boş ad görünmeyen sekmede kalıyor. `onInvalid` → toast + ilgili alana odak. (Madde 6 ile birlikte büyük ölçüde kalkar.) |
 | 6 | Mimari | Çeviriler ürün/kategori satırına taşınsın | `products`/`categories`'e `name`, `description` (ana dil). `*_translations` sadece diğer diller. Migration: `tenants.default_language` satırını kopyala, sonra o dil satırlarını sil. Etkilenen ~26 dosya (menu-db, public menu API, admin API'ler, translations workbench, analytics, orders, MenuEditor). Formlardan dil sekmeleri kalkar; diğer diller Ayarlar → Çeviriler'den. Açık soru: tenant `default_language` değiştirirse ana dil metni ne olur → uyarı göster, otomatik taşıma yapma. |
 | 7 ✅ | Özellik | Alt kategori (1 seviye) | `categories.parent_id` (self FK, tenant_id aynı, derinlik 1 CHECK/trigger). Kategori formunda üst kategori seçimi; menüde grup altında alt kategoriler; ürün formunda hepsi seçilebilir. |
-| 8 | Özellik | Kategori grid seçimi (1'li / 2'li) | Tema ayarı (menü layout'u yanında), `tenants` allowlist tuzağına dikkat (3 elle yazılmış liste). |
+| 8 ✅ | Özellik | Kategori grid seçimi (1'li / 2'li) | Tema ayarı (menü layout'u yanında), `tenants` allowlist tuzağına dikkat (3 elle yazılmış liste). |
 
 Not: 6, 7'den önce gelmeli (aynı tabloya dokunuyor, `name` kolonu hazır olsun).
 
@@ -785,3 +785,10 @@ diller Ayarlar → Çeviriler'den giriliyor. Madde 5 de böylece kapandı.
 uygulanmadan admin kategori listesi/formları hata verir). Ürünler hem ana hem
 alt kategoriye atanabilir; public menüde ana kategori bölümü kendi ürünleri +
 altında alt kategori başlıkları olarak render edilir.
+
+**Madde 8 notu:** `tenants.category_grid_columns` (1|2, varsayılan 1), tema
+ayarlarında yalnız "Kategori kartları" düzeni seçiliyken görünür; kök ve alt
+kategori landing ekranlarına uygulanır. Migration
+`20261009063706_add_category_grid_columns.sql` canlıya `supabase db push` ile
+uygulanmalı (public menü API'si tenant kolonlarını allowlist ile döndürüyor,
+eklendi).

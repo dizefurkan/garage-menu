@@ -333,6 +333,7 @@ export async function GET(request: Request) {
         // columns still behaves like the previous release.
         qr_ordering_enabled: tenant.qr_ordering_enabled ?? true,
         menu_layout: tenant.menu_layout ?? "products",
+        category_grid_columns: tenant.category_grid_columns ?? 1,
         category_sort: tenant.category_sort ?? "manual",
         product_sort: tenant.product_sort ?? "manual",
         menu_languages: tenantLanguages,

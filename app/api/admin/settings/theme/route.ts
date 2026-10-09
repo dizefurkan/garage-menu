@@ -7,6 +7,7 @@ import { revalidateTenantAll } from "@/lib/cache/revalidation";
 // These mirror the tenants_*_valid CHECK constraints. Validating here turns a
 // bad value into a 400 instead of a 500 from the database.
 const MENU_LAYOUTS = ["products", "categories"] as const;
+const CATEGORY_GRID_COLUMNS = [1, 2] as const;
 const CATEGORY_SORTS = ["manual", "alphabetical", "popularity"] as const;
 const PRODUCT_SORTS = [
   "manual",
@@ -29,6 +30,7 @@ export async function PATCH(req: NextRequest) {
       tenant_id,
       theme_config,
       menu_layout,
+      category_grid_columns,
       category_sort,
       product_sort,
     } = await req.json();
@@ -47,6 +49,16 @@ export async function PATCH(req: NextRequest) {
     if (menu_layout !== undefined && !MENU_LAYOUTS.includes(menu_layout)) {
       return NextResponse.json(
         { error: "Invalid menu_layout" },
+        { status: 400 }
+      );
+    }
+
+    if (
+      category_grid_columns !== undefined &&
+      !CATEGORY_GRID_COLUMNS.includes(category_grid_columns)
+    ) {
+      return NextResponse.json(
+        { error: "Invalid category_grid_columns" },
         { status: 400 }
       );
     }
@@ -81,6 +93,9 @@ export async function PATCH(req: NextRequest) {
     };
     if (menu_layout !== undefined) {
       tenantUpdate.menu_layout = menu_layout;
+    }
+    if (category_grid_columns !== undefined) {
+      tenantUpdate.category_grid_columns = category_grid_columns;
     }
     if (category_sort !== undefined) {
       tenantUpdate.category_sort = category_sort;

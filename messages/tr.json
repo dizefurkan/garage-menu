@@ -278,7 +278,13 @@
     "generalSaved": "İşletme bilgileri kaydedildi",
     "failedToUpdateGeneral": "İşletme bilgileri güncellenemedi",
     "nameRequired": "İşletme adı zorunludur",
-    "slugLocked": "Bu adres değiştirilemez — basılı QR kodlarınız buna bağlıdır."
+    "slugLocked": "Bu adres değiştirilemez — basılı QR kodlarınız buna bağlıdır.",
+    "categoryGridTitle": "Kategori ızgarası",
+    "categoryGridHint": "Kategori kartlarının yan yana kaç tane olacağı.",
+    "categoryGridOne": "Satırda tek",
+    "categoryGridOneHint": "Geniş görsel bannerlar, alt alta.",
+    "categoryGridTwo": "Satırda iki",
+    "categoryGridTwoHint": "Kompakt kutucuklar, yan yana ikişer."
   },
   "errors": {
     "required": "Bu alan gereklidir",

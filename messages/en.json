@@ -278,7 +278,13 @@
     "generalSaved": "Business information saved",
     "failedToUpdateGeneral": "Failed to update business information",
     "nameRequired": "Business name is required",
-    "slugLocked": "This address cannot be changed — your printed QR codes depend on it."
+    "slugLocked": "This address cannot be changed — your printed QR codes depend on it.",
+    "categoryGridTitle": "Category grid",
+    "categoryGridHint": "How many category cards sit side by side.",
+    "categoryGridOne": "One per row",
+    "categoryGridOneHint": "Wide image banners, one under another.",
+    "categoryGridTwo": "Two per row",
+    "categoryGridTwoHint": "Compact tiles, two side by side."
   },
   "errors": {
     "required": "This field is required",

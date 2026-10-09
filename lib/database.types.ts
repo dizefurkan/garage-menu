@@ -1060,6 +1060,7 @@ export type Database = {
       }
       tenants: {
         Row: {
+          category_grid_columns: number
           category_sort: string
           contact_info: Json | null
           created_at: string | null
@@ -1084,6 +1085,7 @@ export type Database = {
           verified_network_ip: string | null
         }
         Insert: {
+          category_grid_columns?: number
           category_sort?: string
           contact_info?: Json | null
           created_at?: string | null
@@ -1108,6 +1110,7 @@ export type Database = {
           verified_network_ip?: string | null
         }
         Update: {
+          category_grid_columns?: number
           category_sort?: string
           contact_info?: Json | null
           created_at?: string | null

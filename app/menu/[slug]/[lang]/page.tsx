@@ -367,6 +367,7 @@ export default async function MenuPage({ params, searchParams }: Props) {
       )
     : null;
   const showCategoryLanding = useCategoryLayout && !activeCategory;
+  const gridColumns = tenant.category_grid_columns === 2 ? 2 : 1;
   // Category-first layout: a parent with sub-categories opens as another
   // landing screen of banners, exactly like the root one. Its own products
   // (if any) follow below.
@@ -465,6 +466,7 @@ export default async function MenuPage({ params, searchParams }: Props) {
             lang={lang}
             tableId={orderingTableId}
             primaryColor={primaryColor}
+            columns={gridColumns}
           />
         ) : visibleCategories && visibleCategories.length > 0 ? (
           <div className="space-y-12">
@@ -478,6 +480,7 @@ export default async function MenuPage({ params, searchParams }: Props) {
                   lang={lang}
                   tableId={orderingTableId}
                   primaryColor={primaryColor}
+                  columns={gridColumns}
                 />
               </div>
             )}

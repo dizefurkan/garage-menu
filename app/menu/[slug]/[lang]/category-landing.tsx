@@ -25,6 +25,8 @@ interface CategoryLandingProps {
   /** Preserved across navigation so ordering survives the drill-down. */
   tableId?: string;
   primaryColor: string;
+  /** Cards per row: 1 = wide banners, 2 = compact tiles. */
+  columns?: 1 | 2;
 }
 
 /**
@@ -40,11 +42,15 @@ export function CategoryLanding({
   lang,
   tableId,
   primaryColor,
+  columns = 1,
 }: CategoryLandingProps) {
   const countLabel = PRODUCT_COUNT_LABELS[lang] || PRODUCT_COUNT_LABELS.en;
+  const twoUp = columns === 2;
+  // 21:9 is a banner shape; two across needs a taller tile to stay legible.
+  const aspect = twoUp ? "aspect-[4/3]" : "aspect-[21/9]";
 
   return (
-    <div className="space-y-3">
+    <div className={twoUp ? "grid grid-cols-2 gap-3" : "space-y-3"}>
       {categories.map((category) => {
         const href = `?category=${category.id}${
           tableId ? `&tableId=${tableId}` : ""
@@ -60,7 +66,7 @@ export function CategoryLanding({
             {/* Deliberately ultra-wide: a 21:9 band reads as a section banner
                 rather than competing with the square product photos below. */}
             {category.image ? (
-              <div className="relative aspect-[21/9] w-full overflow-hidden bg-gray-100">
+              <div className="relative ${aspect} w-full overflow-hidden bg-gray-100">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={category.image}
@@ -73,18 +79,18 @@ export function CategoryLanding({
               // Fallback for venues that enabled this layout without uploading
               // images — a flat tinted band, never a broken frame.
               <div
-                className="aspect-[21/9] w-full opacity-10"
+                className={`${aspect} w-full opacity-10`}
                 style={{ backgroundColor: primaryColor }}
                 aria-hidden
               />
             )}
 
-            <div className="flex items-center justify-between gap-3 px-4 py-3">
+            <div className={`flex items-center justify-between gap-2 ${twoUp ? "px-3 py-2.5" : "px-4 py-3"}`}>
               <div className="min-w-0">
-                <h2 className="truncate text-lg font-bold text-gray-900">
+                <h2 className={`truncate font-bold text-gray-900 ${twoUp ? "text-base" : "text-lg"}`}>
                   {category.name}
                 </h2>
-                <p className="mt-0.5 text-sm text-gray-500">
+                <p className={`mt-0.5 text-gray-500 ${twoUp ? "text-xs" : "text-sm"}`}>
                   {countLabel(category.productCount)}
                 </p>
               </div>
