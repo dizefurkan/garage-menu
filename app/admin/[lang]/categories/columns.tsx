@@ -23,11 +23,13 @@ import {
 } from "@/components/ui/alert-dialog";
 import { ArrowUpDown, MoreHorizontal, Trash2, Edit2 } from "lucide-react";
 import { useState } from "react";
+import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 
 export type Category = {
   id: number;
   name: string;
+  image_url?: string | null;
   is_draft: boolean;
   created_at: string;
   productCount?: number;
@@ -50,15 +52,31 @@ export function createColumns(t: (key: string, params?: Record<string, string | 
       cell: ({ row }) => {
         const category = row.original;
         const name = row.getValue("name") as string;
+        const imageUrl = category.image_url;
         const router = useRouter();
         const lang = useParams().lang as string;
 
         return (
           <div
-            className="cursor-pointer truncate transition-opacity hover:opacity-75"
+            className="flex cursor-pointer items-center gap-3 transition-opacity hover:opacity-75"
             onClick={() => router.push(`/admin/${lang}/categories/${category.id}`)}
           >
-            {name}
+            {imageUrl ? (
+              <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded bg-gray-100">
+                <Image
+                  src={imageUrl}
+                  alt={name}
+                  fill
+                  sizes="40px"
+                  className="object-cover"
+                />
+              </div>
+            ) : (
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded bg-gray-200 text-xs text-gray-500">
+                —
+              </div>
+            )}
+            <span className="truncate">{name}</span>
           </div>
         );
       },

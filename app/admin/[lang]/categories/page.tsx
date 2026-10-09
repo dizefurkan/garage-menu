@@ -21,6 +21,7 @@ async function getCategories(tenantId: number, lang: string) {
       created_at,
       is_draft,
       display_order,
+      image_url,
       parent_id,
       category_translations(name, language_code)
     `
