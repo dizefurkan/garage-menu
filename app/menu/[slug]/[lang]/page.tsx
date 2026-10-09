@@ -354,10 +354,31 @@ export default async function MenuPage({ params, searchParams }: Props) {
   // landing screen is just an extra tap.
   const useCategoryLayout =
     tenant.menu_layout === "categories" && (categories?.length || 0) > 1;
+  // The chosen category can be a top-level one or one of its sub-categories
   const activeCategory = selectedCategoryId
-    ? categories?.find((c: any) => String(c.id) === String(selectedCategoryId))
+    ? (categories ?? [])
+        .flatMap((c: any) => [c, ...(c.children ?? [])])
+        .find((c: any) => String(c.id) === String(selectedCategoryId))
+    : null;
+  const activeParent = activeCategory
+    ? categories?.find((c: any) =>
+        (c.children ?? []).some((ch: any) => ch.id === activeCategory.id)
+      )
     : null;
   const showCategoryLanding = useCategoryLayout && !activeCategory;
+  // Category-first layout: a parent with sub-categories opens as another
+  // landing screen of banners, exactly like the root one. Its own products
+  // (if any) follow below.
+  const showBranchLanding =
+    useCategoryLayout &&
+    !!activeCategory &&
+    !activeParent &&
+    (activeCategory.children?.length ?? 0) > 0;
+  const backParams = [
+    activeParent ? `category=${activeParent.id}` : null,
+    orderingTableId ? `tableId=${orderingTableId}` : null,
+  ].filter(Boolean);
+  const backHref = `?${backParams.join("&")}`;
 
   // In the drilled-in view only the chosen category renders; otherwise the
   // full list, exactly as before.
@@ -404,15 +425,11 @@ export default async function MenuPage({ params, searchParams }: Props) {
       )}
 
       {/* Category Navigation */}
-      {shouldShowCategoryNav && !showCategoryLanding && (
+      {shouldShowCategoryNav && !showCategoryLanding && !showBranchLanding && (
         <CategoryNav
           categories={visibleCategories}
           products={products}
-          backHref={
-            activeCategory
-              ? `?${orderingTableId ? `tableId=${orderingTableId}` : ""}`
-              : undefined
-          }
+          backHref={activeCategory ? backHref : undefined}
           backLabel={backToCategoriesLabel}
         />
       )}
@@ -424,7 +441,7 @@ export default async function MenuPage({ params, searchParams }: Props) {
           // the FAB is jumping to a *different* category.
           categories={categories}
           products={products}
-          activeCategoryId={activeCategory?.id}
+          activeCategoryId={activeParent?.id ?? activeCategory?.id}
           hrefFor={
             useCategoryLayout
               ? (id: string | number) =>
@@ -439,10 +456,12 @@ export default async function MenuPage({ params, searchParams }: Props) {
       {/* Desktop gets its back link inside CategoryNav, which is hidden on
           mobile — without this there is no way out of a category on a phone. */}
       {activeCategory && (
-        <div className="md:hidden sticky top-0 z-30 border-b border-gray-100 bg-white">
-          <div className="max-w-7xl mx-auto px-4">
+        <div
+          className={`${showBranchLanding ? "" : "md:hidden "}sticky top-0 z-30 border-b border-gray-100 bg-white`}
+        >
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <Link
-              href={`?${orderingTableId ? `tableId=${orderingTableId}` : ""}`}
+              href={backHref}
               scroll={false}
               className="flex items-center gap-1.5 py-3 text-sm font-medium text-gray-700"
             >
@@ -465,11 +484,26 @@ export default async function MenuPage({ params, searchParams }: Props) {
           />
         ) : visibleCategories && visibleCategories.length > 0 ? (
           <div className="space-y-12">
+            {showBranchLanding && (
+              <div>
+                <h1 className="mb-4 text-2xl font-bold text-gray-900">
+                  {activeCategory.name}
+                </h1>
+                <CategoryLanding
+                  categories={activeCategory.children}
+                  lang={lang}
+                  tableId={orderingTableId}
+                  primaryColor={primaryColor}
+                />
+              </div>
+            )}
             {visibleCategories.map((category: any) => {
               const categoryProducts = products.filter(
                 (p: any) => p.category_id === category.id
               );
-              const subSections = (category.children ?? [])
+              // In the branch landing the sub-categories are banners above, not
+              // inline sections.
+              const subSections = (showBranchLanding ? [] : category.children ?? [])
                 .map((child: any) => ({
                   category: child,
                   products: products.filter(
