@@ -47,8 +47,9 @@ export function BulkCreateForm({ onCreated }: BulkCreateFormProps) {
         type="number"
         min="1"
         max="100"
-        value={bulkCount}
-        onChange={(e) => setBulkCount(parseInt(e.target.value))}
+        // Empty input parses to NaN; keep state numeric (0) and show it blank
+        value={bulkCount || ""}
+        onChange={(e) => setBulkCount(parseInt(e.target.value) || 0)}
         placeholder={t("tableCountPlaceholder")}
         className="w-32"
       />
