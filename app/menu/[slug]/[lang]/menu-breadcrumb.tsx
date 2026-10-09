@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
+import { MarqueeText } from "./marquee-text";
 
 export interface BreadcrumbItem {
   label: string;
@@ -22,9 +23,9 @@ const BREADCRUMB_LABELS: Record<string, string> = {
  * Where-am-I trail for the category-first menu: Categories › Breakfast › Toasts.
  *
  * Every ancestor is a link (so one tap jumps any number of levels up), the
- * last item is plain text marked aria-current. Rows stay on one line: ancestors
- * truncate with an ellipsis and the current page takes the remaining space, so
- * a long name never wraps the sticky bar into two rows on a phone. Links keep
+ * last item is plain text marked aria-current. Rows stay on one line: names
+ * that do not fit glide to the end and back (MarqueeText), so a long name never
+ * wraps the sticky bar into two rows on a phone. Links keep
  * a 44px touch height.
  */
 export function MenuBreadcrumb({
@@ -55,17 +56,17 @@ export function MenuBreadcrumb({
               {isLast || !item.href ? (
                 <span
                   aria-current={isLast ? "page" : undefined}
-                  className="truncate py-3 font-semibold text-gray-900"
+                  className="min-w-0 py-3 font-semibold text-gray-900"
                 >
-                  {item.label}
+                  <MarqueeText>{item.label}</MarqueeText>
                 </span>
               ) : (
                 <Link
                   href={item.href}
                   scroll={false}
-                  className="flex min-h-11 items-center truncate text-gray-500 underline-offset-4 transition-colors hover:text-gray-900 hover:underline"
+                  className="flex min-h-11 min-w-0 items-center text-gray-500 underline-offset-4 transition-colors hover:text-gray-900 hover:underline"
                 >
-                  <span className="truncate">{item.label}</span>
+                  <MarqueeText>{item.label}</MarqueeText>
                 </Link>
               )}
               {!isLast && (

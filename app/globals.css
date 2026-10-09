@@ -169,3 +169,29 @@ body {
 model-viewer::part(default-ar-button) {
   bottom: 3.5rem;
 }
+
+/* Breadcrumb labels that overflow glide to the end and back (MarqueeText). */
+@keyframes crumb-scroll {
+  0%,
+  15% {
+    transform: translateX(0);
+  }
+  85%,
+  100% {
+    transform: translateX(calc(var(--crumb-shift) * -1));
+  }
+}
+
+.crumb-marquee {
+  display: inline-block;
+  animation: crumb-scroll var(--crumb-dur) ease-in-out infinite alternate;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .crumb-marquee {
+    animation: none;
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
