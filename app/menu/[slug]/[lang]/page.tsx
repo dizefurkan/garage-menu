@@ -8,8 +8,9 @@ import { ProductCard } from "./product-card";
 import { CartSidebar } from "./cart-sidebar";
 import { CartProvider } from "./cart-context";
 import { CategoryLanding } from "./category-landing";
+import { MenuBreadcrumb, type BreadcrumbItem } from "./menu-breadcrumb";
 import { getLanguageFlag } from "@/lib/language-flags";
-import { Globe, ChevronLeft } from "lucide-react";
+import { Globe } from "lucide-react";
 import Link from "next/link";
 
 function getBaseUrl(): string {
@@ -33,7 +34,7 @@ function getBaseUrl(): string {
 
 // The public menu is outside NextIntlClientProvider, so its few strings use
 // the same per-language map pattern as the allergen and close labels.
-const BACK_TO_CATEGORIES_LABELS: Record<string, string> = {
+const ROOT_CRUMB_LABELS: Record<string, string> = {
   tr: "Kategoriler",
   en: "Categories",
   de: "Kategorien",
@@ -374,18 +375,30 @@ export default async function MenuPage({ params, searchParams }: Props) {
     !!activeCategory &&
     !activeParent &&
     (activeCategory.children?.length ?? 0) > 0;
-  const backParams = [
-    activeParent ? `category=${activeParent.id}` : null,
-    orderingTableId ? `tableId=${orderingTableId}` : null,
-  ].filter(Boolean);
-  const backHref = `?${backParams.join("&")}`;
+  // null = the root category screen
+  const categoryHref = (id: string | number | null) =>
+    `?${[
+      id !== null ? `category=${id}` : null,
+      orderingTableId ? `tableId=${orderingTableId}` : null,
+    ]
+      .filter(Boolean)
+      .join("&")}`;
 
   // In the drilled-in view only the chosen category renders; otherwise the
   // full list, exactly as before.
   const visibleCategories = activeCategory ? [activeCategory] : categories;
 
-  const backToCategoriesLabel =
-    BACK_TO_CATEGORIES_LABELS[lang] || BACK_TO_CATEGORIES_LABELS.en;
+  const rootCrumbLabel =
+    ROOT_CRUMB_LABELS[lang] || ROOT_CRUMB_LABELS.en;
+  const breadcrumbItems: BreadcrumbItem[] = activeCategory
+    ? [
+        { label: rootCrumbLabel, href: categoryHref(null) },
+        ...(activeParent
+          ? [{ label: activeParent.name, href: categoryHref(activeParent.id) }]
+          : []),
+        { label: activeCategory.name },
+      ]
+    : [];
 
   // Extract theme config with fallbacks
   const themeConfig = (tenant.theme_config as any) || {};
@@ -425,13 +438,10 @@ export default async function MenuPage({ params, searchParams }: Props) {
       )}
 
       {/* Category Navigation */}
-      {shouldShowCategoryNav && !showCategoryLanding && !showBranchLanding && (
-        <CategoryNav
-          categories={visibleCategories}
-          products={products}
-          backHref={activeCategory ? backHref : undefined}
-          backLabel={backToCategoriesLabel}
-        />
+      {/* Drilled into a category: the breadcrumb replaces the tab strip */}
+      <MenuBreadcrumb items={breadcrumbItems} lang={lang} />
+      {shouldShowCategoryNav && !showCategoryLanding && !activeCategory && (
+        <CategoryNav categories={visibleCategories} products={products} />
       )}
 
       {/* Mobile Floating Button */}
@@ -442,34 +452,8 @@ export default async function MenuPage({ params, searchParams }: Props) {
           categories={categories}
           products={products}
           activeCategoryId={activeParent?.id ?? activeCategory?.id}
-          hrefFor={
-            useCategoryLayout
-              ? (id: string | number) =>
-                  `?category=${id}${
-                    orderingTableId ? `&tableId=${orderingTableId}` : ""
-                  }`
-              : undefined
-          }
+          hrefFor={useCategoryLayout ? categoryHref : undefined}
         />
-      )}
-
-      {/* Desktop gets its back link inside CategoryNav, which is hidden on
-          mobile — without this there is no way out of a category on a phone. */}
-      {activeCategory && (
-        <div
-          className={`${showBranchLanding ? "" : "md:hidden "}sticky top-0 z-30 border-b border-gray-100 bg-white`}
-        >
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <Link
-              href={backHref}
-              scroll={false}
-              className="flex items-center gap-1.5 py-3 text-sm font-medium text-gray-700"
-            >
-              <ChevronLeft className="size-4" aria-hidden />
-              {backToCategoriesLabel}
-            </Link>
-          </div>
-        </div>
       )}
 
       {/* Main Content */}
@@ -609,14 +593,9 @@ function Header({
 function CategoryNav({
   categories,
   products,
-  backHref,
-  backLabel,
 }: {
   categories: any[];
   products: any[];
-  /** Present only in the drilled-in category view. */
-  backHref?: string;
-  backLabel?: string;
 }) {
   if (!categories || categories.length === 0) return null;
 
@@ -624,17 +603,6 @@ function CategoryNav({
     <nav className="hidden md:block sticky top-0 z-30 bg-white border-b border-gray-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-2 overflow-x-auto py-4 scrollbar-hide">
-          {backHref && (
-            <Link
-              href={backHref}
-              scroll={false}
-              className="flex shrink-0 items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100"
-            >
-              <ChevronLeft className="size-4" aria-hidden />
-              {backLabel}
-            </Link>
-          )}
-          {backHref && <span className="h-5 w-px shrink-0 bg-gray-200" />}
           {categories.map((cat: any) => {
             // totalCount covers the whole branch (sub-categories included)
             const count = cat.totalCount ?? 0;
