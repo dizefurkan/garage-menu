@@ -24,16 +24,28 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Query products table for all images for this tenant
-    const { data: products, error } = await (supabaseAdmin as any)
-      .from("products")
-      .select("image_url")
-      .eq("tenant_id", tenant.id)
-      .not("image_url", "is", null)
-      .order("created_at", { ascending: false });
+    // Images already in use by this tenant: products and categories both
+    // upload into the same bucket, so either can reuse the other's picture.
+    const [
+      { data: products, error },
+      { data: categories, error: categoriesError },
+    ] = await Promise.all([
+      (supabaseAdmin as any)
+        .from("products")
+        .select("image_url")
+        .eq("tenant_id", tenant.id)
+        .not("image_url", "is", null)
+        .order("created_at", { ascending: false }),
+      (supabaseAdmin as any)
+        .from("categories")
+        .select("image_url")
+        .eq("tenant_id", tenant.id)
+        .not("image_url", "is", null)
+        .order("created_at", { ascending: false }),
+    ]);
 
-    if (error) {
-      console.error("Products query error:", error);
+    if (error || categoriesError) {
+      console.error("Gallery query error:", error ?? categoriesError);
       return NextResponse.json(
         { error: "Failed to fetch gallery" },
         { status: 500 }
@@ -43,7 +55,7 @@ export async function GET(request: NextRequest) {
     // Extract unique image URLs (some products might use the same image)
     const uniqueImages = Array.from(
       new Map(
-        ((products as any[]) || [])
+        [...((products as any[]) || []), ...((categories as any[]) || [])]
           .filter((p: any) => p.image_url)
           .map((p: any) => [p.image_url, p.image_url])
       ).values()
