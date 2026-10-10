@@ -32,6 +32,7 @@ interface ProductsFilterBarProps {
 
 const PAGE_SIZE_OPTIONS = [5, 10, 20];
 const DEFAULT_PAGE_SIZE = 10;
+const LIST_STATE_KEY = "products-list-state";
 
 export function ProductsFilterBar({
   tenantId,
@@ -47,6 +48,43 @@ export function ProductsFilterBar({
   const initialPage = parseInt(searchParams.get("page") || "1");
   const initialCategory = searchParams.get("category") || "all";
   const initialPageSize = parseInt(searchParams.get("pageSize") || DEFAULT_PAGE_SIZE.toString());
+
+  // The list state (page, page size, category) lives in the URL. Coming back
+  // from a product page lands on a bare URL, so fall back to the last state
+  // the user had, remembered in localStorage.
+  const hasUrlState = ["page", "pageSize", "category"].some((k) =>
+    searchParams.has(k)
+  );
+  const [ready, setReady] = useState(hasUrlState);
+  useEffect(() => {
+    if (hasUrlState) {
+      setReady(true);
+      return;
+    }
+    try {
+      const saved = localStorage.getItem(LIST_STATE_KEY);
+      if (saved) {
+        router.replace(`?${saved}`);
+        return;
+      }
+    } catch {
+      // blocked storage: fall through to defaults
+    }
+    setReady(true);
+  }, [hasUrlState, router]);
+  useEffect(() => {
+    if (!hasUrlState) return;
+    const saved = new URLSearchParams();
+    for (const key of ["page", "pageSize", "category"]) {
+      const value = searchParams.get(key);
+      if (value) saved.set(key, value);
+    }
+    try {
+      localStorage.setItem(LIST_STATE_KEY, saved.toString());
+    } catch {
+      // ignore
+    }
+  }, [hasUrlState, searchParams]);
 
   const [products, setProducts] = useState<Product[]>([]);
   const [currentPage, setCurrentPage] = useState(initialPage);
@@ -97,8 +135,15 @@ export function ProductsFilterBar({
     [pageSize, currentLang]
   );
 
+  // The URL is the source of truth, including after a restore. Separate
+  // effects keyed on the URL values only, so a handler that updates state
+  // first and the URL a tick later is never overwritten with the old value.
+  useEffect(() => setSelectedCategory(initialCategory), [initialCategory]);
+  useEffect(() => setPageSize(initialPageSize), [initialPageSize]);
+
   // Initial load - fetch total all products and load initial page
   useEffect(() => {
+    if (!ready) return;
     const categoryId =
       initialCategory === "all" ? undefined : parseInt(initialCategory);
 
@@ -121,8 +166,15 @@ export function ProductsFilterBar({
     };
 
     fetchTotalAllProducts();
-    loadProducts(initialPage, categoryId, pageSize);
-  }, [loadProducts, initialPage, initialCategory, pageSize]);
+    loadProducts(initialPage, categoryId, pageSize).then((count) => {
+      // A remembered page can be gone (rows deleted since): fall back to 1
+      if (count === 0 && initialPage > 1) {
+        const params = new URLSearchParams(searchParams.toString());
+        params.set("page", "1");
+        router.replace(`?${params.toString()}`);
+      }
+    });
+  }, [ready, loadProducts, initialPage, initialCategory, pageSize]);
 
   // Map products to format for DataTable
   const mappedProducts = useMemo(() => {

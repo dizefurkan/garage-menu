@@ -58,6 +58,12 @@ interface DataTableProps<TData, TValue> {
   initialPageIndex?: number;
   onPaginationChange?: (pageIndex: number) => void;
   isServerSidePagination?: boolean;
+  /**
+   * Remembers sorting, the search box, page and page size in localStorage so
+   * coming back from a detail page lands where the user left off. Client-side
+   * tables only: server-paginated ones keep that state in the URL instead.
+   */
+  persistKey?: string;
   totalPages?: number;
   totalCount?: number;
   isLoading?: boolean;
@@ -96,6 +102,7 @@ export function DataTable<TData, TValue>({
   initialPageIndex = 0,
   onPaginationChange,
   isServerSidePagination = false,
+  persistKey,
   totalPages = 1,
   totalCount = 0,
   isLoading = false,
@@ -139,6 +146,48 @@ export function DataTable<TData, TValue>({
       pageIndex: 0,
     }));
   }, [data.length]);
+
+  // Restore after the reset effects above so the saved page wins, and only
+  // start saving once restored so defaults never overwrite the saved state.
+  const [restored, setRestored] = React.useState(!persistKey);
+  const storageKey = persistKey ? `table-state:${persistKey}` : null;
+  React.useEffect(() => {
+    if (!storageKey || isServerSidePagination) return;
+    try {
+      const saved = JSON.parse(localStorage.getItem(storageKey) || "null");
+      if (saved) {
+        setSorting(saved.sorting ?? []);
+        setColumnFilters(saved.columnFilters ?? []);
+        const size = saved.pageSize || 5;
+        // Rows may have been deleted since: never land past the last page
+        const lastPage = Math.max(0, Math.ceil(data.length / size) - 1);
+        setPagination({
+          pageIndex: Math.min(saved.pageIndex ?? 0, lastPage),
+          pageSize: size,
+        });
+      }
+    } catch {
+      // unreadable or blocked storage: start from defaults
+    }
+    setRestored(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  React.useEffect(() => {
+    if (!storageKey || !restored || isServerSidePagination) return;
+    try {
+      localStorage.setItem(
+        storageKey,
+        JSON.stringify({
+          sorting,
+          columnFilters,
+          pageIndex: pagination.pageIndex,
+          pageSize: pagination.pageSize,
+        })
+      );
+    } catch {
+      // storage full or blocked: remembering is a nicety
+    }
+  }, [storageKey, restored, isServerSidePagination, sorting, columnFilters, pagination]);
 
   const table = useReactTable({
     data,
