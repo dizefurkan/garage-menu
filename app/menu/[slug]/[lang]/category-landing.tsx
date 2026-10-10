@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
+import { MarqueeText } from "./marquee-text";
 
 const PRODUCT_COUNT_LABELS: Record<string, (n: number) => string> = {
   tr: (n) => `${n} ürün`,
@@ -87,8 +88,8 @@ export function CategoryLanding({
 
             <div className={`flex items-center justify-between gap-2 ${twoUp ? "px-3 py-2.5" : "px-4 py-3"}`}>
               <div className="min-w-0">
-                <h2 className={`truncate font-bold text-gray-900 ${twoUp ? "text-base" : "text-lg"}`}>
-                  {category.name}
+                <h2 className={`font-bold text-gray-900 ${twoUp ? "text-base" : "text-lg"}`}>
+                  <MarqueeText>{category.name}</MarqueeText>
                 </h2>
                 <p className={`mt-0.5 text-gray-500 ${twoUp ? "text-xs" : "text-sm"}`}>
                   {countLabel(category.productCount)}
