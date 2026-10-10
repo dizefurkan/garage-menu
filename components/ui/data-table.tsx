@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useTranslations } from "next-intl";
+import { usePathname } from "next/navigation";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -59,11 +60,13 @@ interface DataTableProps<TData, TValue> {
   onPaginationChange?: (pageIndex: number) => void;
   isServerSidePagination?: boolean;
   /**
-   * Remembers sorting, the search box, page and page size in localStorage so
-   * coming back from a detail page lands where the user left off. Client-side
-   * tables only: server-paginated ones keep that state in the URL instead.
+   * Sorting, the search box, page and page size are remembered in
+   * localStorage so coming back from a detail page lands where the user left
+   * off. On by default, keyed by the page path without its language segment;
+   * pass a string to share or split the key, or false to opt out. Server-side
+   * paginated tables are skipped: they keep that state in the URL themselves.
    */
-  persistKey?: string;
+  persistKey?: string | false;
   totalPages?: number;
   totalCount?: number;
   isLoading?: boolean;
@@ -139,8 +142,14 @@ export function DataTable<TData, TValue>({
     }));
   }, [initialPageIndex]);
 
-  // Reset pagination when data changes (e.g., due to filtering)
+  // Reset pagination when data changes (e.g., due to filtering). The first
+  // arrival of rows (0 -> n, async fetch) is not a change the user made, and
+  // resetting there would throw away a page restored from storage.
+  const previousLength = React.useRef(data.length);
   React.useEffect(() => {
+    const wasEmpty = previousLength.current === 0;
+    previousLength.current = data.length;
+    if (wasEmpty && data.length > 0) return;
     setPagination((prev) => ({
       ...prev,
       pageIndex: 0,
@@ -149,21 +158,24 @@ export function DataTable<TData, TValue>({
 
   // Restore after the reset effects above so the saved page wins, and only
   // start saving once restored so defaults never overwrite the saved state.
-  const [restored, setRestored] = React.useState(!persistKey);
-  const storageKey = persistKey ? `table-state:${persistKey}` : null;
+  const pathname = usePathname();
+  // /admin/tr/tables and /admin/en/tables are the same table
+  const defaultKey = pathname.replace(/^\/admin\/[^/]+/, "") || pathname;
+  const storageKey =
+    persistKey === false || isServerSidePagination
+      ? null
+      : `table-state:${persistKey ?? defaultKey}`;
+  const [restored, setRestored] = React.useState(!storageKey);
   React.useEffect(() => {
-    if (!storageKey || isServerSidePagination) return;
+    if (!storageKey) return;
     try {
       const saved = JSON.parse(localStorage.getItem(storageKey) || "null");
       if (saved) {
         setSorting(saved.sorting ?? []);
         setColumnFilters(saved.columnFilters ?? []);
-        const size = saved.pageSize || 5;
-        // Rows may have been deleted since: never land past the last page
-        const lastPage = Math.max(0, Math.ceil(data.length / size) - 1);
         setPagination({
-          pageIndex: Math.min(saved.pageIndex ?? 0, lastPage),
-          pageSize: size,
+          pageIndex: saved.pageIndex ?? 0,
+          pageSize: saved.pageSize || 5,
         });
       }
     } catch {
@@ -173,7 +185,7 @@ export function DataTable<TData, TValue>({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   React.useEffect(() => {
-    if (!storageKey || !restored || isServerSidePagination) return;
+    if (!storageKey || !restored) return;
     try {
       localStorage.setItem(
         storageKey,
@@ -187,7 +199,16 @@ export function DataTable<TData, TValue>({
     } catch {
       // storage full or blocked: remembering is a nicety
     }
-  }, [storageKey, restored, isServerSidePagination, sorting, columnFilters, pagination]);
+  }, [storageKey, restored, sorting, columnFilters, pagination]);
+  // Rows may have been deleted since: never sit past the last page. Skipped
+  // while empty, since rows can still be on their way in.
+  React.useEffect(() => {
+    if (!storageKey || !restored || data.length === 0) return;
+    const lastPage = Math.max(0, Math.ceil(data.length / pagination.pageSize) - 1);
+    if (pagination.pageIndex > lastPage) {
+      setPagination((prev) => ({ ...prev, pageIndex: lastPage }));
+    }
+  }, [storageKey, restored, data.length, pagination.pageSize, pagination.pageIndex]);
 
   const table = useReactTable({
     data,

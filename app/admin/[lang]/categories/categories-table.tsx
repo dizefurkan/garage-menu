@@ -18,7 +18,6 @@ export function CategoriesTable({ categories }: CategoriesTableProps) {
       data={categories}
       filterPlaceholder={t('searchCategories')}
       showColumnToggle={false}
-      persistKey="categories"
     />
   );
 }
