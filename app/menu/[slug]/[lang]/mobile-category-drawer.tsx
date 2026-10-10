@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Menu, X } from "lucide-react";
+import { ChevronDown, Menu, X } from "lucide-react";
 
 export interface DrawerCategory {
   id: number | string;
@@ -11,15 +11,15 @@ export interface DrawerCategory {
   children: { id: number | string; name: string; count: number }[];
 }
 
-const LABELS: Record<string, { open: string; close: string }> = {
-  tr: { open: "Kategorileri aç", close: "Kapat" },
-  en: { open: "Open categories", close: "Close" },
-  de: { open: "Kategorien öffnen", close: "Schließen" },
-  fr: { open: "Ouvrir les catégories", close: "Fermer" },
-  es: { open: "Abrir categorías", close: "Cerrar" },
-  ru: { open: "Открыть категории", close: "Закрыть" },
-  ar: { open: "فتح الفئات", close: "إغلاق" },
-  zh: { open: "打开分类", close: "关闭" },
+const LABELS: Record<string, { open: string; close: string; all: string }> = {
+  tr: { open: "Kategorileri aç", close: "Kapat", all: "Tümü" },
+  en: { open: "Open categories", close: "Close", all: "All" },
+  de: { open: "Kategorien öffnen", close: "Schließen", all: "Alle" },
+  fr: { open: "Ouvrir les catégories", close: "Fermer", all: "Tout" },
+  es: { open: "Abrir categorías", close: "Cerrar", all: "Todo" },
+  ru: { open: "Открыть категории", close: "Закрыть", all: "Все" },
+  ar: { open: "فتح الفئات", close: "إغلاق", all: "الكل" },
+  zh: { open: "打开分类", close: "关闭", all: "全部" },
 };
 
 /**
@@ -38,6 +38,7 @@ export function MobileCategoryDrawer({
   navigate,
   tableId,
   activeId,
+  activeParentId,
 }: {
   categories: DrawerCategory[];
   title: string;
@@ -46,9 +47,26 @@ export function MobileCategoryDrawer({
   navigate: boolean;
   tableId?: string;
   activeId?: number | string;
+  /** Parent of the active sub-category, so its branch starts expanded. */
+  activeParentId?: number | string;
 }) {
   const [open, setOpen] = useState(false);
   const labels = LABELS[lang] || LABELS.en;
+  // Branches the user has toggled; the active one starts expanded
+  const [expanded, setExpanded] = useState<Set<string>>(
+    () =>
+      new Set(
+        [activeId, activeParentId]
+          .filter((id) => id !== undefined)
+          .map(String)
+      )
+  );
+  const toggle = (id: number | string) =>
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (!next.delete(String(id))) next.add(String(id));
+      return next;
+    });
   const closeRef = useRef<HTMLButtonElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
 
@@ -117,7 +135,7 @@ export function MobileCategoryDrawer({
         onClick={() => setOpen(true)}
         aria-label={labels.open}
         aria-expanded={open}
-        className="fixed right-4 top-3 z-40 flex size-11 items-center justify-center rounded-full bg-white text-gray-800 shadow-md ring-1 ring-black/5 transition-transform active:scale-95"
+        className="fixed right-4 top-3 z-40 flex size-11 items-center justify-center rounded-full text-gray-800 transition-transform active:scale-95"
       >
         <Menu className="size-5" aria-hidden />
       </button>
@@ -154,32 +172,78 @@ export function MobileCategoryDrawer({
 
         <nav className="flex-1 overflow-y-auto overscroll-contain p-3">
           <ul className="space-y-1">
-            {categories.map((cat) => (
-              <li key={cat.id}>
-                {renderLink(
-                  cat.id,
-                  cat.name,
-                  cat.count,
-                  String(cat.id) === String(activeId),
-                  false
-                )}
-                {cat.children.length > 0 && (
-                  <ul className="ml-3 mt-0.5 space-y-0.5 border-l border-gray-200 pl-2">
-                    {cat.children.map((child) => (
-                      <li key={child.id}>
+            {categories.map((cat) => {
+              if (cat.children.length === 0) {
+                return (
+                  <li key={cat.id}>
+                    {renderLink(
+                      cat.id,
+                      cat.name,
+                      cat.count,
+                      String(cat.id) === String(activeId),
+                      false
+                    )}
+                  </li>
+                );
+              }
+
+              const isOpen = expanded.has(String(cat.id));
+              return (
+                <li key={cat.id}>
+                  <button
+                    type="button"
+                    onClick={() => toggle(cat.id)}
+                    aria-expanded={isOpen}
+                    className="flex min-h-11 w-full items-center justify-between gap-3 rounded-lg px-3 text-left text-sm font-semibold text-gray-900 transition-colors hover:bg-gray-50"
+                  >
+                    <span className="min-w-0 truncate">{cat.name}</span>
+                    <span className="flex shrink-0 items-center gap-2">
+                      <span className="text-xs font-normal text-gray-400">
+                        {cat.count}
+                      </span>
+                      <ChevronDown
+                        className={`size-4 text-gray-400 transition-transform duration-200 ${
+                          isOpen ? "rotate-180" : ""
+                        }`}
+                        aria-hidden
+                      />
+                    </span>
+                  </button>
+                  {/* 0fr -> 1fr animates height without measuring it */}
+                  <div
+                    className={`grid transition-[grid-template-rows] duration-200 ease-out ${
+                      isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+                    }`}
+                  >
+                    <ul
+                      inert={!isOpen}
+                      className="ml-3 min-h-0 space-y-0.5 overflow-hidden border-l border-gray-200 pl-2"
+                    >
+                      <li className="pt-0.5">
                         {renderLink(
-                          child.id,
-                          child.name,
-                          child.count,
-                          String(child.id) === String(activeId),
+                          cat.id,
+                          labels.all,
+                          cat.count,
+                          String(cat.id) === String(activeId),
                           true
                         )}
                       </li>
-                    ))}
-                  </ul>
-                )}
-              </li>
-            ))}
+                      {cat.children.map((child) => (
+                        <li key={child.id}>
+                          {renderLink(
+                            child.id,
+                            child.name,
+                            child.count,
+                            String(child.id) === String(activeId),
+                            true
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         </nav>
       </aside>
