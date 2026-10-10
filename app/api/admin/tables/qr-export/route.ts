@@ -46,11 +46,12 @@ export async function GET(request: NextRequest) {
     }
 
     // Generate QR data (URLs) for each table
-    // Format: /menu/{tenant_slug}/tr?tableId={table_id}
+    // Format: /menu/{tenant_slug}?tableId={table_id} (no language, so the
+    // menu opens in the guest's device language)
     const qrData = tables.map((table: any) => ({
       id: table.id,
       label: table.label,
-      url: `${request.nextUrl.origin}/menu/${tenant.slug}/tr?tableId=${table.id}`,
+      url: `${request.nextUrl.origin}/menu/${tenant.slug}?tableId=${table.id}`,
     }));
 
     if (format === "html") {

@@ -14,18 +14,10 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
   
-  // Handle public menu routes without language parameter -> redirect to /menu/[slug]/[lang]
-  // /menu/garage-chocolate-croissant -> /menu/garage-chocolate-croissant/en
-  if (pathname.startsWith("/menu/")) {
-    const segments = pathname.split("/").filter(Boolean);
-    const KNOWN_LOCALES = ["en", "tr"];
-    
-    // If there are only 2 segments (menu + slug) or last segment is not a known locale, redirect to default (en)
-    if (segments.length === 2 || (segments.length > 2 && !KNOWN_LOCALES.includes(segments[segments.length - 1]))) {
-      const slug = segments[1];
-      return NextResponse.redirect(new URL(`/menu/${slug}/en`, request.url));
-    }
-  }
+  // Public menu routes without a language (/menu/[slug]) are resolved by the
+  // page itself: it picks the visitor's device language when the menu offers
+  // it and the venue's default language otherwise. Unavailable languages
+  // (/menu/[slug]/de) are redirected to the default by the menu page too.
 
   // Admin routes: remember the dashboard language in a cookie whenever a
   // localized admin URL is visited, and use it to localize dilsiz paths

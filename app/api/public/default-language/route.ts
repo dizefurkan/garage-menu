@@ -38,7 +38,13 @@ export async function GET(request: Request) {
         : null) ||
       "en";
 
-    return Response.json({ defaultLanguage });
+    // Also returned so the caller can match a visitor's device language
+    // against what the menu actually offers.
+    const languages: string[] = Array.isArray(tenant.languages)
+      ? tenant.languages
+      : [defaultLanguage];
+
+    return Response.json({ defaultLanguage, languages });
   } catch (error) {
     console.error("[API] Error fetching default language:", error);
     return Response.json({ error: "Internal server error" }, { status: 500 });

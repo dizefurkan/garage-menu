@@ -10,5 +10,6 @@ interface Props {
 export default async function OrderRedirectPage({ params }: Props) {
   const { slug, tableId } = await params;
   // Redirect to menu page with tableId query parameter
-  redirect(`/menu/${slug}/tr?tableId=${tableId}`);
+  // No language: the menu picks the visitor's device language
+  redirect(`/menu/${slug}?tableId=${tableId}`);
 }
