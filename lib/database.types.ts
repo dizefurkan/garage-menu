@@ -1074,6 +1074,7 @@ export type Database = {
           menu_layout: string
           name: string
           order_pin_code: string | null
+          order_pin_required: boolean
           order_pin_date: string | null
           phone: string | null
           plan_id: number | null
@@ -1099,6 +1100,7 @@ export type Database = {
           menu_layout?: string
           name: string
           order_pin_code?: string | null
+          order_pin_required?: boolean
           order_pin_date?: string | null
           phone?: string | null
           plan_id?: number | null
@@ -1124,6 +1126,7 @@ export type Database = {
           menu_layout?: string
           name?: string
           order_pin_code?: string | null
+          order_pin_required?: boolean
           order_pin_date?: string | null
           phone?: string | null
           plan_id?: number | null

@@ -594,7 +594,11 @@
       "notGenerated": "No PIN code generated yet",
       "lastGenerated": "Last generated: {date}",
       "generateButton": "Generate Code",
-      "regenerateButton": "Generate New Code"
+      "regenerateButton": "Generate New Code",
+      "requiredLabel": "Require PIN to order",
+      "requiredSaved": "Verification setting saved",
+      "requiredSaveFailed": "Could not save the verification setting",
+      "offNotice": "PIN verification is off: anyone who scans a table QR code can place an order, on your WiFi or not. Turn it back on to require the WiFi or the PIN."
     },
     "howItWorks": {
       "title": "How It Works",

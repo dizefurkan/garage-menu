@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useTranslations, useLocale } from "next-intl";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { Loader2, Copy, Check } from "lucide-react";
 import { QrOrderingCard } from "./qr-ordering-card";
 
@@ -15,6 +16,7 @@ interface NetworkStatus {
   has_pin_set: boolean;
   pin_code: string | null;
   pin_date: string | null;
+  pin_required: boolean;
 }
 
 export default function OrdersSettingsPage() {
@@ -29,6 +31,7 @@ export default function OrdersSettingsPage() {
   const [generatingPin, setGeneratingPin] = useState(false);
   const [copied, setCopied] = useState(false);
   const [pinCopied, setPinCopied] = useState(false);
+  const [savingPinRequired, setSavingPinRequired] = useState(false);
 
   useEffect(() => {
     fetchSettings();
@@ -119,6 +122,29 @@ export default function OrdersSettingsPage() {
       toast.error(t("pinGenerateFailed"));
     } finally {
       setGeneratingPin(false);
+    }
+  }
+
+  async function changePinRequired(next: boolean) {
+    // Optimistic with rollback, like the QR ordering switch
+    setNetworkStatus((prev) => (prev ? { ...prev, pin_required: next } : prev));
+    setSavingPinRequired(true);
+    try {
+      const res = await fetch("/api/admin/settings/order-pin", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ order_pin_required: next }),
+      });
+      if (!res.ok) throw new Error("Request failed");
+      toast.success(t("pin.requiredSaved"));
+    } catch (error) {
+      console.error("Error saving PIN requirement:", error);
+      setNetworkStatus((prev) =>
+        prev ? { ...prev, pin_required: !next } : prev
+      );
+      toast.error(t("pin.requiredSaveFailed"));
+    } finally {
+      setSavingPinRequired(false);
     }
   }
 
@@ -221,11 +247,27 @@ export default function OrdersSettingsPage() {
 
           {/* PIN Info */}
           <div className="rounded-lg border bg-card p-6 space-y-4">
-            <h2 className="text-xl font-semibold">{t("pin.title")}</h2>
-            <p className="text-sm text-muted-foreground">
-              {t("pin.description")}
-            </p>
+            <div className="flex items-start justify-between gap-6">
+              <div className="space-y-1">
+                <h2 className="text-xl font-semibold">{t("pin.title")}</h2>
+                <p className="text-sm text-muted-foreground">
+                  {t("pin.description")}
+                </p>
+              </div>
+              <Switch
+                checked={networkStatus.pin_required}
+                onCheckedChange={changePinRequired}
+                disabled={savingPinRequired}
+                aria-label={t("pin.requiredLabel")}
+              />
+            </div>
 
+            {!networkStatus.pin_required ? (
+              <p className="rounded bg-muted p-3 text-sm text-muted-foreground">
+                {t("pin.offNotice")}
+              </p>
+            ) : (
+            <>
             {networkStatus.has_pin_set && networkStatus.pin_code ? (
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
@@ -268,6 +310,8 @@ export default function OrdersSettingsPage() {
                 ? t("pin.regenerateButton")
                 : t("pin.generateButton")}
             </Button>
+            </>
+            )}
           </div>
 
           {/* How It Works */}

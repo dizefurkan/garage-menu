@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
       // be named here or it silently arrives as undefined and the check
       // quietly passes. qr_ordering_enabled gates order acceptance.
       .select(
-        "id, slug, verified_network_ip, order_pin_code, order_pin_date, qr_ordering_enabled"
+        "id, slug, verified_network_ip, order_pin_code, order_pin_date, qr_ordering_enabled, order_pin_required"
       )
       .eq("slug", tenant_slug)
       .single();
@@ -109,7 +109,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verification logic
+    // Verification logic. The venue can switch verification off entirely
+    // (order_pin_required = false); anything but an explicit false keeps it on.
+    const verificationRequired = tenant.order_pin_required !== false;
     let verified = false;
     let actual_verification_method = "none";
 
@@ -140,7 +142,7 @@ export async function POST(request: NextRequest) {
     }
 
     // If verification required but failed
-    if ((verification_method !== "none") && !verified) {
+    if (verificationRequired && verification_method !== "none" && !verified) {
       return NextResponse.json(
         {
           error: "Verification failed. Invalid PIN or network.",

@@ -594,7 +594,11 @@
       "notGenerated": "PIN kodu henüz üretilmemiş",
       "lastGenerated": "Son üretim: {date}",
       "generateButton": "Kod Üret",
-      "regenerateButton": "Yeni Kod Üret"
+      "regenerateButton": "Yeni Kod Üret",
+      "requiredLabel": "Sipariş için PIN iste",
+      "requiredSaved": "Doğrulama ayarı kaydedildi",
+      "requiredSaveFailed": "Doğrulama ayarı kaydedilemedi",
+      "offNotice": "PIN doğrulaması kapalı: masadaki QR kodu okutan herkes, WiFi'nizde olsun ya da olmasın sipariş verebilir. WiFi ya da PIN şartını geri getirmek için tekrar açın."
     },
     "howItWorks": {
       "title": "Nasıl Çalışır?",

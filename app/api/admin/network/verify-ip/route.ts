@@ -110,7 +110,7 @@ export async function GET(request: NextRequest) {
     // Fetch tenant's registered IP
     const { data, error } = await (supabaseAdmin as any)
       .from("tenants")
-      .select("verified_network_ip, order_pin_code, order_pin_date")
+      .select("verified_network_ip, order_pin_code, order_pin_date, order_pin_required")
       .eq("id", tenant.id)
       .single();
 
@@ -133,6 +133,7 @@ export async function GET(request: NextRequest) {
       has_pin_set: !!data.order_pin_code,
       pin_code: data.order_pin_code,
       pin_date: data.order_pin_date,
+      pin_required: data.order_pin_required ?? true,
     });
   } catch (error) {
     console.error("Error checking network IP:", error);
