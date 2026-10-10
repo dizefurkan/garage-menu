@@ -144,12 +144,14 @@ export function CartSidebar({ slug, tableId, primaryColor }: CartSidebarProps) {
       </button>
 
       {/* Backdrop */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/40"
-          onClick={showPinVerification ? undefined : handleCloseCart}
-        />
-      )}
+      {/* Always mounted so it can fade like the panel slides */}
+      <div
+        aria-hidden
+        className={`fixed inset-0 z-40 bg-black/40 transition-opacity duration-300 ${
+          isOpen ? "opacity-100" : "pointer-events-none opacity-0"
+        }`}
+        onClick={showPinVerification ? undefined : handleCloseCart}
+      />
 
       {/* Panel: bottom sheet on mobile, right sidebar on desktop */}
       <div

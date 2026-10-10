@@ -383,9 +383,10 @@ export default async function MenuPage({ params, searchParams }: Props) {
       )
     : null;
   const showCategoryLanding = useCategoryLayout && !activeCategory;
-  // The category hamburger is hidden on the root landing, where the page is
-  // already the category list
-  const showMenuButton = shouldShowCategoryNav && !showCategoryLanding;
+  // The Categories tab is always there (two or more categories), including on
+  // the root landing: guests can jump straight to a sub-category from the
+  // sheet without first tapping a card.
+  const showMenuButton = shouldShowCategoryNav;
   const gridColumns = tenant.category_grid_columns === 2 ? 2 : 1;
   // Category-first layout: a parent with sub-categories opens as another
   // landing screen of banners, exactly like the root one. Its own products
