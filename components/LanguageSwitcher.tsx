@@ -83,6 +83,7 @@ export function LanguageSwitcher({
     // Compact version: flag-only on mobile, flag + label on desktop
     return (
       <Select
+        id="language-switcher-compact"
         value={normalizedLang}
         onValueChange={(lang) => {
           if (!lang) return;
@@ -117,6 +118,7 @@ export function LanguageSwitcher({
   // Full version: Dropdown select
   return (
     <Select
+      id="language-switcher"
       value={normalizedLang}
       onValueChange={(lang) => {
         if (!lang) return;
