@@ -1,6 +1,7 @@
 import { cookies, headers } from "next/headers";
 import { MENU_LANGUAGE_COOKIE } from "@/lib/menu-language";
 import { notFound, redirect } from "next/navigation";
+import { supabaseAdmin } from "@/lib/supabase";
 
 // Allow dynamic route generation for any slug
 export const dynamicParams = true;
@@ -58,30 +59,25 @@ export default async function SlugPage({
     redirect(`/${slug}`);
   }
 
-  // Otherwise, treat as menu slug - redirect to default language
+  // Otherwise, treat as menu slug - redirect to a language. Read the tenant
+  // directly: fetching our own API over VERCEL_URL hits the protected
+  // deployment URL and comes back 401, which used to surface as a 404.
   try {
-    const baseUrl = process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+    if (!supabaseAdmin) notFound();
+    const { data: tenant, error } = await supabaseAdmin
+      .from("tenants")
+      .select("languages, default_language")
+      .eq("slug", slug)
+      .single();
 
-    console.log(`[SlugPage] Fetching default language for slug: ${slug}`);
-    const response = await fetch(
-      `${baseUrl}/api/public/default-language?slug=${slug}`,
-      {
-        next: { revalidate: 3600 },
-        signal: AbortSignal.timeout(5000),
-      }
-    );
-
-    if (!response.ok) {
-      console.error(
-        `[SlugPage] API returned ${response.status} for slug: ${slug}`
-      );
+    if (error || !tenant) {
+      console.error(`[SlugPage] No tenant for slug: ${slug}`, error);
       notFound();
     }
 
-    const data = await response.json();
-    const defaultLanguage = data.defaultLanguage || "en";
+    const defaultLanguage =
+      tenant.default_language || tenant.languages?.[0] || "en";
+    const data = { languages: tenant.languages };
 
     // Order of preference: the language the guest picked by hand before, then
     // their device language, then the venue's default. Each is only used if
@@ -106,7 +102,11 @@ export default async function SlugPage({
     redirect(`/menu/${slug}/${language}${suffix}`);
   } catch (error) {
     // Re-throw Next.js redirect errors
-    if (error instanceof Error && error.message.includes("NEXT_REDIRECT")) {
+    if (
+      error instanceof Error &&
+      (error.message.includes("NEXT_REDIRECT") ||
+        (error as { digest?: string }).digest?.startsWith("NEXT_"))
+    ) {
       throw error;
     }
     console.error("[SlugPage] Error:", error);
