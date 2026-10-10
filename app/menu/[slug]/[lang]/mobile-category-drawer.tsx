@@ -253,7 +253,7 @@ export function MobileCategoryDrawer({
           {panelBranch && (
             <nav className="flex-1 overflow-y-auto overscroll-contain p-3">
               <h3 className="px-3 pb-2 pt-1 text-lg font-bold text-gray-900">
-                {panelBranch.name}
+                <MarqueeText>{panelBranch.name}</MarqueeText>
               </h3>
               <ul className="space-y-1">
                 <li>
