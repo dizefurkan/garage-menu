@@ -8,6 +8,7 @@ import { ProductCard } from "./product-card";
 import { CartSidebar } from "./cart-sidebar";
 import { CartProvider } from "./cart-context";
 import { CategoryLanding } from "./category-landing";
+import { MobileCategoryDrawer } from "./mobile-category-drawer";
 import { MenuBreadcrumb, type BreadcrumbItem } from "./menu-breadcrumb";
 import { getLanguageFlag } from "@/lib/language-flags";
 import { Globe } from "lucide-react";
@@ -445,15 +446,25 @@ export default async function MenuPage({ params, searchParams }: Props) {
         <CategoryNav categories={visibleCategories} products={products} />
       )}
 
-      {/* Mobile Floating Button */}
+      {/* Mobile: hamburger + drawer, always the full list so a drilled-in
+          view can jump to a different category */}
       {shouldShowCategoryNav && !showCategoryLanding && (
-        <MobileCategoryButton
-          // Always the full list: in the drilled-in view the whole point of
-          // the FAB is jumping to a *different* category.
-          categories={categories}
-          products={products}
-          activeCategoryId={activeParent?.id ?? activeCategory?.id}
-          hrefFor={useCategoryLayout ? categoryHref : undefined}
+        <MobileCategoryDrawer
+          title={rootCrumbLabel}
+          lang={lang}
+          navigate={useCategoryLayout}
+          tableId={orderingTableId}
+          activeId={activeCategory?.id}
+          categories={categories.map((cat: any) => ({
+            id: cat.id,
+            name: cat.name,
+            count: cat.totalCount ?? 0,
+            children: (cat.children ?? []).map((child: any) => ({
+              id: child.id,
+              name: child.name,
+              count: child.totalCount ?? 0,
+            })),
+          }))}
         />
       )}
 
@@ -629,69 +640,6 @@ function CategoryNav({
   );
 }
 
-// Mobile Floating Category Button
-function MobileCategoryButton({
-  categories,
-  products,
-  activeCategoryId,
-  hrefFor,
-}: {
-  categories: any[];
-  products: any[];
-  activeCategoryId?: string | number;
-  /**
-   * Supplied in the category-first layout, where only one category is on the
-   * page and jumping means navigating. Omitted in the flat layout, where an
-   * in-page anchor is the right behaviour.
-   */
-  hrefFor?: (id: string | number) => string;
-}) {
-  if (!categories || categories.length === 0) return null;
-
-  return (
-    <div className="md:hidden fixed bottom-6 right-6 z-40">
-      <details className="group">
-        <summary className="list-none cursor-pointer bg-black text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow">
-          <span className="text-xl">☰</span>
-        </summary>
-        <div className="absolute bottom-16 right-0 bg-white rounded-2xl shadow-2xl p-4 min-w-[240px]">
-          <ul className="space-y-2">
-            {categories.map((cat: any) => {
-              // totalCount covers the whole branch (sub-categories included)
-            const count = cat.totalCount ?? 0;
-              const isActive = String(cat.id) === String(activeCategoryId);
-              const className = `block px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
-                isActive ? "bg-gray-100 text-gray-900" : "hover:bg-gray-100"
-              }`;
-
-              return (
-                <li key={cat.id}>
-                  {hrefFor ? (
-                    <Link
-                      href={hrefFor(cat.id)}
-                      scroll={false}
-                      className={className}
-                      aria-current={isActive ? "page" : undefined}
-                    >
-                      {cat.name}{" "}
-                      <span className="text-gray-500">({count})</span>
-                    </Link>
-                  ) : (
-                    <a href={`#category-${cat.id}`} className={className}>
-                      {cat.name}{" "}
-                      <span className="text-gray-500">({count})</span>
-                    </a>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      </details>
-    </div>
-  );
-}
-
 // Mobile Floating Language Button
 function MobileLanguageButton({
   currentLang,
@@ -792,7 +740,7 @@ function CategorySection({
   return (
     <section id={`category-${id}`} className="scroll-mt-32">
       <h2
-        className="sticky top-0 z-20 bg-white py-4 mb-8 pb-4 border-b-2 text-2xl sm:text-3xl font-bold"
+        className="sticky top-0 z-20 bg-white py-4 mb-8 pb-4 pr-14 md:pr-0 border-b-2 text-2xl sm:text-3xl font-bold"
         style={{ borderColor: primaryColor, color: primaryColor }}
       >
         {category.name}{" "}
