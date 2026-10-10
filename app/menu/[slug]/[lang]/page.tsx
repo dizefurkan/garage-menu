@@ -455,7 +455,6 @@ export default async function MenuPage({ params, searchParams }: Props) {
           navigate={useCategoryLayout}
           tableId={orderingTableId}
           activeId={activeCategory?.id}
-          activeParentId={activeParent?.id}
           categories={categories.map((cat: any) => ({
             id: cat.id,
             name: cat.name,

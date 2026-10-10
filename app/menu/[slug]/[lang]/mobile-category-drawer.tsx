@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ChevronDown, Menu, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Menu, X } from "lucide-react";
+import { MarqueeText } from "./marquee-text";
 
 export interface DrawerCategory {
   id: number | string;
@@ -24,9 +25,9 @@ const LABELS: Record<string, { open: string; close: string; all: string }> = {
 
 /**
  * Mobile category navigator: a hamburger pinned top-right that opens a
- * right-hand drawer listing categories with their sub-categories indented
- * beneath. It replaces the bottom-right floating button, which sat on top of
- * the cart button.
+ * right-hand drawer. Categories without sub-categories are plain links; one
+ * with sub-categories slides its own panel in from the right (the others are
+ * out of view), with a back row to return to the full list.
  *
  * Category-first layout navigates (?category=<id>); the flat layout jumps to
  * the in-page anchor.
@@ -38,7 +39,6 @@ export function MobileCategoryDrawer({
   navigate,
   tableId,
   activeId,
-  activeParentId,
 }: {
   categories: DrawerCategory[];
   title: string;
@@ -47,33 +47,33 @@ export function MobileCategoryDrawer({
   navigate: boolean;
   tableId?: string;
   activeId?: number | string;
-  /** Parent of the active sub-category, so its branch starts expanded. */
-  activeParentId?: number | string;
 }) {
   const [open, setOpen] = useState(false);
+  // The branch panel currently slid in, if any. `branch` outlives the slide
+  // out so the panel keeps its content while it animates away.
+  const [branchId, setBranchId] = useState<number | string | null>(null);
+  const [headerHeight, setHeaderHeight] = useState<number | null>(null);
   const labels = LABELS[lang] || LABELS.en;
-  // Branches the user has toggled; the active one starts expanded
-  const [expanded, setExpanded] = useState<Set<string>>(
-    () =>
-      new Set(
-        [activeId, activeParentId]
-          .filter((id) => id !== undefined)
-          .map(String)
-      )
-  );
-  const toggle = (id: number | string) =>
-    setExpanded((prev) => {
-      const next = new Set(prev);
-      if (!next.delete(String(id))) next.add(String(id));
-      return next;
-    });
   const closeRef = useRef<HTMLButtonElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const lastBranch = useRef<DrawerCategory | null>(null);
+
+  const branch =
+    categories.find((cat) => String(cat.id) === String(branchId)) ?? null;
+  if (branch) lastBranch.current = branch;
+  const panelBranch = branch ?? lastBranch.current;
 
   useEffect(() => {
     if (!open) return;
+    // Match the page header so the drawer's title row lines up with it
+    const header = document.querySelector("header");
+    if (header) setHeaderHeight(header.getBoundingClientRect().height);
+
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
+      if (event.key !== "Escape") return;
+      // Escape steps back out of a branch before closing the drawer
+      if (branchId !== null) setBranchId(null);
+      else setOpen(false);
     };
     document.addEventListener("keydown", onKey);
     const previousOverflow = document.body.style.overflow;
@@ -85,9 +85,14 @@ export function MobileCategoryDrawer({
       document.body.style.overflow = previousOverflow;
       trigger?.focus();
     };
-  }, [open]);
+  }, [open, branchId]);
 
   if (categories.length === 0) return null;
+
+  const close = () => {
+    setOpen(false);
+    setBranchId(null);
+  };
 
   const hrefFor = (id: number | string) =>
     navigate
@@ -98,15 +103,17 @@ export function MobileCategoryDrawer({
     id: number | string,
     name: string,
     count: number,
-    isActive: boolean,
-    isChild: boolean
+    isChild = false
   ) => {
+    const isActive = String(id) === String(activeId);
     const className = `flex min-h-11 items-center justify-between gap-3 rounded-lg px-3 text-sm transition-colors ${
       isChild ? "font-normal text-gray-700" : "font-semibold text-gray-900"
     } ${isActive ? "bg-gray-100" : "hover:bg-gray-50"}`;
     const content = (
       <>
-        <span className="min-w-0 truncate">{name}</span>
+        <span className="min-w-0 flex-1">
+          <MarqueeText>{name}</MarqueeText>
+        </span>
         <span className="shrink-0 text-xs text-gray-400">{count}</span>
       </>
     );
@@ -114,18 +121,24 @@ export function MobileCategoryDrawer({
       <Link
         href={hrefFor(id)}
         scroll={false}
-        onClick={() => setOpen(false)}
+        onClick={close}
         aria-current={isActive ? "page" : undefined}
         className={className}
       >
         {content}
       </Link>
     ) : (
-      <a href={hrefFor(id)} onClick={() => setOpen(false)} className={className}>
+      <a href={hrefFor(id)} onClick={close} className={className}>
         {content}
       </a>
     );
   };
+
+  // Shared by both panels' title rows
+  const headerStyle = headerHeight ? { height: headerHeight } : undefined;
+  const headerClass =
+    "flex shrink-0 items-center justify-between gap-2 border-b border-gray-100 px-4" +
+    (headerHeight ? "" : " h-20");
 
   return (
     <div className="md:hidden">
@@ -141,7 +154,7 @@ export function MobileCategoryDrawer({
       </button>
 
       <div
-        onClick={() => setOpen(false)}
+        onClick={close}
         aria-hidden
         className={`fixed inset-0 z-50 bg-black/40 transition-opacity duration-200 ${
           open ? "opacity-100" : "pointer-events-none opacity-0"
@@ -153,99 +166,113 @@ export function MobileCategoryDrawer({
         aria-modal="true"
         aria-label={title}
         aria-hidden={!open}
-        className={`fixed inset-y-0 right-0 z-[60] flex w-[85%] max-w-sm flex-col bg-white shadow-2xl transition-[transform,visibility] duration-300 ease-out ${
+        className={`fixed inset-y-0 right-0 z-[60] w-[85%] max-w-sm overflow-hidden bg-white shadow-2xl transition-[transform,visibility] duration-300 ease-out ${
           open ? "visible translate-x-0" : "invisible translate-x-full"
         }`}
       >
-        <div className="flex h-14 shrink-0 items-center justify-between border-b border-gray-100 px-4">
-          <h2 className="text-base font-bold text-gray-900">{title}</h2>
-          <button
-            ref={closeRef}
-            type="button"
-            onClick={() => setOpen(false)}
-            aria-label={labels.close}
-            className="flex size-11 items-center justify-center rounded-full text-gray-600 hover:bg-gray-100"
-          >
-            <X className="size-5" aria-hidden />
-          </button>
+        {/* Full list */}
+        <div
+          inert={branchId !== null}
+          className={`absolute inset-0 flex flex-col bg-white transition-transform duration-300 ease-out ${
+            branchId !== null ? "-translate-x-1/4" : "translate-x-0"
+          }`}
+        >
+          <div className={headerClass} style={headerStyle}>
+            <h2 className="min-w-0 truncate text-base font-bold text-gray-900">
+              {title}
+            </h2>
+            <button
+              ref={closeRef}
+              type="button"
+              onClick={close}
+              aria-label={labels.close}
+              className="flex size-11 shrink-0 items-center justify-center rounded-full text-gray-600 hover:bg-gray-100"
+            >
+              <X className="size-5" aria-hidden />
+            </button>
+          </div>
+
+          <nav className="flex-1 overflow-y-auto overscroll-contain p-3">
+            <ul className="space-y-1">
+              {categories.map((cat) =>
+                cat.children.length === 0 ? (
+                  <li key={cat.id}>{renderLink(cat.id, cat.name, cat.count)}</li>
+                ) : (
+                  <li key={cat.id}>
+                    <button
+                      type="button"
+                      onClick={() => setBranchId(cat.id)}
+                      className="flex min-h-11 w-full items-center justify-between gap-3 rounded-lg px-3 text-left text-sm font-semibold text-gray-900 transition-colors hover:bg-gray-50"
+                    >
+                      <span className="min-w-0 flex-1">
+                        <MarqueeText>{cat.name}</MarqueeText>
+                      </span>
+                      <span className="flex shrink-0 items-center gap-1.5">
+                        <span className="text-xs font-normal text-gray-400">
+                          {cat.count}
+                        </span>
+                        <ChevronRight
+                          className="size-4 text-gray-400 rtl:rotate-180"
+                          aria-hidden
+                        />
+                      </span>
+                    </button>
+                  </li>
+                )
+              )}
+            </ul>
+          </nav>
         </div>
 
-        <nav className="flex-1 overflow-y-auto overscroll-contain p-3">
-          <ul className="space-y-1">
-            {categories.map((cat) => {
-              if (cat.children.length === 0) {
-                return (
-                  <li key={cat.id}>
-                    {renderLink(
-                      cat.id,
-                      cat.name,
-                      cat.count,
-                      String(cat.id) === String(activeId),
-                      false
-                    )}
-                  </li>
-                );
-              }
+        {/* Branch: the chosen category and its sub-categories only */}
+        <div
+          inert={branchId === null}
+          className={`absolute inset-0 flex flex-col bg-white transition-transform duration-300 ease-out ${
+            branchId !== null ? "translate-x-0" : "translate-x-full"
+          }`}
+        >
+          <div className={headerClass} style={headerStyle}>
+            <button
+              type="button"
+              onClick={() => setBranchId(null)}
+              className="-ml-2 flex min-h-11 min-w-0 items-center gap-1 rounded-lg px-2 text-gray-600 hover:bg-gray-100"
+            >
+              <ChevronLeft className="size-5 shrink-0 rtl:rotate-180" aria-hidden />
+              <span className="truncate text-sm font-medium">{title}</span>
+            </button>
+            <button
+              type="button"
+              onClick={close}
+              aria-label={labels.close}
+              className="flex size-11 shrink-0 items-center justify-center rounded-full text-gray-600 hover:bg-gray-100"
+            >
+              <X className="size-5" aria-hidden />
+            </button>
+          </div>
 
-              const isOpen = expanded.has(String(cat.id));
-              return (
-                <li key={cat.id}>
-                  <button
-                    type="button"
-                    onClick={() => toggle(cat.id)}
-                    aria-expanded={isOpen}
-                    className="flex min-h-11 w-full items-center justify-between gap-3 rounded-lg px-3 text-left text-sm font-semibold text-gray-900 transition-colors hover:bg-gray-50"
-                  >
-                    <span className="min-w-0 truncate">{cat.name}</span>
-                    <span className="flex shrink-0 items-center gap-2">
-                      <span className="text-xs font-normal text-gray-400">
-                        {cat.count}
-                      </span>
-                      <ChevronDown
-                        className={`size-4 text-gray-400 transition-transform duration-200 ${
-                          isOpen ? "rotate-180" : ""
-                        }`}
-                        aria-hidden
-                      />
-                    </span>
-                  </button>
-                  {/* 0fr -> 1fr animates height without measuring it */}
-                  <div
-                    className={`grid transition-[grid-template-rows] duration-200 ease-out ${
-                      isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
-                    }`}
-                  >
-                    <ul
-                      inert={!isOpen}
-                      className="ml-3 min-h-0 space-y-0.5 overflow-hidden border-l border-gray-200 pl-2"
-                    >
-                      <li className="pt-0.5">
-                        {renderLink(
-                          cat.id,
-                          labels.all,
-                          cat.count,
-                          String(cat.id) === String(activeId),
-                          true
-                        )}
-                      </li>
-                      {cat.children.map((child) => (
-                        <li key={child.id}>
-                          {renderLink(
-                            child.id,
-                            child.name,
-                            child.count,
-                            String(child.id) === String(activeId),
-                            true
-                          )}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+          {panelBranch && (
+            <nav className="flex-1 overflow-y-auto overscroll-contain p-3">
+              <h3 className="px-3 pb-2 pt-1 text-lg font-bold text-gray-900">
+                {panelBranch.name}
+              </h3>
+              <ul className="space-y-1">
+                <li>
+                  {renderLink(
+                    panelBranch.id,
+                    labels.all,
+                    panelBranch.count,
+                    true
+                  )}
                 </li>
-              );
-            })}
-          </ul>
-        </nav>
+                {panelBranch.children.map((child) => (
+                  <li key={child.id}>
+                    {renderLink(child.id, child.name, child.count, true)}
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          )}
+        </div>
       </aside>
     </div>
   );
