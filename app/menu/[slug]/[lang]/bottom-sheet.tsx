@@ -64,7 +64,7 @@ export function BottomSheet({
         aria-label={label}
         aria-hidden={!open}
         tabIndex={-1}
-        className={`fixed inset-x-0 bottom-0 z-[60] flex flex-col rounded-t-3xl bg-white shadow-[0_-8px_40px_rgba(0,0,0,0.15)] outline-none transition-[transform,visibility] duration-300 ease-out pb-[env(safe-area-inset-bottom)] ${
+        className={`fixed inset-x-0 bottom-0 z-[60] flex flex-col rounded-t-3xl bg-white shadow-[0_-8px_40px_rgba(0,0,0,0.15)] outline-none transition-[translate,visibility] duration-300 ease-out pb-[env(safe-area-inset-bottom)] ${
           open ? "visible translate-y-0" : "invisible translate-y-full"
         } ${className}`}
       >
