@@ -1,3 +1,4 @@
+import { ViewTransition } from "react";
 import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { createClient } from "@supabase/supabase-js";
@@ -467,6 +468,7 @@ export default async function MenuPage({ params, searchParams }: Props) {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <ViewTransition>
         {/* Categories with Products */}
         {showCategoryLanding ? (
           <CategoryLanding
@@ -528,6 +530,7 @@ export default async function MenuPage({ params, searchParams }: Props) {
             <p className="text-gray-500 text-lg">No categories available</p>
           </div>
         )}
+        </ViewTransition>
       </main>
 
       {/* Footer */}

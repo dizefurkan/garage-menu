@@ -2,6 +2,10 @@ import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 
 const nextConfig: NextConfig = {
+  experimental: {
+    // Lets <ViewTransition> animate route and content changes
+    viewTransition: true,
+  },
   images: {
     remotePatterns: [
       {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, ViewTransition } from "react";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -395,7 +395,9 @@ export function AdminLayoutClient({
 
           {/* Page Content */}
           <div className="flex-1 overflow-auto p-8">
-            <TenantProvider tenant={tenant}>{children}</TenantProvider>
+            <ViewTransition>
+              <TenantProvider tenant={tenant}>{children}</TenantProvider>
+            </ViewTransition>
           </div>
         </SidebarInset>
       </SidebarProvider>

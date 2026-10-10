@@ -195,3 +195,18 @@ model-viewer::part(default-ar-button) {
     text-overflow: ellipsis;
   }
 }
+
+/* Route and content changes (React <ViewTransition>): a quick cross-fade. */
+::view-transition-old(*),
+::view-transition-new(*) {
+  animation-duration: 0.18s;
+  animation-timing-function: ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
