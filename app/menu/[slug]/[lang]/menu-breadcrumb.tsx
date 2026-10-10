@@ -44,7 +44,7 @@ export function MenuBreadcrumb({
       aria-label={BREADCRUMB_LABELS[lang] || BREADCRUMB_LABELS.en}
       className="sticky top-0 z-30 border-b border-gray-100 bg-white"
     >
-      <ol className="mx-auto flex max-w-7xl items-center pl-4 pr-16 sm:px-6 lg:px-8 text-sm">
+      <ol className="mx-auto flex max-w-7xl items-center pl-4 sm:px-6 lg:px-8 max-md:pr-[var(--menu-fab-reserve)]! text-sm">
         {items.map((item, index) => {
           const isLast = index === items.length - 1;
 

@@ -368,6 +368,9 @@ export default async function MenuPage({ params, searchParams }: Props) {
       )
     : null;
   const showCategoryLanding = useCategoryLayout && !activeCategory;
+  // The category hamburger is hidden on the root landing, where the page is
+  // already the category list
+  const showMenuButton = shouldShowCategoryNav && !showCategoryLanding;
   const gridColumns = tenant.category_grid_columns === 2 ? 2 : 1;
   // Category-first layout: a parent with sub-categories opens as another
   // landing screen of banners, exactly like the root one. Its own products
@@ -415,6 +418,11 @@ export default async function MenuPage({ params, searchParams }: Props) {
           {
             "--primary-color": primaryColor,
             "--secondary-color": secondaryColor,
+            // Room the fixed top-right buttons take on mobile, so headers and
+            // sticky titles never slide under them
+            "--menu-fab-reserve": `${
+              1 + 2.75 * (Number(showMenuButton) + Number(shouldShowLanguageSwitcher))
+            }rem`,
           } as React.CSSProperties
         }
       >
@@ -436,6 +444,7 @@ export default async function MenuPage({ params, searchParams }: Props) {
           currentLang={lang}
           menuLanguages={configuredMenuLanguages}
           slug={slug}
+          hasMenuButton={showMenuButton}
         />
       )}
 
@@ -448,7 +457,7 @@ export default async function MenuPage({ params, searchParams }: Props) {
 
       {/* Mobile: hamburger + drawer, always the full list so a drilled-in
           view can jump to a different category */}
-      {shouldShowCategoryNav && !showCategoryLanding && (
+      {showMenuButton && (
         <MobileCategoryDrawer
           title={rootCrumbLabel}
           lang={lang}
@@ -565,7 +574,7 @@ function Header({
 }) {
   return (
     <header className="bg-white border-b border-gray-100 shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 max-md:pr-[var(--menu-fab-reserve)]!">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             {tenant.logo_url && (
@@ -645,10 +654,13 @@ function MobileLanguageButton({
   currentLang,
   menuLanguages,
   slug,
+  hasMenuButton,
 }: {
   currentLang: string;
   menuLanguages: string[];
   slug: string;
+  /** The category hamburger sits at the corner; step left of it. */
+  hasMenuButton: boolean;
 }) {
   const getLanguageLabel = (languageCode: string) => {
     try {
@@ -664,12 +676,16 @@ function MobileLanguageButton({
   };
 
   return (
-    <div className="md:hidden fixed bottom-6 left-6 z-40">
+    <div
+      className={`md:hidden fixed top-3 z-40 ${
+        hasMenuButton ? "right-16" : "right-4"
+      }`}
+    >
       <details className="group">
-        <summary className="list-none cursor-pointer bg-white text-gray-700 rounded-full w-12 h-12 flex items-center justify-center shadow-lg ring-1 ring-black/5 transition-all hover:shadow-xl hover:text-gray-900 active:scale-95 group-open:text-gray-900">
+        <summary className="list-none cursor-pointer text-gray-800 rounded-full size-11 flex items-center justify-center transition-transform active:scale-95">
           <Globe className="h-5 w-5" />
         </summary>
-        <div className="absolute bottom-14 left-0 bg-white rounded-2xl shadow-2xl p-2 min-w-40 border border-gray-100">
+        <div className="absolute top-12 right-0 bg-white rounded-2xl shadow-2xl p-2 min-w-40 border border-gray-100">
           <ul className="space-y-1">
             {menuLanguages.map((language) => {
               const isActive = language === currentLang;
@@ -740,7 +756,7 @@ function CategorySection({
   return (
     <section id={`category-${id}`} className="scroll-mt-32">
       <h2
-        className="sticky top-0 z-20 bg-white py-4 mb-8 pb-4 pr-14 md:pr-0 border-b-2 text-2xl sm:text-3xl font-bold"
+        className="sticky top-0 z-20 bg-white py-4 mb-8 pb-4 max-md:pr-[var(--menu-fab-reserve)] border-b-2 text-2xl sm:text-3xl font-bold"
         style={{ borderColor: primaryColor, color: primaryColor }}
       >
         {category.name}{" "}
