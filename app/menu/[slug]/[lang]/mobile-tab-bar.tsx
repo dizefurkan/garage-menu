@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Check, Globe, LayoutGrid, ShoppingBag } from "lucide-react";
 import { getLanguageFlag } from "@/lib/language-flags";
+import { rememberMenuLanguage } from "@/lib/menu-language";
 import { BottomSheet } from "./bottom-sheet";
 import { useCart } from "./cart-context";
 import {
@@ -115,6 +116,7 @@ export function MobileTabBar({
                 <li key={code} role="option" aria-selected={code === lang}>
                   <a
                     href={`/menu/${slug}/${code}`}
+                    onClick={() => rememberMenuLanguage(code)}
                     className={`flex min-h-12 items-center gap-3 rounded-xl px-3 text-sm font-medium transition-colors ${
                       code === lang
                         ? "bg-gray-100 text-black"

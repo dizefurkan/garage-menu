@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { getLanguageFlag } from "@/lib/language-flags";
+import { rememberMenuLanguage } from "@/lib/menu-language";
 import {
   Select,
   SelectContent,
@@ -85,6 +86,7 @@ export function LanguageSwitcher({
         value={normalizedLang}
         onValueChange={(lang) => {
           if (!lang) return;
+          if (pathname.startsWith("/menu/")) rememberMenuLanguage(lang);
           window.location.href = getLanguagePath(lang);
         }}
       >
@@ -118,6 +120,7 @@ export function LanguageSwitcher({
       value={normalizedLang}
       onValueChange={(lang) => {
         if (!lang) return;
+        if (pathname.startsWith("/menu/")) rememberMenuLanguage(lang);
         window.location.href = getLanguagePath(lang);
       }}
     >

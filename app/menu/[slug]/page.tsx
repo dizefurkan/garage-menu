@@ -1,4 +1,5 @@
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
+import { MENU_LANGUAGE_COOKIE } from "@/lib/menu-language";
 import { notFound, redirect } from "next/navigation";
 
 // Allow dynamic route generation for any slug
@@ -82,13 +83,17 @@ export default async function SlugPage({
     const data = await response.json();
     const defaultLanguage = data.defaultLanguage || "en";
 
-    // The visitor's device language wins when the menu offers it; otherwise
-    // fall back to the venue's default language.
-    const deviceLanguage = pickDeviceLanguage(
-      (await headers()).get("accept-language"),
-      Array.isArray(data.languages) ? data.languages : [defaultLanguage]
-    );
-    const language = deviceLanguage || defaultLanguage;
+    // Order of preference: the language the guest picked by hand before, then
+    // their device language, then the venue's default. Each is only used if
+    // the menu actually offers it.
+    const available: string[] = Array.isArray(data.languages)
+      ? data.languages
+      : [defaultLanguage];
+    const remembered = (await cookies()).get(MENU_LANGUAGE_COOKIE)?.value;
+    const language =
+      (remembered && available.includes(remembered) ? remembered : null) ||
+      pickDeviceLanguage((await headers()).get("accept-language"), available) ||
+      defaultLanguage;
 
     // Carry the query along: QR codes arrive as /menu/{slug}?tableId=...
     const qs = new URLSearchParams();
