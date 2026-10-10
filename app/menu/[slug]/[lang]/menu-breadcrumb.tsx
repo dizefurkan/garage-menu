@@ -1,9 +1,11 @@
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Home } from "lucide-react";
 import { MarqueeText } from "./marquee-text";
 
 export interface BreadcrumbItem {
   label: string;
+  /** Show a home icon instead of the text (label stays as the accessible name). */
+  home?: boolean;
   /** Omitted on the last item: it is the current page, not a link. */
   href?: string;
 }
@@ -50,7 +52,11 @@ export function MenuBreadcrumb({
             <li
               key={`${index}-${item.label}`}
               className={`flex items-center ${
-                isLast ? "min-w-0 flex-1" : "min-w-0 shrink"
+                isLast
+                  ? "min-w-0 flex-1"
+                  : item.home
+                    ? "shrink-0"
+                    : "min-w-0 max-w-[45%] shrink"
               }`}
             >
               {isLast || !item.href ? (
@@ -64,9 +70,18 @@ export function MenuBreadcrumb({
                 <Link
                   href={item.href}
                   scroll={false}
-                  className="flex min-h-11 min-w-0 items-center text-gray-500 underline-offset-4 transition-colors hover:text-gray-900 hover:underline"
+                  aria-label={item.home ? item.label : undefined}
+                  className={`flex min-h-11 min-w-0 items-center text-gray-500 transition-colors hover:text-gray-900 ${
+                    item.home
+                      ? "min-w-11 justify-center"
+                      : "underline-offset-4 hover:underline"
+                  }`}
                 >
-                  <MarqueeText>{item.label}</MarqueeText>
+                  {item.home ? (
+                    <Home className="size-4" aria-hidden />
+                  ) : (
+                    <MarqueeText>{item.label}</MarqueeText>
+                  )}
                 </Link>
               )}
               {!isLast && (

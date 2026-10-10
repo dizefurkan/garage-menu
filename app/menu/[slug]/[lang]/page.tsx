@@ -394,7 +394,7 @@ export default async function MenuPage({ params, searchParams }: Props) {
     ROOT_CRUMB_LABELS[lang] || ROOT_CRUMB_LABELS.en;
   const breadcrumbItems: BreadcrumbItem[] = activeCategory
     ? [
-        { label: rootCrumbLabel, href: categoryHref(null) },
+        { label: rootCrumbLabel, href: categoryHref(null), home: true },
         ...(activeParent
           ? [{ label: activeParent.name, href: categoryHref(activeParent.id) }]
           : []),
