@@ -1,6 +1,7 @@
 import { getSessionWithTenant } from "@/lib/auth/session";
 import { supabaseAdmin } from "@/lib/supabase";
 import { guardAddonAccess } from "@/lib/licensing/hasAddon";
+import { ensureDefaultOrderStatuses } from "@/lib/orders/default-statuses";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
@@ -22,20 +23,34 @@ export async function GET(request: NextRequest) {
 
     const includeDisabled = request.nextUrl.searchParams.get("all") === "true";
 
-    let query = (supabaseAdmin as any)
-      .from("order_statuses")
-      .select("*")
-      .eq("tenant_id", tenant.id)
-      .order("sort_order", { ascending: true });
+    const loadStatuses = () => {
+      let query = (supabaseAdmin as any)
+        .from("order_statuses")
+        .select("*")
+        .eq("tenant_id", tenant.id)
+        .order("sort_order", { ascending: true });
 
-    if (!includeDisabled) {
-      query = query.eq("is_enabled", true);
-    }
+      if (!includeDisabled) {
+        query = query.eq("is_enabled", true);
+      }
+      return query;
+    };
 
-    const { data, error } = await query;
+    let { data, error } = await loadStatuses();
 
     if (error) {
       throw new Error(`Failed to fetch order statuses: ${error.message}`);
+    }
+
+    if (!data?.length) {
+      // Tenants created after the first seed have no statuses yet. Seeding is
+      // a no-op for any key that already exists, so an all-disabled list is
+      // left alone.
+      await ensureDefaultOrderStatuses(supabaseAdmin, tenant.id);
+      ({ data, error } = await loadStatuses());
+      if (error) {
+        throw new Error(`Failed to fetch order statuses: ${error.message}`);
+      }
     }
 
     return NextResponse.json({ statuses: data || [] });

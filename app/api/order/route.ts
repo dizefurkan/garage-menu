@@ -1,3 +1,4 @@
+import { ensureDefaultOrderStatuses } from "@/lib/orders/default-statuses";
 import { supabaseAdmin } from "@/lib/supabase";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -153,13 +154,22 @@ export async function POST(request: NextRequest) {
     }
 
     // Get default order status (first awaiting status)
-    const { data: defaultStatus, error: statusError } = await (supabaseAdmin as any)
-      .from("order_statuses")
-      .select("id")
-      .eq("tenant_id", tenant.id)
-      .eq("key", "awaiting_approval")
-      .limit(1)
-      .single();
+    const fetchDefaultStatus = () =>
+      (supabaseAdmin as any)
+        .from("order_statuses")
+        .select("id")
+        .eq("tenant_id", tenant.id)
+        .eq("key", "awaiting_approval")
+        .limit(1)
+        .maybeSingle();
+
+    let { data: defaultStatus, error: statusError } = await fetchDefaultStatus();
+
+    if (!statusError && !defaultStatus) {
+      // A tenant that never had its defaults seeded: create them, then retry
+      await ensureDefaultOrderStatuses(supabaseAdmin, tenant.id);
+      ({ data: defaultStatus, error: statusError } = await fetchDefaultStatus());
+    }
 
     if (statusError || !defaultStatus) {
       return NextResponse.json(
