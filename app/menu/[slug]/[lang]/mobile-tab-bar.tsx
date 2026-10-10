@@ -78,7 +78,7 @@ export function MobileTabBar({
   if (!showCategories && !showLanguage && !showCart) return null;
 
   const tab =
-    "relative flex min-h-12 flex-1 flex-col items-center justify-center gap-0.5 rounded-[22px] text-[10px] font-medium transition-colors duration-200 active:scale-95";
+    "relative flex min-h-12 min-w-[4.75rem] flex-col items-center justify-center gap-0.5 rounded-[22px] px-3 text-[10px] font-medium transition-colors duration-200 active:scale-95";
   // Active tab: brand colour text on a 12% tint of it
   const activeStyle = {
     color: primaryColor,
@@ -136,9 +136,11 @@ export function MobileTabBar({
         </BottomSheet>
       )}
 
+      {/* The capsule hugs its tabs and sits centred, like the latest iOS */}
+      <div className="pointer-events-none fixed inset-x-4 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-40 flex justify-center md:hidden">
       <nav
         aria-label={labels.categories}
-        className="fixed inset-x-4 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-40 flex gap-1 rounded-[28px] border border-white/60 bg-white/70 p-1.5 shadow-[0_8px_30px_rgba(0,0,0,0.12)] ring-1 ring-black/5 backdrop-blur-2xl backdrop-saturate-150 md:hidden"
+        className="pointer-events-auto flex gap-1 rounded-[28px] border border-white/60 bg-white/70 p-1.5 shadow-[0_8px_30px_rgba(0,0,0,0.12)] ring-1 ring-black/5 backdrop-blur-2xl backdrop-saturate-150"
       >
         {showCategories && (
           <button
@@ -157,7 +159,7 @@ export function MobileTabBar({
         )}
 
         {showLanguage && (
-          <div className="relative flex flex-1">
+          <div className="relative flex">
             <button
               type="button"
               onClick={() => setLangOpen((v) => !v)}
@@ -197,6 +199,7 @@ export function MobileTabBar({
           </button>
         )}
       </nav>
+      </div>
     </>
   );
 }
