@@ -412,7 +412,7 @@ export default async function MenuPage({ params, searchParams }: Props) {
     <CartProvider>
       <div
         // Bottom padding keeps the last content clear of the mobile tab bar
-        className="min-h-screen bg-white max-md:pb-[calc(3.5rem+env(safe-area-inset-bottom))]"
+        className="min-h-screen bg-white max-md:pb-[calc(6rem+env(safe-area-inset-bottom))]"
         style={
           {
             "--primary-color": primaryColor,
