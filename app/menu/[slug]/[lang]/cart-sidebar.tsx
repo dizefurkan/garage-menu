@@ -129,7 +129,7 @@ export function CartSidebar({ slug, tableId, primaryColor }: CartSidebarProps) {
       <button
         onClick={toggleCart}
         aria-label="Sepeti aç"
-        className={`fixed bottom-6 right-6 z-40 flex items-center gap-2 rounded-full px-5 py-3.5 text-white shadow-lg transition-all duration-200 hover:scale-105 ${
+        className={`fixed bottom-6 right-6 z-40 hidden items-center gap-2 md:flex rounded-full px-5 py-3.5 text-white shadow-lg transition-all duration-200 hover:scale-105 ${
           isOpen ? "pointer-events-none scale-0 opacity-0" : "scale-100 opacity-100"
         }`}
         style={{ backgroundColor: primaryColor }}

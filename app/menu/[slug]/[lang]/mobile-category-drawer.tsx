@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Menu, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { MarqueeText } from "./marquee-text";
 
 export interface DrawerCategory {
@@ -12,20 +12,20 @@ export interface DrawerCategory {
   children: { id: number | string; name: string; count: number }[];
 }
 
-const LABELS: Record<string, { open: string; close: string; all: string }> = {
-  tr: { open: "Kategorileri aç", close: "Kapat", all: "Tümü" },
-  en: { open: "Open categories", close: "Close", all: "All" },
-  de: { open: "Kategorien öffnen", close: "Schließen", all: "Alle" },
-  fr: { open: "Ouvrir les catégories", close: "Fermer", all: "Tout" },
-  es: { open: "Abrir categorías", close: "Cerrar", all: "Todo" },
-  ru: { open: "Открыть категории", close: "Закрыть", all: "Все" },
-  ar: { open: "فتح الفئات", close: "إغلاق", all: "الكل" },
-  zh: { open: "打开分类", close: "关闭", all: "全部" },
+const LABELS: Record<string, { close: string; all: string }> = {
+  tr: { close: "Kapat", all: "Tümü" },
+  en: { close: "Close", all: "All" },
+  de: { close: "Schließen", all: "Alle" },
+  fr: { close: "Fermer", all: "Tout" },
+  es: { close: "Cerrar", all: "Todo" },
+  ru: { close: "Закрыть", all: "Все" },
+  ar: { close: "إغلاق", all: "الكل" },
+  zh: { close: "关闭", all: "全部" },
 };
 
 /**
- * Mobile category navigator: a hamburger pinned top-right that opens a
- * right-hand drawer. Categories without sub-categories are plain links; one
+ * Mobile category navigator: a right-hand drawer opened from the bottom tab
+ * bar (open state is owned by the caller). Categories without sub-categories are plain links; one
  * with sub-categories slides its own panel in from the right (the others are
  * out of view), with a back row to return to the full list.
  *
@@ -39,6 +39,8 @@ export function MobileCategoryDrawer({
   navigate,
   tableId,
   activeId,
+  open,
+  onOpenChange,
 }: {
   categories: DrawerCategory[];
   title: string;
@@ -47,15 +49,15 @@ export function MobileCategoryDrawer({
   navigate: boolean;
   tableId?: string;
   activeId?: number | string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }) {
-  const [open, setOpen] = useState(false);
   // The branch panel currently slid in, if any. `branch` outlives the slide
   // out so the panel keeps its content while it animates away.
   const [branchId, setBranchId] = useState<number | string | null>(null);
   const [headerHeight, setHeaderHeight] = useState<number | null>(null);
   const labels = LABELS[lang] || LABELS.en;
   const closeRef = useRef<HTMLButtonElement>(null);
-  const triggerRef = useRef<HTMLButtonElement>(null);
   const lastBranch = useRef<DrawerCategory | null>(null);
 
   const branch =
@@ -73,24 +75,22 @@ export function MobileCategoryDrawer({
       if (event.key !== "Escape") return;
       // Escape steps back out of a branch before closing the drawer
       if (branchId !== null) setBranchId(null);
-      else setOpen(false);
+      else onOpenChange(false);
     };
     document.addEventListener("keydown", onKey);
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     closeRef.current?.focus();
-    const trigger = triggerRef.current;
     return () => {
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = previousOverflow;
-      trigger?.focus();
     };
-  }, [open, branchId]);
+  }, [open, branchId, onOpenChange]);
 
   if (categories.length === 0) return null;
 
   const close = () => {
-    setOpen(false);
+    onOpenChange(false);
     setBranchId(null);
   };
 
@@ -142,17 +142,6 @@ export function MobileCategoryDrawer({
 
   return (
     <div className="md:hidden">
-      <button
-        ref={triggerRef}
-        type="button"
-        onClick={() => setOpen(true)}
-        aria-label={labels.open}
-        aria-expanded={open}
-        className="fixed right-4 top-3 z-40 flex size-11 items-center justify-center rounded-full text-gray-800 transition-transform active:scale-95"
-      >
-        <Menu className="size-5" aria-hidden />
-      </button>
-
       <div
         onClick={close}
         aria-hidden

@@ -8,10 +8,8 @@ import { ProductCard } from "./product-card";
 import { CartSidebar } from "./cart-sidebar";
 import { CartProvider } from "./cart-context";
 import { CategoryLanding } from "./category-landing";
-import { MobileCategoryDrawer } from "./mobile-category-drawer";
+import { MobileTabBar } from "./mobile-tab-bar";
 import { MenuBreadcrumb, type BreadcrumbItem } from "./menu-breadcrumb";
-import { getLanguageFlag } from "@/lib/language-flags";
-import { Globe } from "lucide-react";
 import Link from "next/link";
 
 function getBaseUrl(): string {
@@ -413,16 +411,12 @@ export default async function MenuPage({ params, searchParams }: Props) {
   return (
     <CartProvider>
       <div
-        className="min-h-screen bg-white"
+        // Bottom padding keeps the last content clear of the mobile tab bar
+        className="min-h-screen bg-white max-md:pb-[calc(3.5rem+env(safe-area-inset-bottom))]"
         style={
           {
             "--primary-color": primaryColor,
             "--secondary-color": secondaryColor,
-            // Room the fixed top-right buttons take on mobile, so headers and
-            // sticky titles never slide under them
-            "--menu-fab-reserve": `${
-              1 + 2.75 * (Number(showMenuButton) + Number(shouldShowLanguageSwitcher))
-            }rem`,
           } as React.CSSProperties
         }
       >
@@ -438,16 +432,6 @@ export default async function MenuPage({ params, searchParams }: Props) {
         menuLanguages={configuredMenuLanguages}
       />
 
-      {/* Mobile Floating Language Button */}
-      {shouldShowLanguageSwitcher && (
-        <MobileLanguageButton
-          currentLang={lang}
-          menuLanguages={configuredMenuLanguages}
-          slug={slug}
-          hasMenuButton={showMenuButton}
-        />
-      )}
-
       {/* Category Navigation */}
       {/* Drilled into a category: the breadcrumb replaces the tab strip */}
       <MenuBreadcrumb items={breadcrumbItems} lang={lang} />
@@ -455,27 +439,31 @@ export default async function MenuPage({ params, searchParams }: Props) {
         <CategoryNav categories={visibleCategories} products={products} />
       )}
 
-      {/* Mobile: hamburger + drawer, always the full list so a drilled-in
-          view can jump to a different category */}
-      {showMenuButton && (
-        <MobileCategoryDrawer
-          title={rootCrumbLabel}
-          lang={lang}
-          navigate={useCategoryLayout}
-          tableId={orderingTableId}
-          activeId={activeCategory?.id}
-          categories={categories.map((cat: any) => ({
-            id: cat.id,
-            name: cat.name,
-            count: cat.totalCount ?? 0,
-            children: (cat.children ?? []).map((child: any) => ({
-              id: child.id,
-              name: child.name,
-              count: child.totalCount ?? 0,
-            })),
-          }))}
-        />
-      )}
+      {/* Mobile: bottom tab bar (categories drawer, language, cart). The
+          drawer always gets the full list so a drilled-in view can jump to a
+          different category. */}
+      <MobileTabBar
+        lang={lang}
+        slug={slug}
+        title={rootCrumbLabel}
+        primaryColor={primaryColor}
+        categoryNavigate={useCategoryLayout}
+        tableId={orderingTableId}
+        activeId={activeCategory?.id}
+        menuLanguages={shouldShowLanguageSwitcher ? configuredMenuLanguages : []}
+        showCategories={showMenuButton}
+        showCart={!!orderingTableId}
+        categories={categories.map((cat: any) => ({
+          id: cat.id,
+          name: cat.name,
+          count: cat.totalCount ?? 0,
+          children: (cat.children ?? []).map((child: any) => ({
+            id: child.id,
+            name: child.name,
+            count: child.totalCount ?? 0,
+          })),
+        }))}
+      />
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -574,7 +562,7 @@ function Header({
 }) {
   return (
     <header className="bg-white border-b border-gray-100 shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 max-md:pr-[var(--menu-fab-reserve)]!">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             {tenant.logo_url && (
@@ -649,72 +637,6 @@ function CategoryNav({
   );
 }
 
-// Mobile Floating Language Button
-function MobileLanguageButton({
-  currentLang,
-  menuLanguages,
-  slug,
-  hasMenuButton,
-}: {
-  currentLang: string;
-  menuLanguages: string[];
-  slug: string;
-  /** The category hamburger sits at the corner; step left of it. */
-  hasMenuButton: boolean;
-}) {
-  const getLanguageLabel = (languageCode: string) => {
-    try {
-      const normalizedCode = languageCode.toLowerCase();
-      const baseLanguage = normalizedCode.split("-")[0];
-      const displayNames = new Intl.DisplayNames([normalizedCode], {
-        type: "language",
-      });
-      return displayNames.of(baseLanguage) || languageCode.toUpperCase();
-    } catch {
-      return languageCode.toUpperCase();
-    }
-  };
-
-  return (
-    <div
-      className={`md:hidden fixed top-3 z-40 ${
-        hasMenuButton ? "right-16" : "right-4"
-      }`}
-    >
-      <details className="group">
-        <summary className="list-none cursor-pointer text-gray-800 rounded-full size-11 flex items-center justify-center transition-transform active:scale-95">
-          <Globe className="h-5 w-5" />
-        </summary>
-        <div className="absolute top-12 right-0 bg-white rounded-2xl shadow-2xl p-2 min-w-40 border border-gray-100">
-          <ul className="space-y-1">
-            {menuLanguages.map((language) => {
-              const isActive = language === currentLang;
-
-              return (
-                <li key={language}>
-                  <a
-                    href={`/menu/${slug}/${language}`}
-                    className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
-                      isActive
-                        ? "bg-gray-100 text-black"
-                        : "hover:bg-gray-100 text-gray-700"
-                    }`}
-                  >
-                    <span className="text-base leading-none">
-                      {getLanguageFlag(language)}
-                    </span>
-                    <span>{getLanguageLabel(language)}</span>
-                  </a>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      </details>
-    </div>
-  );
-}
-
 // Category Section
 function CategorySection({
   id,
@@ -756,7 +678,7 @@ function CategorySection({
   return (
     <section id={`category-${id}`} className="scroll-mt-32">
       <h2
-        className="sticky top-0 z-20 bg-white py-4 mb-8 pb-4 max-md:pr-[var(--menu-fab-reserve)] border-b-2 text-2xl sm:text-3xl font-bold"
+        className="sticky top-0 z-20 bg-white py-4 mb-8 pb-4 border-b-2 text-2xl sm:text-3xl font-bold"
         style={{ borderColor: primaryColor, color: primaryColor }}
       >
         {category.name}{" "}
