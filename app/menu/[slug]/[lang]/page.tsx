@@ -13,6 +13,8 @@ import { MobileTabBar } from "./mobile-tab-bar";
 import { MarqueeText } from "./marquee-text";
 import { MenuBreadcrumb, type BreadcrumbItem } from "./menu-breadcrumb";
 import Link from "next/link";
+import { Utensils } from "lucide-react";
+import { supabaseAdmin } from "@/lib/supabase";
 
 function getBaseUrl(): string {
   // On Vercel production, use the production domain
@@ -350,6 +352,19 @@ export default async function MenuPage({ params, searchParams }: Props) {
   const orderingTableId =
     tenant.qr_ordering_enabled === false ? undefined : tableId;
 
+  // The guest's table name for the header chip. Scoped to this tenant, so a
+  // tableId from another venue (or a malformed one) simply shows nothing.
+  let tableLabel: string | null = null;
+  if (orderingTableId && supabaseAdmin) {
+    const { data: tableRow } = await (supabaseAdmin as any)
+      .from("tables")
+      .select("label")
+      .eq("id", orderingTableId)
+      .eq("tenant_id", tenant.id)
+      .maybeSingle();
+    tableLabel = tableRow?.label ?? null;
+  }
+
   // Category-first layout: the landing screen lists categories, and picking
   // one drills into the existing product view via ?category=<id>. Falls back
   // to the flat layout when the venue has a single category — a one-item
@@ -446,6 +461,7 @@ export default async function MenuPage({ params, searchParams }: Props) {
         currentLang={lang}
         showLanguageSwitcher={shouldShowLanguageSwitcher}
         menuLanguages={configuredMenuLanguages}
+        tableLabel={tableLabel}
       />
 
       {/* Category Navigation */}
@@ -574,12 +590,15 @@ function Header({
   currentLang,
   showLanguageSwitcher,
   menuLanguages,
+  tableLabel,
 }: {
   tenant: any;
   primaryColor: string;
   currentLang: string;
   showLanguageSwitcher: boolean;
   menuLanguages: string[];
+  /** Set when the guest scanned a table QR code and ordering is on */
+  tableLabel: string | null;
 }) {
   return (
     <header className="bg-white border-b border-gray-100 shadow-sm">
@@ -606,15 +625,26 @@ function Header({
             </div>
           </div>
 
-          {showLanguageSwitcher && (
-            <div className="hidden md:block">
-              <LanguageSwitcher
-                currentLang={currentLang}
-                compact
-                languages={menuLanguages}
-              />
-            </div>
-          )}
+          <div className="flex shrink-0 items-center gap-3">
+            {tableLabel && (
+              <span
+                className="inline-flex max-w-32 items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-semibold sm:max-w-48"
+                style={{ borderColor: primaryColor, color: primaryColor }}
+              >
+                <Utensils className="size-3.5 shrink-0" aria-hidden />
+                <span className="truncate">{tableLabel}</span>
+              </span>
+            )}
+            {showLanguageSwitcher && (
+              <div className="hidden md:block">
+                <LanguageSwitcher
+                  currentLang={currentLang}
+                  compact
+                  languages={menuLanguages}
+                />
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </header>
