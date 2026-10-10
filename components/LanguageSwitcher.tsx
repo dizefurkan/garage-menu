@@ -87,7 +87,7 @@ export function LanguageSwitcher({
         onValueChange={(lang) => {
           if (!lang) return;
           if (pathname.startsWith("/menu/")) rememberMenuLanguage(lang);
-          window.location.href = getLanguagePath(lang);
+          window.location.href = getLanguagePath(lang) + window.location.search;
         }}
       >
         <SelectTrigger
@@ -121,7 +121,7 @@ export function LanguageSwitcher({
       onValueChange={(lang) => {
         if (!lang) return;
         if (pathname.startsWith("/menu/")) rememberMenuLanguage(lang);
-        window.location.href = getLanguagePath(lang);
+        window.location.href = getLanguagePath(lang) + window.location.search;
       }}
     >
       <SelectTrigger className="h-9 w-40">
