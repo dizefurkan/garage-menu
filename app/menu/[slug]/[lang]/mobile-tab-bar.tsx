@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Globe, LayoutGrid, ShoppingBag } from "lucide-react";
+import Link from "next/link";
+import { Check, Globe, House, LayoutGrid, ShoppingBag } from "lucide-react";
 import { getLanguageFlag } from "@/lib/language-flags";
 import { rememberMenuLanguage } from "@/lib/menu-language";
 import { BottomSheet } from "./bottom-sheet";
@@ -11,15 +12,18 @@ import {
   type DrawerCategory,
 } from "./mobile-category-drawer";
 
-const LABELS: Record<string, { categories: string; language: string; cart: string }> = {
-  tr: { categories: "Kategoriler", language: "Dil", cart: "Sepetim" },
-  en: { categories: "Categories", language: "Language", cart: "Cart" },
-  de: { categories: "Kategorien", language: "Sprache", cart: "Warenkorb" },
-  fr: { categories: "Catégories", language: "Langue", cart: "Panier" },
-  es: { categories: "Categorías", language: "Idioma", cart: "Carrito" },
-  ru: { categories: "Категории", language: "Язык", cart: "Корзина" },
-  ar: { categories: "الفئات", language: "اللغة", cart: "السلة" },
-  zh: { categories: "分类", language: "语言", cart: "购物车" },
+const LABELS: Record<
+  string,
+  { home: string; categories: string; language: string; cart: string }
+> = {
+  tr: { home: "Ana sayfa", categories: "Kategoriler", language: "Dil", cart: "Sepetim" },
+  en: { home: "Home", categories: "Categories", language: "Language", cart: "Cart" },
+  de: { home: "Start", categories: "Kategorien", language: "Sprache", cart: "Warenkorb" },
+  fr: { home: "Accueil", categories: "Catégories", language: "Langue", cart: "Panier" },
+  es: { home: "Inicio", categories: "Categorías", language: "Idioma", cart: "Carrito" },
+  ru: { home: "Главная", categories: "Категории", language: "Язык", cart: "Корзина" },
+  ar: { home: "الرئيسية", categories: "الفئات", language: "اللغة", cart: "السلة" },
+  zh: { home: "首页", categories: "分类", language: "语言", cart: "购物车" },
 };
 
 function languageLabel(code: string): string {
@@ -38,9 +42,8 @@ function languageLabel(code: string): string {
 /**
  * Mobile bottom tab bar in the iOS style: a floating, frosted capsule inset
  * from the screen edges, with the active tab marked by a soft tinted pill.
- * Tabs: Categories (opens the
- * drawer), Language (a small list above the bar) and Cart (opens the existing
- * cart sheet). A tab only exists when its feature does. Replaces the floating
+ * Tabs: Home (the root category screen), Categories (opens the sheet), Language
+ * (a language sheet) and Cart (opens the existing cart sheet). A tab only exists when its feature does. Replaces the floating
  * buttons that crowded the corners and collided with sticky bars.
  */
 export function MobileTabBar({
@@ -55,6 +58,9 @@ export function MobileTabBar({
   menuLanguages,
   showCategories,
   showCart,
+  showHome,
+  homeHref,
+  homeActive,
 }: {
   lang: string;
   slug: string;
@@ -68,6 +74,10 @@ export function MobileTabBar({
   menuLanguages: string[];
   showCategories: boolean;
   showCart: boolean;
+  /** Category-first layout only: a way back to the root category screen */
+  showHome: boolean;
+  homeHref: string;
+  homeActive: boolean;
 }) {
   const labels = LABELS[lang] || LABELS.en;
   const { cart, openCart, isOpen: cartOpen } = useCart();
@@ -76,10 +86,10 @@ export function MobileTabBar({
   const showLanguage = menuLanguages.length >= 2;
   const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
-  if (!showCategories && !showLanguage && !showCart) return null;
+  if (!showHome && !showCategories && !showLanguage && !showCart) return null;
 
   const tab =
-    "relative flex min-h-12 min-w-[4.75rem] flex-col items-center justify-center gap-0.5 rounded-[22px] px-3 text-[10px] font-medium transition-colors duration-200 active:scale-95";
+    "relative flex min-h-12 min-w-16 flex-col items-center justify-center gap-0.5 rounded-[22px] px-3 text-[10px] font-medium transition-colors duration-200 active:scale-95";
   // Active tab: brand colour text on a 12% tint of it
   const activeStyle = {
     color: primaryColor,
@@ -144,6 +154,19 @@ export function MobileTabBar({
         aria-label={labels.categories}
         className="pointer-events-auto flex gap-1 rounded-[28px] border border-white/60 bg-white/70 p-1.5 shadow-[0_8px_30px_rgba(0,0,0,0.12)] ring-1 ring-black/5 backdrop-blur-2xl backdrop-saturate-150"
       >
+        {showHome && (
+          <Link
+            href={homeHref}
+            scroll={false}
+            aria-current={homeActive ? "page" : undefined}
+            className={`${tab} ${homeActive ? "" : "text-gray-500"}`}
+            style={homeActive ? activeStyle : undefined}
+          >
+            <House className="size-6" strokeWidth={1.75} aria-hidden />
+            {labels.home}
+          </Link>
+        )}
+
         {showCategories && (
           <button
             type="button"

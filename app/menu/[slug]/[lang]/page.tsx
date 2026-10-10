@@ -10,6 +10,7 @@ import { CartSidebar } from "./cart-sidebar";
 import { CartProvider } from "./cart-context";
 import { CategoryLanding } from "./category-landing";
 import { MobileTabBar } from "./mobile-tab-bar";
+import { MarqueeText } from "./marquee-text";
 import { MenuBreadcrumb, type BreadcrumbItem } from "./menu-breadcrumb";
 import Link from "next/link";
 
@@ -400,9 +401,21 @@ export default async function MenuPage({ params, searchParams }: Props) {
         ...(activeParent
           ? [{ label: activeParent.name, href: categoryHref(activeParent.id) }]
           : []),
-        { label: activeCategory.name },
+        // The current category is not repeated: it is the title right above
+        // its products
       ]
     : [];
+
+  // Sticky stack: the breadcrumb (44px) pins to the top and the category
+  // title pins right beneath it. Without a breadcrumb, the desktop category
+  // tab strip takes that place instead (md and up only). On mobile the
+  // breadcrumb only shows when there is a parent to go back to (the tab bar's
+  // Home tab covers the root), so the stack starts at 0 otherwise.
+  const categoryNavShown =
+    shouldShowCategoryNav && !showCategoryLanding && !activeCategory;
+  const stickyBase = breadcrumbItems.length > 1 ? "2.75rem" : "0rem";
+  const stickyMd =
+    breadcrumbItems.length > 0 ? "2.75rem" : categoryNavShown ? "4.3rem" : "0rem";
 
   // Extract theme config with fallbacks
   const themeConfig = (tenant.theme_config as any) || {};
@@ -418,6 +431,8 @@ export default async function MenuPage({ params, searchParams }: Props) {
           {
             "--primary-color": primaryColor,
             "--secondary-color": secondaryColor,
+            "--menu-sticky": stickyBase,
+            "--menu-sticky-md": stickyMd,
           } as React.CSSProperties
         }
       >
@@ -436,7 +451,7 @@ export default async function MenuPage({ params, searchParams }: Props) {
       {/* Category Navigation */}
       {/* Drilled into a category: the breadcrumb replaces the tab strip */}
       <MenuBreadcrumb items={breadcrumbItems} lang={lang} />
-      {shouldShowCategoryNav && !showCategoryLanding && !activeCategory && (
+      {categoryNavShown && (
         <CategoryNav categories={visibleCategories} products={products} />
       )}
 
@@ -454,6 +469,9 @@ export default async function MenuPage({ params, searchParams }: Props) {
         menuLanguages={shouldShowLanguageSwitcher ? configuredMenuLanguages : []}
         showCategories={showMenuButton}
         showCart={!!orderingTableId}
+        showHome={useCategoryLayout}
+        homeHref={categoryHref(null)}
+        homeActive={showCategoryLanding}
         categories={categories.map((cat: any) => ({
           id: cat.id,
           name: cat.name,
@@ -679,13 +697,20 @@ function CategorySection({
   );
 
   return (
-    <section id={`category-${id}`} className="scroll-mt-32">
+    <section
+      id={`category-${id}`}
+      className="scroll-mt-[var(--menu-sticky)] md:scroll-mt-[var(--menu-sticky-md)]"
+    >
+      {/* Fixed 4rem, one line: the sub-category titles below pin at exactly
+          this offset beneath it. */}
       <h2
-        className="sticky top-0 z-20 bg-white py-4 mb-8 pb-4 border-b-2 text-2xl sm:text-3xl font-bold"
+        className="sticky top-[var(--menu-sticky)] md:top-[var(--menu-sticky-md)] z-20 mb-8 flex h-16 items-center gap-2 border-b-2 bg-white text-2xl font-bold sm:text-3xl"
         style={{ borderColor: primaryColor, color: primaryColor }}
       >
-        {category.name}{" "}
-        <span className="text-gray-400 text-lg">({totalCount})</span>
+        <span className="min-w-0 flex-1">
+          <MarqueeText>{category.name}</MarqueeText>
+        </span>
+        <span className="shrink-0 text-lg text-gray-400">({totalCount})</span>
       </h2>
 
       {products.length > 0 && renderGrid(products, id)}
@@ -694,11 +719,11 @@ function CategorySection({
         <div
           key={sub.category.id}
           id={`category-${sub.category.id}`}
-          className={`scroll-mt-32 ${products.length > 0 ? "mt-10" : "mt-0"} first:mt-0`}
+          className={`scroll-mt-[calc(var(--menu-sticky)+4rem)] md:scroll-mt-[calc(var(--menu-sticky-md)+4rem)] ${products.length > 0 ? "mt-10" : "mt-0"} first:mt-0`}
         >
-          <h3 className="mb-5 text-xl font-semibold text-gray-900">
-            {sub.category.name}{" "}
-            <span className="text-gray-400 text-base">
+          <h3 className="sticky top-[calc(var(--menu-sticky)+4rem)] z-10 mb-4 flex items-baseline gap-2 bg-white py-2 text-xl font-semibold text-gray-900 md:top-[calc(var(--menu-sticky-md)+4rem)]">
+            <span className="min-w-0 truncate">{sub.category.name}</span>
+            <span className="shrink-0 text-base font-normal text-gray-400">
               ({sub.products.length})
             </span>
           </h3>
