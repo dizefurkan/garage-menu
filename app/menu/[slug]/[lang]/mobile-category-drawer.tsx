@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { MarqueeText } from "./marquee-text";
+import { BottomSheet } from "./bottom-sheet";
 
 export interface DrawerCategory {
   id: number | string;
@@ -24,10 +25,10 @@ const LABELS: Record<string, { close: string; all: string }> = {
 };
 
 /**
- * Mobile category navigator: a right-hand drawer opened from the bottom tab
- * bar (open state is owned by the caller). Categories without sub-categories are plain links; one
- * with sub-categories slides its own panel in from the right (the others are
- * out of view), with a back row to return to the full list.
+ * Mobile category navigator as a bottom sheet (opened from the tab bar, open
+ * state owned by the caller). Categories without sub-categories are plain
+ * links; one with sub-categories slides its own panel in from the right (the
+ * others are out of view), with a back row to return to the full list.
  *
  * Category-first layout navigates (?category=<id>); the flat layout jumps to
  * the in-page anchor.
@@ -55,37 +56,13 @@ export function MobileCategoryDrawer({
   // The branch panel currently slid in, if any. `branch` outlives the slide
   // out so the panel keeps its content while it animates away.
   const [branchId, setBranchId] = useState<number | string | null>(null);
-  const [headerHeight, setHeaderHeight] = useState<number | null>(null);
   const labels = LABELS[lang] || LABELS.en;
-  const closeRef = useRef<HTMLButtonElement>(null);
   const lastBranch = useRef<DrawerCategory | null>(null);
 
   const branch =
     categories.find((cat) => String(cat.id) === String(branchId)) ?? null;
   if (branch) lastBranch.current = branch;
   const panelBranch = branch ?? lastBranch.current;
-
-  useEffect(() => {
-    if (!open) return;
-    // Match the page header so the drawer's title row lines up with it
-    const header = document.querySelector("header");
-    if (header) setHeaderHeight(header.getBoundingClientRect().height);
-
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return;
-      // Escape steps back out of a branch before closing the drawer
-      if (branchId !== null) setBranchId(null);
-      else onOpenChange(false);
-    };
-    document.addEventListener("keydown", onKey);
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    closeRef.current?.focus();
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = previousOverflow;
-    };
-  }, [open, branchId, onOpenChange]);
 
   if (categories.length === 0) return null;
 
@@ -134,31 +111,19 @@ export function MobileCategoryDrawer({
     );
   };
 
-  // Shared by both panels' title rows
-  const headerStyle = headerHeight ? { height: headerHeight } : undefined;
   const headerClass =
-    "flex shrink-0 items-center justify-between gap-2 border-b border-gray-100 px-4" +
-    (headerHeight ? "" : " h-20");
+    "flex h-14 shrink-0 items-center justify-between gap-2 border-b border-gray-100 px-4";
 
   return (
-    <div className="md:hidden">
-      <div
-        onClick={close}
-        aria-hidden
-        className={`fixed inset-0 z-50 bg-black/40 transition-opacity duration-200 ${
-          open ? "opacity-100" : "pointer-events-none opacity-0"
-        }`}
-      />
-
-      <aside
-        role="dialog"
-        aria-modal="true"
-        aria-label={title}
-        aria-hidden={!open}
-        className={`fixed inset-y-0 right-0 z-[60] w-[85%] max-w-sm overflow-hidden bg-white shadow-2xl transition-[transform,visibility] duration-300 ease-out ${
-          open ? "visible translate-x-0" : "invisible translate-x-full"
-        }`}
-      >
+    <BottomSheet
+      open={open}
+      onClose={close}
+      // Escape steps back out of a branch before it closes the sheet
+      onEscape={() => (branchId !== null ? setBranchId(null) : close())}
+      label={title}
+      className="h-[min(75dvh,36rem)]"
+    >
+      <div className="relative flex-1 overflow-hidden">
         {/* Full list */}
         <div
           inert={branchId !== null}
@@ -166,12 +131,11 @@ export function MobileCategoryDrawer({
             branchId !== null ? "-translate-x-1/4" : "translate-x-0"
           }`}
         >
-          <div className={headerClass} style={headerStyle}>
+          <div className={headerClass}>
             <h2 className="min-w-0 truncate text-base font-bold text-gray-900">
               {title}
             </h2>
             <button
-              ref={closeRef}
               type="button"
               onClick={close}
               aria-label={labels.close}
@@ -220,7 +184,7 @@ export function MobileCategoryDrawer({
             branchId !== null ? "translate-x-0" : "translate-x-full"
           }`}
         >
-          <div className={headerClass} style={headerStyle}>
+          <div className={headerClass}>
             <button
               type="button"
               onClick={() => setBranchId(null)}
@@ -262,7 +226,7 @@ export function MobileCategoryDrawer({
             </nav>
           )}
         </div>
-      </aside>
-    </div>
+      </div>
+    </BottomSheet>
   );
 }

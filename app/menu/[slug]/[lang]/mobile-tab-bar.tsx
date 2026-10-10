@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Globe, LayoutGrid, ShoppingBag } from "lucide-react";
+import { useState } from "react";
+import { Check, Globe, LayoutGrid, ShoppingBag } from "lucide-react";
 import { getLanguageFlag } from "@/lib/language-flags";
+import { BottomSheet } from "./bottom-sheet";
 import { useCart } from "./cart-context";
 import {
   MobileCategoryDrawer,
@@ -74,15 +75,6 @@ export function MobileTabBar({
   const showLanguage = menuLanguages.length >= 2;
   const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
-  useEffect(() => {
-    if (!langOpen) return;
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setLangOpen(false);
-    };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [langOpen]);
-
   if (!showCategories && !showLanguage && !showCart) return null;
 
   const tab =
@@ -108,12 +100,40 @@ export function MobileTabBar({
         />
       )}
 
-      {langOpen && (
-        <div
-          className="fixed inset-0 z-40 md:hidden"
-          onClick={() => setLangOpen(false)}
-          aria-hidden
-        />
+      {showLanguage && (
+        <BottomSheet
+          open={langOpen}
+          onClose={() => setLangOpen(false)}
+          label={labels.language}
+        >
+          <div className="px-4 pb-4 pt-1">
+            <h2 className="px-3 pb-2 text-base font-bold text-gray-900">
+              {labels.language}
+            </h2>
+            <ul role="listbox" className="space-y-1">
+              {menuLanguages.map((code) => (
+                <li key={code} role="option" aria-selected={code === lang}>
+                  <a
+                    href={`/menu/${slug}/${code}`}
+                    className={`flex min-h-12 items-center gap-3 rounded-xl px-3 text-sm font-medium transition-colors ${
+                      code === lang
+                        ? "bg-gray-100 text-black"
+                        : "text-gray-700 hover:bg-gray-50"
+                    }`}
+                  >
+                    <span className="text-xl leading-none">
+                      {getLanguageFlag(code)}
+                    </span>
+                    <span className="flex-1">{languageLabel(code)}</span>
+                    {code === lang && (
+                      <Check className="size-4 text-gray-700" aria-hidden />
+                    )}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </BottomSheet>
       )}
 
       <nav
@@ -141,7 +161,7 @@ export function MobileTabBar({
             <button
               type="button"
               onClick={() => setLangOpen((v) => !v)}
-              aria-haspopup="listbox"
+              aria-haspopup="dialog"
               aria-expanded={langOpen}
               className={`${tab} ${langOpen ? "" : "text-gray-500"}`}
               style={langOpen ? activeStyle : undefined}
@@ -149,30 +169,6 @@ export function MobileTabBar({
               <Globe className="size-6" strokeWidth={1.75} aria-hidden />
               {labels.language}
             </button>
-            {langOpen && (
-              <ul
-                role="listbox"
-                className="absolute bottom-full left-1/2 z-50 mb-3 min-w-44 -translate-x-1/2 space-y-1 rounded-2xl border border-gray-100 bg-white p-2 shadow-2xl"
-              >
-                {menuLanguages.map((code) => (
-                  <li key={code} role="option" aria-selected={code === lang}>
-                    <a
-                      href={`/menu/${slug}/${code}`}
-                      className={`flex min-h-11 items-center gap-2.5 rounded-lg px-3 text-sm font-medium transition-colors ${
-                        code === lang
-                          ? "bg-gray-100 text-black"
-                          : "text-gray-700 hover:bg-gray-100"
-                      }`}
-                    >
-                      <span className="text-base leading-none">
-                        {getLanguageFlag(code)}
-                      </span>
-                      <span>{languageLabel(code)}</span>
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            )}
           </div>
         )}
 
